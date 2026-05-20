@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
 
@@ -132,9 +133,12 @@ export default function HomePage() {
                 {outing.description}
               </p>
 
-              <button className="w-full bg-ocean-600 hover:bg-ocean-700 text-white py-2 rounded-lg text-sm font-medium transition">
-                Join Outing
-              </button>
+              <Link
+                to={`/outing/${outing.id}`}
+                className="block w-full text-center bg-ocean-600 hover:bg-ocean-700 text-white py-2 rounded-lg text-sm font-medium transition"
+              >
+                View Details
+              </Link>
             </div>
           ))}
         </div>

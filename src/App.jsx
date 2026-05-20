@@ -3,6 +3,8 @@ import { useAuth } from './hooks/useAuth';
 import Layout from './components/Layout/Layout';
 import HomePage from './pages/HomePage';
 import ProfilePage from './pages/ProfilePage';
+import OuttingDetailPage from './pages/OuttingDetailPage';
+import SkipperDashboard from './pages/SkipperDashboard';
 import SignupForm from './components/Auth/SignupForm';
 import LoginForm from './components/Auth/LoginForm';
 
@@ -63,6 +65,22 @@ function App() {
           element={
             <ProtectedRoute>
               <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/outing/:id"
+          element={
+            <ProtectedRoute>
+              <OuttingDetailPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/skipper-dashboard"
+          element={
+            <ProtectedRoute>
+              <SkipperDashboard />
             </ProtectedRoute>
           }
         />

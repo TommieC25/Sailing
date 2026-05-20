@@ -35,6 +35,11 @@ export default function Layout({ children }) {
                   <Link to="/" className="text-gray-600 hover:text-gray-900">
                     Outings
                   </Link>
+                  {profile?.user_type === 'owner' && (
+                    <Link to="/skipper-dashboard" className="text-gray-600 hover:text-gray-900">
+                      My Outings
+                    </Link>
+                  )}
                   <Link to="/profile" className="text-gray-600 hover:text-gray-900">
                     Profile
                   </Link>
@@ -95,6 +100,14 @@ export default function Layout({ children }) {
                   >
                     Outings
                   </Link>
+                  {profile?.user_type === 'owner' && (
+                    <Link
+                      to="/skipper-dashboard"
+                      className="block px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded"
+                    >
+                      My Outings
+                    </Link>
+                  )}
                   <Link
                     to="/profile"
                     className="block px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded"

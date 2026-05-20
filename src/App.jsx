@@ -49,7 +49,7 @@ function AuthRoute({ children }) {
 
 function App() {
   return (
-    <Router>
+    <Router basename="/Sailing">
       <Routes>
         <Route path="/signup" element={<AuthRoute><SignupForm /></AuthRoute>} />
         <Route path="/login" element={<AuthRoute><LoginForm /></AuthRoute>} />

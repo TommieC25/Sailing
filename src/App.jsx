@@ -5,6 +5,7 @@ import HomePage from './pages/HomePage';
 import ProfilePage from './pages/ProfilePage';
 import OuttingDetailPage from './pages/OuttingDetailPage';
 import SkipperDashboard from './pages/SkipperDashboard';
+import CreateOutingPage from './pages/CreateOutingPage';
 import SignupForm from './components/Auth/SignupForm';
 import LoginForm from './components/Auth/LoginForm';
 
@@ -81,6 +82,14 @@ function App() {
           element={
             <ProtectedRoute>
               <SkipperDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/create-outing"
+          element={
+            <ProtectedRoute>
+              <CreateOutingPage />
             </ProtectedRoute>
           }
         />

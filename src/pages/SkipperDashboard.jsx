@@ -170,21 +170,29 @@ export default function SkipperDashboard() {
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">My Outings</h1>
-        <p className="text-gray-600">
-          Manage your outings and review crew requests
-        </p>
+      <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">My Outings</h1>
+          <p className="text-gray-600">
+            Manage your outings and review crew requests
+          </p>
+        </div>
+        <button
+          onClick={() => navigate('/create-outing')}
+          className="bg-ocean-600 hover:bg-ocean-700 text-white px-6 py-3 rounded-lg font-semibold transition w-full md:w-auto"
+        >
+          + Create Outing
+        </button>
       </div>
 
       {outings.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-lg">
-          <p className="text-gray-600 mb-4">You haven't created any outings yet</p>
+          <p className="text-gray-600 mb-6">You haven't created any outings yet</p>
           <button
-            onClick={() => navigate('/')}
-            className="text-ocean-600 hover:text-ocean-700 font-medium"
+            onClick={() => navigate('/create-outing')}
+            className="inline-block bg-ocean-600 hover:bg-ocean-700 text-white px-6 py-3 rounded-lg font-semibold transition mb-3"
           >
-            Browse Outings →
+            Create Your First Outing
           </button>
         </div>
       ) : (

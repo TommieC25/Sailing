@@ -3,7 +3,7 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches:
-      - claude/cgsc-matching-app-4kTXz
+      - claude/**
   workflow_dispatch:
 
 permissions:

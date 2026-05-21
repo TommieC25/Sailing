@@ -2,6 +2,26 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
 
+const styles = {
+  container: { maxWidth: '800px', margin: '0 auto' },
+  card: { background: 'white', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', padding: '1.5rem' },
+  title: { fontSize: '2rem', fontWeight: 'bold', color: '#111', marginBottom: '2rem' },
+  photo: { width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', border: '4px solid #ddd' },
+  photoSection: { marginBottom: '2rem', textAlign: 'center' },
+  photoPlaceholder: { width: '80px', height: '80px', borderRadius: '50%', background: '#ddd', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', border: '4px solid #ddd' },
+  button: { background: '#06b6d4', color: 'white', padding: '0.75rem 1.5rem', borderRadius: '6px', border: 'none', fontWeight: 'bold', cursor: 'pointer', fontSize: '1rem' },
+  label: { fontSize: '1.125rem', fontWeight: 'bold', color: '#555', marginBottom: '0.5rem', display: 'block' },
+  value: { fontSize: '1.5rem', fontWeight: '600', color: '#111', marginBottom: '1.5rem' },
+  input: { width: '100%', padding: '0.75rem', fontSize: '1.5rem', border: '1px solid #ccc', borderRadius: '6px', fontFamily: 'inherit', marginBottom: '1.5rem' },
+  select: { width: '100%', padding: '0.75rem', fontSize: '1.5rem', border: '1px solid #ccc', borderRadius: '6px', fontFamily: 'inherit', marginBottom: '1.5rem' },
+  textarea: { width: '100%', padding: '0.75rem', fontSize: '1.5rem', border: '1px solid #ccc', borderRadius: '6px', fontFamily: 'inherit', marginBottom: '1.5rem', minHeight: '100px' },
+  section: { marginBottom: '2rem' },
+  sectionTitle: { fontSize: '1.5rem', fontWeight: 'bold', color: '#111', marginBottom: '1.5rem' },
+  boat: { background: '#f5f5f5', border: '1px solid #ddd', borderRadius: '6px', padding: '1rem', marginBottom: '1rem' },
+  topContact: { display: 'flex', gap: '2rem', marginBottom: '2rem' },
+  contactCol: { flex: 1 },
+};
+
 export default function ProfilePage() {
   const { user, profile, updateProfile } = useAuth();
   const [editMode, setEditMode] = useState(false);
@@ -140,37 +160,30 @@ export default function ProfilePage() {
   };
 
   if (!user) {
-    return <div className="text-center py-12">Loading...</div>;
+    return <div style={{textAlign: 'center', paddingTop: '3rem'}}>Loading...</div>;
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <div className="bg-white rounded-lg shadow-lg p-6 md:p-8">
-        <h1 className="text-4xl font-bold text-gray-900 mb-8">My Profile</h1>
+    <div style={styles.container}>
+      <div style={styles.card}>
+        <h1 style={styles.title}>My Profile</h1>
 
         {message && (
-          <div className={`mb-6 p-4 rounded text-xl ${message.includes('Error') ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>
+          <div style={{marginBottom: '1.5rem', padding: '1rem', borderRadius: '6px', fontSize: '1.1rem', background: message.includes('Error') ? '#fee' : '#efe', color: message.includes('Error') ? '#c00' : '#060'}}>
             {message}
           </div>
         )}
 
-        {/* Photo Section */}
-        <div className="mb-8 text-center">
-          <div className="inline-block mb-4">
+        <div style={styles.photoSection}>
+          <div style={{marginBottom: '1rem', display: 'inline-block'}}>
             {profile?.photo_url ? (
-              <img
-                src={profile.photo_url}
-                alt={profile.full_name}
-                className="w-20 h-20 rounded-full object-cover border-4 border-gray-200"
-              />
+              <img src={profile.photo_url} alt={profile.full_name} style={styles.photo} />
             ) : (
-              <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 text-3xl border-4 border-gray-200">
-                📷
-              </div>
+              <div style={styles.photoPlaceholder}>📷</div>
             )}
           </div>
-          <label className="block">
-            <span className="inline-block px-6 py-3 bg-teal-500 hover:bg-teal-600 text-white rounded-lg font-bold cursor-pointer transition text-lg">
+          <label>
+            <span style={{...styles.button, display: 'inline-block', cursor: 'pointer'}}>
               {uploading ? 'Uploading...' : 'Change Photo'}
             </span>
             <input
@@ -178,64 +191,58 @@ export default function ProfilePage() {
               accept="image/*"
               onChange={handlePhotoUpload}
               disabled={uploading}
-              className="hidden"
+              style={{display: 'none'}}
             />
           </label>
         </div>
 
-        <div className="mb-8 space-y-2">
-          <div>
-            <p className="text-lg font-bold text-gray-700">Email</p>
-            <p className="text-2xl font-semibold text-gray-900">{user.email}</p>
-          </div>
-          {profile?.phone && (
-            <div>
-              <p className="text-lg font-bold text-gray-700">Phone</p>
-              <p className="text-2xl font-semibold text-gray-900">{profile.phone}</p>
-            </div>
-          )}
-        </div>
-
         {!editMode ? (
-          <div className="space-y-6">
-            <div>
-              <p className="text-lg text-gray-600 mb-1">Full Name</p>
-              <p className="text-2xl font-semibold text-gray-900">{profile?.full_name || 'Not set'}</p>
+          <>
+            <div style={styles.topContact}>
+              <div style={styles.contactCol}>
+                <div style={styles.label}>Email</div>
+                <div style={styles.value}>{user.email}</div>
+              </div>
+              {profile?.phone && (
+                <div style={styles.contactCol}>
+                  <div style={styles.label}>Phone</div>
+                  <div style={styles.value}>{profile.phone}</div>
+                </div>
+              )}
             </div>
 
-            <div>
-              <p className="text-lg text-gray-600 mb-1">Bio</p>
-              <p className="text-xl text-gray-900">{profile?.bio || 'No bio added'}</p>
+            <div style={styles.section}>
+              <div style={styles.label}>Full Name</div>
+              <div style={styles.value}>{profile?.full_name || 'Not set'}</div>
             </div>
 
-            <div>
-              <p className="text-lg text-gray-600 mb-1">Sailing Experience</p>
-              <p className="text-2xl font-semibold text-gray-900 capitalize">
-                {profile?.sailing_experience || 'Not set'}
-              </p>
+            <div style={styles.section}>
+              <div style={styles.label}>Bio</div>
+              <div style={styles.value}>{profile?.bio || 'No bio added'}</div>
             </div>
 
-            <div>
-              <p className="text-lg text-gray-600 mb-1">Account Type</p>
-              <p className="text-2xl font-semibold text-gray-900 capitalize">
-                {profile?.user_type || 'Not set'}
-              </p>
+            <div style={styles.section}>
+              <div style={styles.label}>Sailing Experience</div>
+              <div style={styles.value}>{profile?.sailing_experience || 'Not set'}</div>
+            </div>
+
+            <div style={styles.section}>
+              <div style={styles.label}>Account Type</div>
+              <div style={styles.value}>{profile?.user_type || 'Not set'}</div>
             </div>
 
             {profile?.user_type === 'owner' && boats.length > 0 && (
-              <div>
-                <p className="text-lg text-gray-600 mb-2">Your Boat</p>
+              <div style={styles.section}>
+                <div style={styles.sectionTitle}>Your Boat</div>
                 {boats.map((boat) => (
-                  <div key={boat.id} className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                    <p className="font-bold text-gray-900 text-2xl">{boat.name}</p>
-                    <p className="text-lg text-gray-600 mt-1">
-                      {[boat.brand, boat.model, boat.color].filter(Boolean).join(' / ')}
-                    </p>
-                    <div className="grid grid-cols-2 gap-2 mt-3 text-lg text-gray-700">
+                  <div key={boat.id} style={styles.boat}>
+                    <div style={{fontSize: '1.25rem', fontWeight: 'bold', color: '#111', marginBottom: '0.5rem'}}>{boat.name}</div>
+                    <div style={{fontSize: '1rem', color: '#666', marginBottom: '1rem'}}>{[boat.brand, boat.model, boat.color].filter(Boolean).join(' / ')}</div>
+                    <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', fontSize: '1rem', color: '#333'}}>
                       <div>Size: {boat.size_ft}ft</div>
                       <div>Capacity: {boat.capacity}</div>
                       {boat.mooring_location && (
-                        <div className="col-span-2">Location: {boat.mooring_location}</div>
+                        <div style={{gridColumn: '1/-1'}}>Location: {boat.mooring_location}</div>
                       )}
                     </div>
                   </div>
@@ -243,168 +250,78 @@ export default function ProfilePage() {
               </div>
             )}
 
-            <button
-              onClick={() => setEditMode(true)}
-              className="mt-8 text-white px-8 py-4 rounded-lg font-bold transition hover:opacity-90 text-xl"
-              style={{background: '#06b6d4'}}
-            >
+            <button onClick={() => setEditMode(true)} style={{...styles.button, marginTop: '2rem', fontSize: '1.1rem', padding: '1rem 2rem'}}>
               Edit Profile
             </button>
-          </div>
+          </>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-8">
-            <div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-6">Profile Information</h3>
+          <form onSubmit={handleSubmit}>
+            <div style={styles.section}>
+              <div style={{fontSize: '1.5rem', fontWeight: 'bold', color: '#111', marginBottom: '1.5rem'}}>Profile Information</div>
 
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-xl font-bold text-gray-700 mb-2">
-                    Full Name
-                  </label>
-                  <input
-                    type="text"
-                    name="full_name"
-                    value={formData.full_name}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 text-2xl border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  />
-                </div>
+              <div>
+                <div style={styles.label}>Full Name</div>
+                <input type="text" name="full_name" value={formData.full_name} onChange={handleChange} style={styles.input} />
+              </div>
 
-                <div>
-                  <label className="block text-xl font-bold text-gray-700 mb-2">
-                    Bio
-                  </label>
-                  <textarea
-                    name="bio"
-                    value={formData.bio}
-                    onChange={handleChange}
-                    rows="4"
-                    className="w-full px-4 py-3 text-2xl border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    placeholder="Tell other sailors about yourself..."
-                  />
-                </div>
+              <div>
+                <div style={styles.label}>Bio</div>
+                <textarea name="bio" value={formData.bio} onChange={handleChange} style={styles.textarea} placeholder="Tell other sailors about yourself..." />
+              </div>
 
-                <div>
-                  <label className="block text-xl font-bold text-gray-700 mb-2">
-                    Sailing Experience
-                  </label>
-                  <select
-                    name="sailing_experience"
-                    value={formData.sailing_experience}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 text-2xl border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  >
-                    <option value="beginner">Beginner</option>
-                    <option value="intermediate">Intermediate</option>
-                    <option value="advanced">Advanced</option>
-                  </select>
-                </div>
+              <div>
+                <div style={styles.label}>Sailing Experience</div>
+                <select name="sailing_experience" value={formData.sailing_experience} onChange={handleChange} style={styles.select}>
+                  <option value="beginner">Beginner</option>
+                  <option value="intermediate">Intermediate</option>
+                  <option value="advanced">Advanced</option>
+                </select>
+              </div>
 
-                <div>
-                  <label className="block text-xl font-bold text-gray-700 mb-2">
-                    Phone
-                  </label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 text-2xl border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  />
-                </div>
+              <div>
+                <div style={styles.label}>Phone</div>
+                <input type="tel" name="phone" value={formData.phone} onChange={handleChange} style={styles.input} />
               </div>
             </div>
 
             {profile?.user_type === 'owner' && (
-              <div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-6">Boat Information</h3>
+              <div style={styles.section}>
+                <div style={{fontSize: '1.5rem', fontWeight: 'bold', color: '#111', marginBottom: '1.5rem'}}>Boat Information</div>
 
-                <div className="space-y-6">
+                <div>
+                  <div style={styles.label}>Boat Name</div>
+                  <input type="text" name="name" value={boatData.name} onChange={handleBoatChange} style={styles.input} />
+                </div>
+
+                <div>
+                  <div style={styles.label}>Brand / Model / Color</div>
+                  <input type="text" name="brand_model_color" value={boatData.brand_model_color} onChange={handleBoatChange} style={styles.input} placeholder="e.g., Tartan 33, blue" />
+                </div>
+
+                <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem'}}>
                   <div>
-                    <label className="block text-xl font-bold text-gray-700 mb-2">
-                      Boat Name
-                    </label>
-                    <input
-                      type="text"
-                      name="name"
-                      value={boatData.name}
-                      onChange={handleBoatChange}
-                      className="w-full px-4 py-3 text-2xl border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xl font-bold text-gray-700 mb-2">
-                      Brand / Model / Color
-                    </label>
-                    <input
-                      type="text"
-                      name="brand_model_color"
-                      value={boatData.brand_model_color}
-                      onChange={handleBoatChange}
-                      placeholder="e.g., Tartan 33, blue"
-                      className="w-full px-4 py-3 text-2xl border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-xl font-bold text-gray-700 mb-2">
-                        Size (ft)
-                      </label>
-                      <input
-                        type="number"
-                        name="size_ft"
-                        value={boatData.size_ft}
-                        onChange={handleBoatChange}
-                        className="w-full px-4 py-3 text-2xl border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xl font-bold text-gray-700 mb-2">
-                        Capacity
-                      </label>
-                      <input
-                        type="number"
-                        name="capacity"
-                        value={boatData.capacity}
-                        onChange={handleBoatChange}
-                        className="w-full px-4 py-3 text-2xl border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-                      />
-                    </div>
+                    <div style={styles.label}>Size (ft)</div>
+                    <input type="number" name="size_ft" value={boatData.size_ft} onChange={handleBoatChange} style={{...styles.input, marginBottom: 0}} />
                   </div>
 
                   <div>
-                    <label className="block text-xl font-bold text-gray-700 mb-2">
-                      Location (Club Mooring / Marina & Slip)
-                    </label>
-                    <input
-                      type="text"
-                      name="mooring_location"
-                      value={boatData.mooring_location}
-                      onChange={handleBoatChange}
-                      className="w-full px-4 py-3 text-2xl border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    />
+                    <div style={styles.label}>Capacity</div>
+                    <input type="number" name="capacity" value={boatData.capacity} onChange={handleBoatChange} style={{...styles.input, marginBottom: 0}} />
                   </div>
+                </div>
+
+                <div style={{marginTop: '1.5rem'}}>
+                  <div style={styles.label}>Location (Club Mooring / Marina & Slip)</div>
+                  <input type="text" name="mooring_location" value={boatData.mooring_location} onChange={handleBoatChange} style={styles.input} />
                 </div>
               </div>
             )}
 
-            <div className="flex gap-4">
-              <button
-                type="submit"
-                disabled={saving}
-                className="flex-1 text-white py-4 rounded-lg font-bold transition disabled:opacity-50 text-xl"
-                style={{background: saving ? '#9ca3af' : '#06b6d4'}}
-              >
+            <div style={{display: 'flex', gap: '1rem', marginTop: '2rem'}}>
+              <button type="submit" disabled={saving} style={{...styles.button, flex: 1, fontSize: '1.1rem', padding: '1rem', opacity: saving ? 0.6 : 1}}>
                 {saving ? 'Saving...' : 'Save Changes'}
               </button>
-              <button
-                type="button"
-                onClick={() => setEditMode(false)}
-                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-900 py-4 rounded-lg font-bold transition text-xl"
-              >
+              <button type="button" onClick={() => setEditMode(false)} style={{flex: 1, fontSize: '1.1rem', padding: '1rem', background: '#ddd', color: '#333', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer'}}>
                 Cancel
               </button>
             </div>
@@ -414,4 +331,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-// deployment fix

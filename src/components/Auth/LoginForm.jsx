@@ -30,25 +30,50 @@ export default function LoginForm() {
 
   return (
     <div className="min-h-screen flex flex-col" style={{background: 'linear-gradient(160deg, #0c2340 0%, #0369a1 60%, #0ea5e9 100%)'}}>
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
+      <div className="flex-1 flex flex-col px-6 py-10 max-w-lg mx-auto w-full">
 
-        <div className="mb-8 text-center">
-          <img src="/Sailing/Club Logo.jpg" alt="CGSC Logo" className="h-28 w-auto mx-auto mb-3 drop-shadow-lg" />
-          <p className="text-white font-semibold text-xl tracking-wide drop-shadow">Coconut Grove Sailing Club</p>
+        {/* Logo + Title */}
+        <div className="text-center mb-8">
+          <img src="/Sailing/Club Logo.jpg" alt="CGSC Logo" className="h-28 w-auto mx-auto mb-4 drop-shadow-lg" />
+          <h1 className="text-4xl font-extrabold text-white tracking-tight drop-shadow">CGSC Sailing</h1>
+          <p className="text-blue-100 text-xl mt-1 font-medium">Coconut Grove Sailing Club</p>
         </div>
 
-        <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-8">
-          <h2 className="text-2xl font-extrabold mb-6 text-center" style={{color: '#0c2340'}}>⚓ Sign In</h2>
+        {/* What is this */}
+        <div className="mb-6">
+          <p className="text-white text-2xl font-bold mb-2">Ready to sail? 🌊</p>
+          <p className="text-blue-100 text-lg leading-relaxed">
+            Connect with sailors at CGSC. Find outings to crew, or post your own as a skipper.
+          </p>
+        </div>
+
+        {/* How it works */}
+        <div className="space-y-3 mb-8">
+          {[
+            { emoji: '🙋', text: 'Browse sailings → Request a spot → Skipper approves → You\'re in' },
+            { emoji: '🚢', text: 'Own a boat? Post an outing and pick your crew' },
+            { emoji: '💬', text: 'Chat, share photos, and build your sailing community' },
+          ].map(({ emoji, text }) => (
+            <div key={emoji} className="flex items-start gap-3 bg-white bg-opacity-10 rounded-xl px-4 py-3">
+              <span className="text-2xl flex-shrink-0">{emoji}</span>
+              <p className="text-white text-lg font-medium leading-snug">{text}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Sign In Card */}
+        <div className="bg-white rounded-2xl shadow-2xl p-7">
+          <h2 className="text-3xl font-extrabold mb-6 text-center" style={{color: '#0c2340'}}>⚓ Sign In</h2>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-lg mb-5">
+            <div className="bg-red-50 border border-red-300 text-red-700 text-lg px-4 py-3 rounded-xl mb-5">
               {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-lg font-semibold text-gray-700 mb-2">Email</label>
+              <label className="block text-xl font-bold mb-2" style={{color: '#0c2340'}}>Email</label>
               <input
                 type="email"
                 name="email"
@@ -56,40 +81,47 @@ export default function LoginForm() {
                 onChange={handleChange}
                 required
                 placeholder="your@email.com"
-                className="w-full px-4 py-4 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xl"
+                className="w-full px-4 py-4 border-2 border-gray-300 rounded-xl text-gray-900 text-xl focus:outline-none focus:border-blue-500"
+                style={{'--tw-placeholder-color': '#6b7280', fontSize: '1.25rem'}}
               />
             </div>
 
             <div>
-              <label className="block text-lg font-semibold text-gray-700 mb-2">Password</label>
+              <label className="block text-xl font-bold mb-2" style={{color: '#0c2340'}}>Password</label>
               <input
                 type="password"
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
                 required
-                placeholder="••••••••"
-                className="w-full px-4 py-4 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xl"
+                placeholder="Your password"
+                className="w-full px-4 py-4 border-2 border-gray-300 rounded-xl text-gray-900 text-xl focus:outline-none focus:border-blue-500"
               />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-4 rounded-xl font-bold text-white text-xl transition-all"
+              className="w-full py-4 rounded-xl font-extrabold text-white text-xl transition-all mt-2"
               style={{background: loading ? '#9ca3af' : 'linear-gradient(135deg, #0c2340, #0369a1)'}}
             >
               {loading ? 'Signing In...' : 'Sign In'}
             </button>
           </form>
 
-          <p className="text-center text-gray-500 text-base mt-6">
-            No account?{' '}
-            <Link to="/signup" className="text-blue-600 font-semibold hover:text-blue-700">
-              Sign Up
+          <div className="mt-6 pt-5 border-t-2 border-gray-100 text-center">
+            <p className="text-gray-500 text-lg mb-3">New to CGSC Sailing?</p>
+            <Link
+              to="/signup"
+              className="block w-full py-4 rounded-xl font-extrabold text-xl border-2 transition-all"
+              style={{color: '#0c2340', borderColor: '#0c2340'}}
+            >
+              Create Your Account →
             </Link>
-          </p>
+          </div>
         </div>
+
+        <p className="text-blue-200 text-center text-base mt-6">Coconut Grove Sailing Club · Miami, FL</p>
       </div>
     </div>
   );

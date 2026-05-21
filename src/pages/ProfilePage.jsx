@@ -12,14 +12,14 @@ const styles = {
   button: { background: '#06b6d4', color: 'white', padding: '0.75rem 1.5rem', borderRadius: '6px', border: 'none', fontWeight: 'bold', cursor: 'pointer', fontSize: '1rem' },
   label: { fontSize: '1.125rem', fontWeight: 'bold', color: '#555', marginBottom: '0.5rem', display: 'block' },
   value: { fontSize: '1.5rem', fontWeight: '600', color: '#111', marginBottom: '1.5rem' },
-  input: { width: '100%', padding: '0.75rem', fontSize: '1.5rem', border: '1px solid #ccc', borderRadius: '6px', fontFamily: 'inherit', marginBottom: '1.5rem' },
-  select: { width: '100%', padding: '0.75rem', fontSize: '1.5rem', border: '1px solid #ccc', borderRadius: '6px', fontFamily: 'inherit', marginBottom: '1.5rem' },
-  textarea: { width: '100%', padding: '0.75rem', fontSize: '1.5rem', border: '1px solid #ccc', borderRadius: '6px', fontFamily: 'inherit', marginBottom: '1.5rem', minHeight: '100px' },
+  input: { width: '100%', padding: '0.75rem', fontSize: '1.1rem', border: '1px solid #ccc', borderRadius: '6px', fontFamily: 'inherit', marginBottom: '1.5rem' },
+  select: { width: '100%', padding: '0.75rem', fontSize: '1.1rem', border: '1px solid #ccc', borderRadius: '6px', fontFamily: 'inherit', marginBottom: '1.5rem' },
+  textarea: { width: '100%', padding: '0.75rem', fontSize: '1.1rem', border: '1px solid #ccc', borderRadius: '6px', fontFamily: 'inherit', marginBottom: '1.5rem', minHeight: '100px' },
   section: { marginBottom: '2rem' },
   sectionTitle: { fontSize: '1.5rem', fontWeight: 'bold', color: '#111', marginBottom: '1.5rem' },
   boat: { background: '#f5f5f5', border: '1px solid #ddd', borderRadius: '6px', padding: '1rem', marginBottom: '1rem' },
-  topContact: { display: 'flex', gap: '2rem', marginBottom: '2rem' },
-  contactCol: { flex: 1 },
+  topContact: { display: 'block', marginBottom: '2rem' },
+  contactCol: { marginBottom: '1.5rem' },
 };
 
 export default function ProfilePage() {
@@ -223,12 +223,12 @@ export default function ProfilePage() {
 
             <div style={styles.section}>
               <div style={styles.label}>Sailing Experience</div>
-              <div style={styles.value}>{profile?.sailing_experience || 'Not set'}</div>
+              <div style={styles.value}>{profile?.sailing_experience ? profile.sailing_experience.charAt(0).toUpperCase() + profile.sailing_experience.slice(1) : 'Not set'}</div>
             </div>
 
             <div style={styles.section}>
               <div style={styles.label}>Account Type</div>
-              <div style={styles.value}>{profile?.user_type || 'Not set'}</div>
+              <div style={styles.value}>{profile?.user_type ? profile.user_type.charAt(0).toUpperCase() + profile.user_type.slice(1) : 'Not set'}</div>
             </div>
 
             {profile?.user_type === 'owner' && boats.length > 0 && (

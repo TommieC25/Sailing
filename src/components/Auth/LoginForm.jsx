@@ -78,37 +78,25 @@ export default function LoginForm() {
           <h2 style={styles.sectionTitle}>Here's How It Works</h2>
 
           <div style={styles.sectionBox}>
-            <p style={{...styles.cardTitle, marginBottom: '0.75rem'}}>🙋 If you crew <span style={{color: '#e0f2fe', fontSize: '0.9rem'}}>(no boat needed)</span></p>
+            <p style={{...styles.cardTitle, marginBottom: '0.75rem'}}>🚢 Skippers</p>
             <p style={styles.description}>
-              Browse upcoming sailings → Find one that fits your schedule → Request to join → Skipper approves → You're in! Chat with your crew before you go, share photos after.
+              Manage your outings and invite crew. Post your upcoming sail, review crew requests, approve who joins, and chat with your crew.
             </p>
           </div>
 
           <div style={styles.sectionBox}>
-            <p style={{...styles.cardTitle, marginBottom: '0.75rem'}}>🚢 If you own a boat</p>
+            <p style={{...styles.cardTitle, marginBottom: '0.75rem'}}>⛵ Crew</p>
             <p style={styles.description}>
-              Post your upcoming outing → Crew members request to join → You pick who comes → Manage everything from your dashboard.
+              Browse upcoming outings and request to join. Find a sail you like, ask the skipper if you can crew, and connect with your team.
             </p>
           </div>
-        </div>
 
-        {/* What You Can Do */}
-        <div style={styles.section}>
-          <h2 style={styles.sectionTitle}>What You Can Do Right Now</h2>
-          {[
-            { emoji: '🧭', title: 'Browse Outings', desc: 'See all upcoming sails. Tap any one to learn more.' },
-            { emoji: '⛵', title: 'Request to Join', desc: 'Found one you like? Ask the skipper if you can crew.' },
-            { emoji: '👥', title: 'See Your Crew', desc: 'Once approved, chat and share photos with your crew.' },
-            { emoji: '📋', title: 'Manage Your Boat', desc: 'Owners can post outings and approve crew from the "My Outings" tab.' },
-          ].map(({ emoji, title, desc }) => (
-            <div key={title} style={styles.card}>
-              <span style={styles.emoji}>{emoji}</span>
-              <div>
-                <p style={styles.cardTitle}>{title}</p>
-                <p style={styles.cardDesc}>{desc}</p>
-              </div>
-            </div>
-          ))}
+          <div style={styles.sectionBox}>
+            <p style={{...styles.cardTitle, marginBottom: '0.75rem'}}>💬 Group Chat</p>
+            <p style={styles.description}>
+              Stay connected before, during, and after each outing. Share updates, photos, and stay in touch with your sailing community.
+            </p>
+          </div>
         </div>
 
         {/* Getting Started */}

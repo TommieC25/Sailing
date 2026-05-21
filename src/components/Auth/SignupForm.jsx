@@ -78,6 +78,10 @@ export default function SignupForm() {
       setError('Please select your gender');
       return;
     }
+    if (!photoFile) {
+      setError('Profile photo is required');
+      return;
+    }
     try {
       setLoading(true);
 
@@ -161,11 +165,12 @@ export default function SignupForm() {
             </div>
 
             <div style={styles.fieldGroup}>
-              <label style={styles.label}>Profile Photo (optional)</label>
+              <label style={styles.label}>Profile Photo *</label>
               <input
                 type="file"
                 accept="image/*"
                 onChange={handlePhotoChange}
+                required
                 style={{...styles.input, padding: '8px 12px', cursor: 'pointer'}}
               />
               {photoPreview && (

@@ -114,15 +114,15 @@ export default function Layout({ children }) {
       {/* Nav */}
       <nav style={{background: NAV_BG, position: 'sticky', top: 0, zIndex: 50, boxShadow: '0 4px 12px rgba(0,0,0,0.3)'}}>
         <div style={{maxWidth: '512px', margin: '0 auto', padding: '0 1rem'}}>
-          <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '64px'}}>
+          <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '64px', gap: '12px'}}>
 
-            <Link to="/" style={{display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none'}}>
+            <Link to="/" style={{display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none', minWidth: 0}}>
               <img
                 src="/Sailing/Club Logo.jpg"
                 alt="CGSC"
                 style={{height: '40px', width: 'auto', borderRadius: '4px', flexShrink: 0, display: 'block'}}
               />
-              <span style={{color: '#ffffff', fontSize: '1.2rem', fontWeight: 900, letterSpacing: '-0.02em', textShadow: '0 1px 6px rgba(0,0,0,0.6)', whiteSpace: 'nowrap'}}>
+              <span style={{color: '#ffffff', fontSize: '1.2rem', fontWeight: 900, letterSpacing: '-0.02em', textShadow: '0 1px 6px rgba(0,0,0,0.6)', whiteSpace: 'nowrap', flexShrink: 1}}>
                 CGSC Sailing
               </span>
             </Link>
@@ -148,60 +148,63 @@ export default function Layout({ children }) {
               )}
             </div>
 
-            {/* Admin Dashboard button */}
-            {isAdmin && (
-              <button
-                onClick={() => navigate('/admin/dashboard')}
-                style={{color: '#fbbf24', background: 'none', border: 'none', cursor: 'pointer', padding: '4px', position: 'relative', marginRight: '8px', fontSize: '1.5rem', fontWeight: 900}}
-                title="Admin Dashboard"
-              >
-                ⚙️
-              </button>
-            )}
-
-            {/* Announcements bell */}
-            <button
-              onClick={() => navigate('/announcements')}
-              style={{color: '#ffffff', background: 'none', border: 'none', cursor: 'pointer', padding: '4px', position: 'relative', marginRight: '8px'}}
-              title="View announcements"
-            >
-              <svg style={{width: '28px', height: '28px'}} fill="currentColor" viewBox="0 0 24 24">
-                <path d="M10 20h4c0 1.1-.9 2-2 2s-2-.9-2-2zm10-2v-5c0-3.07-1.64-5.64-4.5-6.32V2h-3v4.68C7.64 7.36 6 9.93 6 13v5H4v2h16v-2h-2z"/>
-              </svg>
-              {unreadAnnouncementCount > 0 && (
-                <span style={{position: 'absolute', top: '-4px', right: '-4px', background: '#ef4444', color: '#ffffff', borderRadius: '50%', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 900}}>
-                  {unreadAnnouncementCount}
-                </span>
+            {/* Icons group */}
+            <div style={{display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0}}>
+              {/* Admin Dashboard button */}
+              {isAdmin && (
+                <button
+                  onClick={() => navigate('/admin/dashboard')}
+                  style={{color: '#fbbf24', background: 'none', border: 'none', cursor: 'pointer', padding: '4px', position: 'relative', fontSize: '1.5rem', fontWeight: 900, display: 'flex', alignItems: 'center'}}
+                  title="Admin Dashboard"
+                >
+                  ⚙️
+                </button>
               )}
-            </button>
 
-            {/* Admin inbox bell */}
-            {isAdmin && (
+              {/* Announcements bell */}
               <button
-                onClick={() => navigate('/admin/inbox')}
-                style={{color: '#fbbf24', background: 'none', border: 'none', cursor: 'pointer', padding: '4px', position: 'relative', marginRight: '8px'}}
-                title="Admin inbox"
+                onClick={() => navigate('/announcements')}
+                style={{color: '#ffffff', background: 'none', border: 'none', cursor: 'pointer', padding: '4px', position: 'relative', display: 'flex', alignItems: 'center'}}
+                title="View announcements"
               >
                 <svg style={{width: '28px', height: '28px'}} fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4V6c0-1.1-.9-2-2-2zm-2 12H4V6h14v10z"/>
+                  <path d="M10 20h4c0 1.1-.9 2-2 2s-2-.9-2-2zm10-2v-5c0-3.07-1.64-5.64-4.5-6.32V2h-3v4.68C7.64 7.36 6 9.93 6 13v5H4v2h16v-2h-2z"/>
                 </svg>
-                {unreadInboxCount > 0 && (
+                {unreadAnnouncementCount > 0 && (
                   <span style={{position: 'absolute', top: '-4px', right: '-4px', background: '#ef4444', color: '#ffffff', borderRadius: '50%', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 900}}>
-                    {unreadInboxCount}
+                    {unreadAnnouncementCount}
                   </span>
                 )}
               </button>
-            )}
 
-            {/* Mobile hamburger */}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              style={{color: '#ffffff', background: 'none', border: 'none', cursor: 'pointer', padding: '4px'}}
-            >
-              <svg style={{width: '32px', height: '32px'}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={mobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
-              </svg>
-            </button>
+              {/* Admin inbox bell */}
+              {isAdmin && (
+                <button
+                  onClick={() => navigate('/admin/inbox')}
+                  style={{color: '#fbbf24', background: 'none', border: 'none', cursor: 'pointer', padding: '4px', position: 'relative', display: 'flex', alignItems: 'center'}}
+                  title="Admin inbox"
+                >
+                  <svg style={{width: '28px', height: '28px'}} fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4V6c0-1.1-.9-2-2-2zm-2 12H4V6h14v10z"/>
+                  </svg>
+                  {unreadInboxCount > 0 && (
+                    <span style={{position: 'absolute', top: '-4px', right: '-4px', background: '#ef4444', color: '#ffffff', borderRadius: '50%', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 900}}>
+                      {unreadInboxCount}
+                    </span>
+                  )}
+                </button>
+              )}
+
+              {/* Mobile hamburger */}
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                style={{color: '#ffffff', background: 'none', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center'}}
+              >
+                <svg style={{width: '32px', height: '32px'}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={mobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
+                </svg>
+              </button>
+            </div>
           </div>
 
           {/* Mobile menu */}

@@ -346,75 +346,73 @@ export default function OutingDetailPage() {
           </div>
         )}
 
-        <div style={styles.grid}>
-          <div style={styles.section}>
-            <h2 style={styles.sectionTitle}>Outing Details</h2>
-            <div style={styles.section}>
-              <div>
-                <p style={styles.detailLabel}>Date & Time</p>
-                <p style={styles.detailValue}>
-                  {new Date(outing.outing_date).toLocaleDateString()} at {outing.outing_time}
-                </p>
-              </div>
-
-              <div>
-                <p style={styles.detailLabel}>Crew Spots Available</p>
-                <p style={styles.detailValue}>{outing.capacity_available} available</p>
-              </div>
-
-              <div>
-                <p style={styles.detailLabel}>Description</p>
-                <p style={{ ...styles.detailValue, lineHeight: '1.6' }}>{outing.description}</p>
-              </div>
-            </div>
+        {/* Key Info */}
+        <div style={{display: 'grid', gap: '24px', marginBottom: '32px'}}>
+          <div>
+            <p style={styles.detailLabel}>📍 Location</p>
+            <p style={{...styles.detailValue, fontSize: '1.25rem', color: '#0c2340'}}>{outing.location}</p>
           </div>
 
-          <div style={styles.section}>
-            <div>
-              <h2 style={styles.sectionTitle}>Boat Information</h2>
-              <div style={styles.section}>
-                <div>
-                  <p style={styles.detailLabel}>Boat Name</p>
-                  <p style={styles.detailValue}>{boat.name}</p>
-                </div>
+          <div>
+            <p style={styles.detailLabel}>📅 Date & Time</p>
+            <p style={styles.detailValue}>
+              {new Date(outing.outing_date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} at {outing.outing_time}
+            </p>
+          </div>
 
-                <div>
-                  <p style={styles.detailLabel}>Size</p>
-                  <p style={styles.detailValue}>{boat.size_ft} ft</p>
-                </div>
-
-                <div>
-                  <p style={styles.detailLabel}>Total Capacity</p>
-                  <p style={styles.detailValue}>{boat.capacity} people</p>
-                </div>
-
-                {boat.mooring_location && (
-                  <div>
-                    <p style={styles.detailLabel}>Mooring Location</p>
-                    <p style={styles.detailValue}>{boat.mooring_location}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div>
-              <h2 style={styles.sectionTitle}>Skipper</h2>
-              <div style={styles.skipperCard}>
-                {skipper.photo_url ? (
-                  <img src={skipper.photo_url} alt={skipper.full_name} style={styles.skipperPhoto} />
-                ) : (
-                  <div style={styles.skipperPhotoPlaceholder}>📷</div>
-                )}
-                <p style={styles.skipperName}>{skipper.full_name}</p>
-                <p style={{ ...styles.skipperSkill, margin: 0 }}>{skipper.sailing_experience} sailor</p>
-                {skipper.bio && <p style={styles.skipperBio}>{skipper.bio}</p>}
-              </div>
-            </div>
-            <a href={generateCalendarLink(outing)} target="_blank" rel="noopener noreferrer" style={styles.calendarLink}>
-              📅 Add to Calendar
-            </a>
+          <div>
+            <p style={styles.detailLabel}>👥 Crew Spots Available</p>
+            <p style={styles.detailValue}>{outing.capacity_available} spot{outing.capacity_available !== 1 ? 's' : ''} available</p>
           </div>
         </div>
+
+        {/* Boat Information */}
+        <div style={{background: '#f0f9ff', border: '2px solid #bfdbfe', borderRadius: '8px', padding: '24px', marginBottom: '24px', display: 'grid', gap: '12px'}}>
+          <p style={{fontSize: '1.125rem', fontWeight: 900, color: '#0c2340', margin: '0 0 12px 0', paddingBottom: '12px', borderBottom: '2px solid #e0f2fe'}}>🚢 Boat</p>
+          <div>
+            <p style={styles.detailLabel}>Name</p>
+            <p style={styles.detailValue}>{boat.name}</p>
+          </div>
+          <div>
+            <p style={styles.detailLabel}>Size</p>
+            <p style={styles.detailValue}>{boat.size_ft} ft</p>
+          </div>
+          <div>
+            <p style={styles.detailLabel}>Total Capacity</p>
+            <p style={styles.detailValue}>{boat.capacity} people</p>
+          </div>
+          {boat.mooring_location && (
+            <div>
+              <p style={styles.detailLabel}>Mooring Location</p>
+              <p style={styles.detailValue}>{boat.mooring_location}</p>
+            </div>
+          )}
+        </div>
+
+        {/* Skipper */}
+        <div style={{background: '#ffffff', border: '2px solid #e5e7eb', borderRadius: '8px', padding: '20px', marginBottom: '24px', display: 'flex', gap: '16px', alignItems: 'center'}}>
+          {skipper?.photo_url ? (
+            <img src={skipper.photo_url} alt={skipper.full_name} style={{width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0}} />
+          ) : (
+            <div style={{width: '64px', height: '64px', borderRadius: '50%', background: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', flexShrink: 0}}>👤</div>
+          )}
+          <div>
+            <p style={{fontSize: '1.125rem', fontWeight: 900, color: '#1e293b', margin: '0 0 4px 0'}}>⛵ Skipper</p>
+            <p style={{fontSize: '1rem', color: '#1e293b', fontWeight: 600, margin: '0 0 2px 0'}}>{skipper?.full_name}</p>
+            <p style={{fontSize: '0.875rem', color: '#64748b', margin: 0, textTransform: 'capitalize'}}>{skipper?.sailing_experience} sailor</p>
+            {skipper?.bio && <p style={{fontSize: '0.875rem', color: '#475569', margin: '6px 0 0 0'}}>{skipper.bio}</p>}
+          </div>
+        </div>
+
+        {/* Description */}
+        {outing.description && (
+          <div style={{background: '#ffffff', border: '2px solid #e5e7eb', borderRadius: '8px', padding: '20px', marginBottom: '24px'}}>
+            <p style={{fontSize: '1rem', fontWeight: 900, color: '#1e293b', margin: '0 0 12px 0', paddingBottom: '12px', borderBottom: '2px solid #e0f2fe'}}>ℹ️ About This Outing</p>
+            <p style={{fontSize: '1rem', color: '#475569', lineHeight: '1.6', margin: 0}}>{outing.description}</p>
+          </div>
+        )}
+
+        {/* Crew Requests Section */}
 
         {/* Approved Crew & Chat Section (show if approved, or skipper, or crew exists) */}
         {(crewRequest?.status === 'approved' || isSkipper || approvedCrew.length > 0) && (

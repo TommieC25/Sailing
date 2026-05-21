@@ -3,6 +3,19 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../utils/supabaseClient';
 
+const checkIsAdmin = async (userId) => {
+  try {
+    const { data } = await supabase
+      .from('admins')
+      .select('id')
+      .eq('user_id', userId)
+      .single();
+    return !!data;
+  } catch {
+    return false;
+  }
+};
+
 const NAV_BG = 'linear-gradient(135deg, #0c2340 0%, #0369a1 100%)';
 
 export default function Layout({ children }) {
@@ -10,6 +23,8 @@ export default function Layout({ children }) {
   const { user, profile, signOut } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [unreadAnnouncementCount, setUnreadAnnouncementCount] = useState(0);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [unreadInboxCount, setUnreadInboxCount] = useState(0);
 
   useEffect(() => {
     if (!user) return;
@@ -42,6 +57,42 @@ export default function Layout({ children }) {
 
     fetchUnreadCount();
   }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const checkAdmin = async () => {
+      const adminStatus = await checkIsAdmin(user.id);
+      setIsAdmin(adminStatus);
+    };
+
+    checkAdmin();
+  }, [user]);
+
+  useEffect(() => {
+    if (!user || !isAdmin) return;
+
+    const fetchInboxCount = async () => {
+      try {
+        const [messagesRes, bugsRes, featuresRes] = await Promise.all([
+          supabase.from('contact_messages').select('id').eq('status', 'open'),
+          supabase.from('bug_reports').select('id').eq('status', 'open'),
+          supabase.from('feature_requests').select('id').eq('status', 'open'),
+        ]);
+
+        const total =
+          (messagesRes.data?.length || 0) +
+          (bugsRes.data?.length || 0) +
+          (featuresRes.data?.length || 0);
+
+        setUnreadInboxCount(total);
+      } catch (err) {
+        console.error('Error fetching inbox count:', err);
+      }
+    };
+
+    fetchInboxCount();
+  }, [user, isAdmin]);
 
   const handleSignOut = async () => {
     try {
@@ -111,6 +162,24 @@ export default function Layout({ children }) {
               )}
             </button>
 
+            {/* Admin inbox bell */}
+            {isAdmin && (
+              <button
+                onClick={() => navigate('/admin/inbox')}
+                style={{color: '#fbbf24', background: 'none', border: 'none', cursor: 'pointer', padding: '4px', position: 'relative', marginRight: '8px'}}
+                title="Admin inbox"
+              >
+                <svg style={{width: '28px', height: '28px'}} fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4V6c0-1.1-.9-2-2-2zm-2 12H4V6h14v10z"/>
+                </svg>
+                {unreadInboxCount > 0 && (
+                  <span style={{position: 'absolute', top: '-4px', right: '-4px', background: '#ef4444', color: '#ffffff', borderRadius: '50%', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 900}}>
+                    {unreadInboxCount}
+                  </span>
+                )}
+              </button>
+            )}
+
             {/* Mobile hamburger */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -130,6 +199,11 @@ export default function Layout({ children }) {
                   <Link to="/" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#ffffff', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>⛵ Outings</Link>
                   <Link to="/profile" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#ffffff', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>👤 Profile</Link>
                   <Link to="/bug-report" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#a7f3d0', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>🐛 Report Bug</Link>
+                  <Link to="/feature-request" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#a7f3d0', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>⭐ Feature Request</Link>
+                  <Link to="/contact-admin" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#a7f3d0', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>📧 Contact Admin</Link>
+                  {isAdmin && (
+                    <Link to="/admin/inbox" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#fbbf24', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>📬 Admin Inbox</Link>
+                  )}
                   <button onClick={handleSignOut} style={{display: 'block', width: '100%', textAlign: 'left', padding: '12px', color: '#fca5a5', fontSize: '1.25rem', fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer', borderRadius: '12px'}}>
                     🚪 Sign Out
                   </button>
@@ -139,6 +213,8 @@ export default function Layout({ children }) {
                   <Link to="/login" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#ffffff', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none'}}>Sign In</Link>
                   <Link to="/signup" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#ffffff', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none'}}>Sign Up</Link>
                   <Link to="/bug-report" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#a7f3d0', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>🐛 Report Bug</Link>
+                  <Link to="/feature-request" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#a7f3d0', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>⭐ Feature Request</Link>
+                  <Link to="/contact-admin" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#a7f3d0', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>📧 Contact Admin</Link>
                 </>
               )}
             </div>

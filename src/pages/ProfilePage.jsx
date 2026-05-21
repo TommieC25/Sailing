@@ -10,12 +10,7 @@ export default function ProfilePage() {
     bio: '',
     sailing_experience: '',
   });
-  const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState('');
-  const [uploading, setUploading] = useState(false);
-  const [boats, setBoats] = useState([]);
-  const [editingBoatId, setEditingBoatId] = useState(null);
-  const [boatFormData, setBoatFormData] = useState({
+  const [boatData, setBoatData] = useState({
     name: '',
     brand: '',
     model: '',
@@ -23,7 +18,11 @@ export default function ProfilePage() {
     capacity: '',
     mooring_location: '',
   });
-  const [boatSaving, setBoatSaving] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [boats, setBoats] = useState([]);
+  const [boatId, setBoatId] = useState(null);
 
   useEffect(() => {
     if (profile) {
@@ -37,19 +36,26 @@ export default function ProfilePage() {
 
   useEffect(() => {
     const fetchBoats = async () => {
-      console.log('Boats fetch check - user:', user?.id, 'profile:', profile, 'user_type:', profile?.user_type);
       if (!user || profile?.user_type !== 'owner') {
-        console.log('Skipping boats fetch - user exists:', !!user, 'is owner:', profile?.user_type === 'owner');
         return;
       }
       try {
-        console.log('Fetching boats for owner:', user.id);
         const { data } = await supabase
           .from('boats')
           .select('*')
           .eq('owner_id', user.id);
-        console.log('Boats data:', data);
-        setBoats(data || []);
+        if (data && data.length > 0) {
+          setBoatId(data[0].id);
+          setBoatData({
+            name: data[0].name || '',
+            brand: data[0].brand || '',
+            model: data[0].model || '',
+            size_ft: data[0].size_ft || '',
+            capacity: data[0].capacity || '',
+            mooring_location: data[0].mooring_location || '',
+          });
+          setBoats(data);
+        }
       } catch (err) {
         console.error('Error fetching boats:', err);
       }
@@ -60,6 +66,11 @@ export default function ProfilePage() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleBoatChange = (e) => {
+    const { name, value } = e.target;
+    setBoatData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handlePhotoUpload = async (e) => {
@@ -98,6 +109,21 @@ export default function ProfilePage() {
     try {
       setSaving(true);
       await updateProfile(formData);
+
+      if (profile?.user_type === 'owner' && boatId) {
+        await supabase
+          .from('boats')
+          .update({
+            name: boatData.name,
+            brand: boatData.brand || null,
+            model: boatData.model || null,
+            size_ft: boatData.size_ft ? parseInt(boatData.size_ft) : null,
+            capacity: parseInt(boatData.capacity) || 1,
+            mooring_location: boatData.mooring_location || null,
+          })
+          .eq('id', boatId);
+      }
+
       setMessage('Profile updated successfully!');
       setEditMode(false);
       setTimeout(() => setMessage(''), 3000);
@@ -105,63 +131,6 @@ export default function ProfilePage() {
       setMessage('Error updating profile: ' + err.message);
     } finally {
       setSaving(false);
-    }
-  };
-
-  const handleEditBoat = (boat) => {
-    setEditingBoatId(boat.id);
-    setBoatFormData({
-      name: boat.name || '',
-      brand: boat.brand || '',
-      model: boat.model || '',
-      size_ft: boat.size_ft || '',
-      capacity: boat.capacity || '',
-      mooring_location: boat.mooring_location || '',
-    });
-  };
-
-  const handleBoatChange = (e) => {
-    const { name, value } = e.target;
-    setBoatFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSaveBoat = async (boatId) => {
-    try {
-      setBoatSaving(true);
-      const { error } = await supabase
-        .from('boats')
-        .update({
-          name: boatFormData.name,
-          brand: boatFormData.brand || null,
-          model: boatFormData.model || null,
-          size_ft: boatFormData.size_ft ? parseInt(boatFormData.size_ft) : null,
-          capacity: parseInt(boatFormData.capacity) || 1,
-          mooring_location: boatFormData.mooring_location || null,
-        })
-        .eq('id', boatId);
-
-      if (error) throw error;
-
-      setBoats((prev) =>
-        prev.map((b) =>
-          b.id === boatId
-            ? {
-                ...b,
-                ...boatFormData,
-                size_ft: boatFormData.size_ft ? parseInt(boatFormData.size_ft) : null,
-                capacity: parseInt(boatFormData.capacity) || 1,
-              }
-            : b
-        )
-      );
-
-      setEditingBoatId(null);
-      setMessage('Boat updated successfully!');
-      setTimeout(() => setMessage(''), 3000);
-    } catch (err) {
-      setMessage('Error updating boat: ' + err.message);
-    } finally {
-      setBoatSaving(false);
     }
   };
 
@@ -239,122 +208,22 @@ export default function ProfilePage() {
               </p>
             </div>
 
-            {profile?.user_type === 'owner' && (
+            {profile?.user_type === 'owner' && boats.length > 0 && (
               <div>
-                <p className="text-gray-600">Your Boats</p>
-                {boats.length === 0 ? (
-                  <p className="text-lg text-gray-500">No boats added yet</p>
-                ) : (
-                  <div className="space-y-3 mt-2">
-                    {boats.map((boat) => (
-                      <div key={boat.id} className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                        {editingBoatId === boat.id ? (
-                          <div className="space-y-3">
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">Boat Name</label>
-                              <input
-                                type="text"
-                                name="name"
-                                value={boatFormData.name}
-                                onChange={handleBoatChange}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-                              />
-                            </div>
-                            <div className="grid grid-cols-2 gap-2">
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Brand</label>
-                                <input
-                                  type="text"
-                                  name="brand"
-                                  value={boatFormData.brand}
-                                  onChange={handleBoatChange}
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Model</label>
-                                <input
-                                  type="text"
-                                  name="model"
-                                  value={boatFormData.model}
-                                  onChange={handleBoatChange}
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-                                />
-                              </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-2">
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Size (ft)</label>
-                                <input
-                                  type="number"
-                                  name="size_ft"
-                                  value={boatFormData.size_ft}
-                                  onChange={handleBoatChange}
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Capacity</label>
-                                <input
-                                  type="number"
-                                  name="capacity"
-                                  value={boatFormData.capacity}
-                                  onChange={handleBoatChange}
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-                                />
-                              </div>
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">Mooring Location</label>
-                              <input
-                                type="text"
-                                name="mooring_location"
-                                value={boatFormData.mooring_location}
-                                onChange={handleBoatChange}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-                              />
-                            </div>
-                            <div className="flex gap-2">
-                              <button
-                                onClick={() => handleSaveBoat(boat.id)}
-                                disabled={boatSaving}
-                                className="flex-1 text-white py-2 rounded-lg font-medium transition disabled:opacity-50"
-                                style={{background: boatSaving ? '#9ca3af' : '#06b6d4'}}
-                              >
-                                {boatSaving ? 'Saving...' : 'Save'}
-                              </button>
-                              <button
-                                onClick={() => setEditingBoatId(null)}
-                                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-900 py-2 rounded-lg font-medium transition"
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          </div>
-                        ) : (
-                          <>
-                            <p className="font-semibold text-gray-900 text-lg">{boat.name}</p>
-                            <p className="text-sm text-gray-600">{boat.brand} {boat.model}</p>
-                            <div className="grid grid-cols-2 gap-2 mt-2 text-sm text-gray-700">
-                              <div>Size: {boat.size_ft}ft</div>
-                              <div>Capacity: {boat.capacity} people</div>
-                              {boat.mooring_location && (
-                                <div className="col-span-2">Location: {boat.mooring_location}</div>
-                              )}
-                            </div>
-                            <button
-                              onClick={() => handleEditBoat(boat)}
-                              className="mt-3 text-white px-4 py-2 rounded-lg font-medium text-sm transition hover:opacity-90"
-                              style={{background: '#06b6d4'}}
-                            >
-                              Edit Boat
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    ))}
+                <p className="text-gray-600">Your Boat</p>
+                {boats.map((boat) => (
+                  <div key={boat.id} className="bg-gray-50 border border-gray-200 rounded-lg p-4 mt-2">
+                    <p className="font-semibold text-gray-900 text-lg">{boat.name}</p>
+                    <p className="text-sm text-gray-600">{boat.brand} {boat.model}</p>
+                    <div className="grid grid-cols-2 gap-2 mt-2 text-sm text-gray-700">
+                      <div>Size: {boat.size_ft}ft</div>
+                      <div>Capacity: {boat.capacity} people</div>
+                      {boat.mooring_location && (
+                        <div className="col-span-2">Location: {boat.mooring_location}</div>
+                      )}
+                    </div>
                   </div>
-                )}
+                ))}
               </div>
             )}
 
@@ -367,49 +236,145 @@ export default function ProfilePage() {
             </button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Full Name
-              </label>
-              <input
-                type="text"
-                name="full_name"
-                value={formData.full_name}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean-500"
-              />
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Profile Information</h3>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Full Name
+                  </label>
+                  <input
+                    type="text"
+                    name="full_name"
+                    value={formData.full_name}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Bio
+                  </label>
+                  <textarea
+                    name="bio"
+                    value={formData.bio}
+                    onChange={handleChange}
+                    rows="4"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    placeholder="Tell other sailors about yourself..."
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Sailing Experience
+                  </label>
+                  <select
+                    name="sailing_experience"
+                    value={formData.sailing_experience}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  >
+                    <option value="beginner">Beginner</option>
+                    <option value="intermediate">Intermediate</option>
+                    <option value="advanced">Advanced</option>
+                  </select>
+                </div>
+              </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Bio
-              </label>
-              <textarea
-                name="bio"
-                value={formData.bio}
-                onChange={handleChange}
-                rows="4"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean-500"
-                placeholder="Tell other sailors about yourself..."
-              />
-            </div>
+            {profile?.user_type === 'owner' && (
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Boat Information</h3>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Sailing Experience
-              </label>
-              <select
-                name="sailing_experience"
-                value={formData.sailing_experience}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean-500"
-              >
-                <option value="beginner">Beginner</option>
-                <option value="intermediate">Intermediate</option>
-                <option value="advanced">Advanced</option>
-              </select>
-            </div>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Boat Name
+                    </label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={boatData.name}
+                      onChange={handleBoatChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Brand
+                      </label>
+                      <input
+                        type="text"
+                        name="brand"
+                        value={boatData.brand}
+                        onChange={handleBoatChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Model
+                      </label>
+                      <input
+                        type="text"
+                        name="model"
+                        value={boatData.model}
+                        onChange={handleBoatChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Size (ft)
+                      </label>
+                      <input
+                        type="number"
+                        name="size_ft"
+                        value={boatData.size_ft}
+                        onChange={handleBoatChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Capacity (people)
+                      </label>
+                      <input
+                        type="number"
+                        name="capacity"
+                        value={boatData.capacity}
+                        onChange={handleBoatChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Mooring Location
+                    </label>
+                    <input
+                      type="text"
+                      name="mooring_location"
+                      value={boatData.mooring_location}
+                      onChange={handleBoatChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="flex gap-4">
               <button

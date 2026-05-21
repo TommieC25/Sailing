@@ -27,12 +27,18 @@ export default function ProfilePage() {
 
   useEffect(() => {
     const fetchBoats = async () => {
-      if (!user || profile?.user_type !== 'owner') return;
+      console.log('Boats fetch check - user:', user?.id, 'profile:', profile, 'user_type:', profile?.user_type);
+      if (!user || profile?.user_type !== 'owner') {
+        console.log('Skipping boats fetch - user exists:', !!user, 'is owner:', profile?.user_type === 'owner');
+        return;
+      }
       try {
+        console.log('Fetching boats for owner:', user.id);
         const { data } = await supabase
           .from('boats')
           .select('*')
           .eq('owner_id', user.id);
+        console.log('Boats data:', data);
         setBoats(data || []);
       } catch (err) {
         console.error('Error fetching boats:', err);
@@ -54,7 +60,6 @@ export default function ProfilePage() {
       setUploading(true);
       setMessage('');
 
-      // Upload to Supabase Storage
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}-${Date.now()}.${fileExt}`;
       const filePath = `profile-photos/${fileName}`;
@@ -65,11 +70,9 @@ export default function ProfilePage() {
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
       const { data } = supabase.storage.from('profiles').getPublicUrl(filePath);
       const photoUrl = data.publicUrl;
 
-      // Update profile
       await updateProfile({ photo_url: photoUrl });
       setMessage('Photo updated successfully!');
       setTimeout(() => setMessage(''), 3000);

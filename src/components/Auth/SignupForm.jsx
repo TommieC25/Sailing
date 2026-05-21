@@ -34,8 +34,8 @@ export default function SignupForm() {
     confirmPassword: '',
     fullName: '',
     gender: '',
-    userType: 'crew',
-    sailingExperience: 'beginner',
+    userType: '',
+    sailingExperience: '',
   });
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
@@ -76,6 +76,14 @@ export default function SignupForm() {
     }
     if (!formData.gender) {
       setError('Please select your gender');
+      return;
+    }
+    if (!formData.userType) {
+      setError('Please select your account type');
+      return;
+    }
+    if (!formData.sailingExperience) {
+      setError('Please select your experience level');
       return;
     }
     if (!photoFile) {
@@ -224,26 +232,30 @@ export default function SignupForm() {
             </div>
 
             <div style={styles.fieldGroup}>
-              <label style={styles.label}>I am a...</label>
+              <label style={styles.label}>I am a... *</label>
               <select
                 name="userType"
                 value={formData.userType}
                 onChange={handleChange}
+                required
                 style={styles.select}
               >
+                <option value="">Select account type</option>
                 <option value="crew">Crew Member</option>
                 <option value="owner">Boat Owner / Skipper</option>
               </select>
             </div>
 
             <div style={styles.fieldGroup}>
-              <label style={styles.label}>Experience Level</label>
+              <label style={styles.label}>Experience Level *</label>
               <select
                 name="sailingExperience"
                 value={formData.sailingExperience}
                 onChange={handleChange}
+                required
                 style={styles.select}
               >
+                <option value="">Select experience level</option>
                 <option value="beginner">Beginner</option>
                 <option value="intermediate">Intermediate</option>
                 <option value="advanced">Advanced</option>

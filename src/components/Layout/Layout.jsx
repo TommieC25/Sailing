@@ -63,6 +63,7 @@ export default function Layout({ children }) {
 
     const checkAdmin = async () => {
       const adminStatus = await checkIsAdmin(user.id);
+      console.log('🔐 Admin check:', { userId: user.id, isAdmin: adminStatus });
       setIsAdmin(adminStatus);
     };
 

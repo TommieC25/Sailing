@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
 
+const HEADER_BG = 'linear-gradient(135deg, #0c2340 0%, #0369a1 100%)';
+
 export default function HomePage() {
   const { user, profile } = useAuth();
   const [outings, setOutings] = useState([]);
@@ -10,20 +12,22 @@ export default function HomePage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
+    if (!user) return;
+
     const fetchOutings = async () => {
       try {
-        const { data, error } = await supabase
+        const { data, error: err } = await supabase
           .from('outings')
           .select(`
             *,
             boats (name, boat_type, size_ft, capacity, owner_id),
-            skipper:users (full_name, photo_url)
+            skipper:skipper_id (full_name)
           `)
           .gte('outing_date', new Date().toISOString().split('T')[0])
           .order('outing_date', { ascending: true })
-          .limit(20);
+          .limit(50);
 
-        if (error) throw error;
+        if (err) throw err;
         setOutings(data || []);
       } catch (err) {
         setError(err.message);
@@ -32,169 +36,139 @@ export default function HomePage() {
       }
     };
 
-    if (user) fetchOutings();
+    fetchOutings();
   }, [user]);
 
-  if (!user) {
-    return (
-      <div className="text-center py-12">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">Welcome to CGSC Sailing App</h2>
-        <p className="text-gray-600 mb-6">Sign in to view upcoming outings and connect with other sailors.</p>
-      </div>
-    );
-  }
+  if (!user) return null;
+
+  const yourOutings = outings.filter((o) => o.skipper_id === user?.id);
+  const otherOutings = outings.filter((o) => o.skipper_id !== user?.id);
+  const isSkipper = profile?.user_type === 'owner';
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6">
-
-      {/* Welcome Banner */}
-      <div className="mb-8 text-center">
-        <h1 className="text-3xl font-extrabold text-gray-900 leading-tight mb-2">
-          Welcome to CGSC ⛵
-        </h1>
-        <p className="text-xl text-gray-600 font-medium">Where Sailors Meet Adventures</p>
-      </div>
-
-      {/* Ready to sail */}
-      <div className="bg-blue-50 border border-blue-100 rounded-2xl p-5 mb-6">
-        <p className="text-lg font-bold text-blue-900 mb-1">Ready to sail? 🌊</p>
-        <p className="text-gray-700 text-base leading-relaxed">
-          You're part of a community of sailors at Coconut Grove Sailing Club. Whether you own a boat or love crewing, this app connects you with people and outings.
+    <div style={{marginLeft: '-16px', marginRight: '-16px', marginTop: '-24px'}}>
+      {/* Header with greeting */}
+      <div style={{background: HEADER_BG, padding: '32px 20px', color: '#ffffff', marginBottom: '24px'}}>
+        <h1 style={{fontSize: '2rem', fontWeight: 900, margin: '0 0 4px 0'}}>Hello, {profile?.full_name || 'Sailor'}! 👋</h1>
+        <p style={{fontSize: '1.125rem', margin: 0, opacity: 0.95}}>
+          {isSkipper ? "Your outings are waiting for crew." : "Find your next adventure on the water."}
         </p>
       </div>
 
-      {/* How it works */}
-      <div className="mb-6">
-        <h2 className="text-xl font-extrabold text-gray-900 mb-4">Here's How It Works</h2>
-
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-4">
-          <p className="text-base font-bold text-gray-800 mb-2">🙋 If you crew <span className="font-normal text-gray-500">(no boat needed)</span></p>
-          <div className="space-y-1 text-base text-gray-700">
-            <p>Browse upcoming sailings → Find one that fits your schedule</p>
-            <p>→ Request to join → Skipper approves → <strong>You're in!</strong></p>
-            <p className="text-gray-500 text-sm mt-2">Chat with your crew before you go, share photos after.</p>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-          <p className="text-base font-bold text-gray-800 mb-2">🚢 If you own a boat</p>
-          <div className="space-y-1 text-base text-gray-700">
-            <p>Post your upcoming outing → Crew members request to join</p>
-            <p>→ You pick who comes → <strong>Manage from your dashboard.</strong></p>
-          </div>
-        </div>
-      </div>
-
-      {/* What you can do */}
-      <div className="mb-6">
-        <h2 className="text-xl font-extrabold text-gray-900 mb-4">What You Can Do Right Now</h2>
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 divide-y divide-gray-100">
-          {[
-            { emoji: '🧭', title: 'Browse Outings', desc: 'See all upcoming sails. Tap any one to learn more.' },
-            { emoji: '⛵', title: 'Request to Join', desc: 'Found one you like? Ask the skipper if you can crew.' },
-            { emoji: '👥', title: 'See Your Crew', desc: 'Once approved, chat and share photos with your crew.' },
-            { emoji: '📋', title: 'Manage Your Boat', desc: 'Owners can post outings and approve crew from "My Outings".' },
-          ].map(({ emoji, title, desc }) => (
-            <div key={title} className="flex items-start gap-3 p-4">
-              <span className="text-2xl">{emoji}</span>
-              <div>
-                <p className="font-bold text-gray-900 text-base">{title}</p>
-                <p className="text-gray-600 text-sm mt-0.5">{desc}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Getting started */}
-      <div className="mb-8">
-        <h2 className="text-xl font-extrabold text-gray-900 mb-4">Getting Started</h2>
-        <div className="space-y-3">
-          {[
-            { n: '1', text: 'Complete your profile — Add a photo and tell us about your sailing experience.' },
-            { n: '2', text: 'Browse outings — Tap "Outings" to see what\'s sailing this week.' },
-            { n: '3', text: 'Request to join — Found something fun? Request it. Skippers respond fast.' },
-            { n: '4', text: 'Show up and sail — That\'s it. Enjoy the water. 🌅' },
-          ].map(({ n, text }) => (
-            <div key={n} className="flex items-start gap-3">
-              <span className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold text-white" style={{background: '#0c2340'}}>{n}</span>
-              <p className="text-gray-700 text-base pt-0.5">{text}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Outings list */}
-      <div>
-        <h2 className="text-xl font-extrabold text-gray-900 mb-4">Upcoming Outings</h2>
-
-        {loading && (
-          <div className="flex justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          </div>
-        )}
+      {/* Main content with padding */}
+      <div style={{padding: '0 20px 40px 20px'}}>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">{error}</div>
+          <div style={{background: '#fee2e2', border: '2px solid #dc2626', color: '#7f1d1d', padding: '16px', borderRadius: '12px', marginBottom: '24px', fontSize: '1rem', fontWeight: 600}}>
+            {error}
+          </div>
         )}
 
-        {!loading && outings.length === 0 && (
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-            <div className="text-center py-10 px-6" style={{background: 'linear-gradient(135deg, #0c2340 0%, #0369a1 100%)'}}>
-              <p className="text-6xl mb-4">⛵</p>
-              <p className="text-white text-2xl font-black mb-2">No outings posted yet</p>
-              <p className="text-blue-100 text-lg font-semibold">Be the first — or check back soon as skippers add their upcoming sails.</p>
+        {loading && (
+          <div style={{textAlign: 'center', padding: '40px'}}>
+            <div style={{display: 'inline-block', width: '40px', height: '40px', borderRadius: '50%', border: '4px solid #e2e8f0', borderTopColor: '#0369a1', animation: 'spin 0.8s linear infinite'}} />
+            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+          </div>
+        )}
+
+        {!loading && isSkipper && yourOutings.length === 0 && (
+          <div style={{background: '#ffffff', border: '2px solid #dbeafe', borderRadius: '16px', padding: '32px', textAlign: 'center', marginBottom: '32px'}}>
+            <p style={{fontSize: '3rem', margin: '0 0 16px 0'}}>🚢</p>
+            <p style={{fontSize: '1.5rem', fontWeight: 900, color: '#1e293b', margin: '0 0 8px 0'}}>No outings posted yet</p>
+            <p style={{fontSize: '1.125rem', color: '#64748b', margin: '0 0 24px 0'}}>Post your first outing to find crew and get sailing!</p>
+            <Link
+              to="/create-outing"
+              style={{display: 'inline-block', background: '#0369a1', color: '#ffffff', padding: '16px 32px', borderRadius: '12px', fontWeight: 900, fontSize: '1.125rem', textDecoration: 'none'}}
+            >
+              + Post Outing
+            </Link>
+          </div>
+        )}
+
+        {/* Your Outings (for skipper) */}
+        {!loading && isSkipper && yourOutings.length > 0 && (
+          <div style={{marginBottom: '32px'}}>
+            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '16px'}}>
+              <h2 style={{fontSize: '1.5rem', fontWeight: 900, color: '#1e293b', margin: 0}}>📋 Your Outings ({yourOutings.length})</h2>
+              <Link to="/create-outing" style={{fontSize: '1rem', fontWeight: 900, color: '#0369a1', textDecoration: 'none'}}>+ New</Link>
             </div>
-            <div className="p-6 space-y-4">
-              <p className="text-gray-800 text-xl font-black">While you wait:</p>
-              {[
-                { emoji: '👤', text: 'Complete your profile so skippers know who you are' },
-                { emoji: '🔔', text: 'Check back regularly — outings get posted weekly' },
-                { emoji: '🚢', text: 'Own a boat? Post the first outing from My Outings' },
-              ].map(({ emoji, text }) => (
-                <div key={emoji} className="flex items-start gap-3">
-                  <span className="text-2xl">{emoji}</span>
-                  <p className="text-gray-700 text-lg font-semibold">{text}</p>
-                </div>
+            <div style={{display: 'grid', gap: '16px'}}>
+              {yourOutings.map((outing) => (
+                <OutingCard key={outing.id} outing={outing} isYours={true} />
               ))}
             </div>
           </div>
         )}
 
-        {!loading && outings.length > 0 && (
-          <div className="space-y-4">
-            {outings.map((outing) => (
-              <div key={outing.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-                <div className="flex items-start justify-between mb-3">
-                  <h3 className="text-lg font-bold text-gray-900 leading-tight">{outing.title}</h3>
-                  <span className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-full font-medium ml-2 flex-shrink-0">
-                    {outing.status}
-                  </span>
-                </div>
+        {/* Other Outings */}
+        {!loading && otherOutings.length > 0 && (
+          <div>
+            <h2 style={{fontSize: '1.5rem', fontWeight: 900, color: '#1e293b', marginBottom: '16px', margin: '0 0 16px 0'}}>
+              {isSkipper ? '⛵ Available Outings' : '⛵ Outings'}
+            </h2>
+            <div style={{display: 'grid', gap: '16px'}}>
+              {otherOutings.map((outing) => (
+                <OutingCard key={outing.id} outing={outing} isYours={false} />
+              ))}
+            </div>
+          </div>
+        )}
 
-                <div className="space-y-1.5 mb-3 text-sm text-gray-600">
-                  <p>🚢 <span className="font-medium">{outing.boats?.name}</span> · {outing.boats?.boat_type}</p>
-                  <p>📅 <span className="font-medium">{new Date(outing.outing_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span> at {outing.outing_time}</p>
-                  <p>👤 Skipper: <span className="font-medium">{outing.skipper?.full_name || 'TBD'}</span></p>
-                  <p>🙋 <span className="font-medium">{outing.capacity_available} spots</span> available</p>
-                </div>
-
-                {outing.description && (
-                  <p className="text-sm text-gray-500 mb-4 line-clamp-2">{outing.description}</p>
-                )}
-
-                <Link
-                  to={`/outing/${outing.id}`}
-                  className="block w-full text-center py-3 rounded-xl text-base font-bold text-white transition"
-                  style={{background: 'linear-gradient(135deg, #0c2340, #0369a1)'}}
-                >
-                  View Details
-                </Link>
-              </div>
-            ))}
+        {!loading && outings.length === 0 && (
+          <div style={{background: '#ffffff', border: '2px solid #dbeafe', borderRadius: '16px', padding: '32px', textAlign: 'center'}}>
+            <p style={{fontSize: '3rem', margin: '0 0 16px 0'}}>⛵</p>
+            <p style={{fontSize: '1.5rem', fontWeight: 900, color: '#1e293b', margin: '0 0 8px 0'}}>No outings yet</p>
+            <p style={{fontSize: '1.125rem', color: '#64748b', margin: 0}}>Check back soon as skippers post their upcoming sails!</p>
           </div>
         )}
       </div>
     </div>
+  );
+}
+
+function OutingCard({ outing, isYours }) {
+  const totalSpots = outing.boats?.capacity || 0;
+  const availableSpots = outing.capacity_available || 0;
+  const filledSpots = totalSpots - availableSpots;
+
+  return (
+    <Link
+      to={`/outing/${outing.id}`}
+      style={{display: 'block', textDecoration: 'none', color: 'inherit'}}
+    >
+      <div style={{background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.1)'}}>
+        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '12px'}}>
+          <h3 style={{fontSize: '1.25rem', fontWeight: 900, color: '#1e293b', margin: 0}}>{outing.title}</h3>
+          {availableSpots > 0 && !isYours && (
+            <span style={{background: '#dcfce7', color: '#166534', padding: '6px 12px', borderRadius: '8px', fontSize: '0.875rem', fontWeight: 700, flexShrink: 0}}>
+              {availableSpots} spot{availableSpots !== 1 ? 's' : ''}
+            </span>
+          )}
+          {availableSpots === 0 && !isYours && (
+            <span style={{background: '#fee2e2', color: '#991b1b', padding: '6px 12px', borderRadius: '8px', fontSize: '0.875rem', fontWeight: 700, flexShrink: 0}}>
+              Full
+            </span>
+          )}
+          {isYours && (
+            <span style={{background: '#fef3c7', color: '#92400e', padding: '6px 12px', borderRadius: '8px', fontSize: '0.875rem', fontWeight: 700}}>
+              Your outing
+            </span>
+          )}
+        </div>
+
+        <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '1rem', color: '#64748b', marginBottom: '12px', fontWeight: 600}}>
+          <div>📅 {new Date(outing.outing_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} at {outing.outing_time}</div>
+          <div>🚢 {outing.boats?.name} ({outing.boats?.size_ft}ft)</div>
+          <div>👤 {outing.skipper?.full_name || 'TBD'}</div>
+          <div>{filledSpots} of {totalSpots} crew</div>
+        </div>
+
+        {outing.description && (
+          <p style={{color: '#64748b', margin: '12px 0 0 0', fontSize: '0.95rem', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden'}}>
+            {outing.description}
+          </p>
+        )}
+      </div>
+    </Link>
   );
 }

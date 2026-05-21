@@ -54,9 +54,7 @@ export default function SignupForm() {
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
 
         <div className="mb-6 text-center">
-          <div className="text-4xl mb-2">⛵</div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">CGSC Sailing</h1>
-          <p className="text-blue-200 text-sm mt-1">Coconut Grove Sailing Club</p>
+          <img src="/Sailing/Club Logo.jpg" alt="CGSC Logo" className="h-20 w-auto mx-auto mb-2" />
         </div>
 
         <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-8">

@@ -3,6 +3,7 @@ import { useAuth } from './hooks/useAuth';
 import Layout from './components/Layout/Layout';
 import HomePage from './pages/HomePage';
 import ProfilePage from './pages/ProfilePage';
+import CommunityPage from './pages/CommunityPage';
 import OuttingDetailPage from './pages/OuttingDetailPage';
 import SkipperDashboard from './pages/SkipperDashboard';
 import CreateOutingPage from './pages/CreateOutingPage';
@@ -63,7 +64,9 @@ function App() {
         <Route path="/signup" element={<AuthRoute><SignupForm /></AuthRoute>} />
         <Route path="/login" element={<AuthRoute><LoginForm /></AuthRoute>} />
         <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+        <Route path="/community" element={<ProtectedRoute><CommunityPage /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+        <Route path="/profile/:id" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
         <Route path="/outing/:id" element={<ProtectedRoute><OuttingDetailPage /></ProtectedRoute>} />
         <Route path="/skipper-dashboard" element={<ProtectedRoute><SkipperDashboard /></ProtectedRoute>} />
         <Route path="/create-outing" element={<ProtectedRoute><CreateOutingPage /></ProtectedRoute>} />

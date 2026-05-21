@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
 
@@ -23,7 +24,12 @@ const styles = {
 };
 
 export default function ProfilePage() {
+  const { id: profileId } = useParams();
   const { user, profile, updateProfile } = useAuth();
+  const [viewedProfile, setViewedProfile] = useState(null);
+  const [viewedBoats, setViewedBoats] = useState([]);
+  const [loading, setLoading] = useState(profileId ? true : false);
+  const isViewingOther = !!profileId && profileId !== user?.id;
   const [editMode, setEditMode] = useState(false);
   const [formData, setFormData] = useState({
     full_name: '',
@@ -45,7 +51,45 @@ export default function ProfilePage() {
   const [boatId, setBoatId] = useState(null);
 
   useEffect(() => {
-    if (profile) {
+    if (isViewingOther) {
+      const fetchViewedProfile = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', profileId)
+            .single();
+
+          if (error) throw error;
+          setViewedProfile(data);
+        } catch (err) {
+          console.error('Error fetching profile:', err);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchViewedProfile();
+    }
+  }, [profileId, isViewingOther]);
+
+  useEffect(() => {
+    const fetchViewedBoats = async () => {
+      if (!isViewingOther || !viewedProfile) return;
+      try {
+        const { data } = await supabase
+          .from('boats')
+          .select('*')
+          .eq('owner_id', profileId);
+        setViewedBoats(data || []);
+      } catch (err) {
+        console.error('Error fetching boats:', err);
+      }
+    };
+    fetchViewedBoats();
+  }, [profileId, isViewingOther, viewedProfile]);
+
+  useEffect(() => {
+    if (profile && !isViewingOther) {
       setFormData({
         full_name: profile.full_name || '',
         bio: profile.bio || '',
@@ -53,7 +97,7 @@ export default function ProfilePage() {
         phone: profile.phone || '',
       });
     }
-  }, [profile]);
+  }, [profile, isViewingOther]);
 
   useEffect(() => {
     const fetchBoats = async () => {
@@ -163,10 +207,21 @@ export default function ProfilePage() {
     return <div style={{textAlign: 'center', paddingTop: '3rem'}}>Loading...</div>;
   }
 
+  if (isViewingOther && loading) {
+    return <div style={{textAlign: 'center', paddingTop: '3rem'}}>Loading profile...</div>;
+  }
+
+  if (isViewingOther && !viewedProfile) {
+    return <div style={{textAlign: 'center', paddingTop: '3rem'}}>Profile not found</div>;
+  }
+
+  const displayProfile = isViewingOther ? viewedProfile : profile;
+  const displayBoats = isViewingOther ? viewedBoats : boats;
+
   return (
     <div style={styles.container}>
       <div style={styles.card}>
-        <h1 style={styles.title}>My Profile</h1>
+        <h1 style={styles.title}>{isViewingOther ? displayProfile?.full_name : 'My Profile'}</h1>
 
         {message && (
           <div style={{marginBottom: '1.5rem', padding: '1rem', borderRadius: '6px', fontSize: '1.1rem', background: message.includes('Error') ? '#fee' : '#efe', color: message.includes('Error') ? '#c00' : '#060'}}>
@@ -176,27 +231,29 @@ export default function ProfilePage() {
 
         <div style={styles.photoSection}>
           <div>
-            {profile?.photo_url ? (
-              <img src={profile.photo_url} alt={profile.full_name} style={styles.photo} />
+            {displayProfile?.photo_url ? (
+              <img src={displayProfile.photo_url} alt={displayProfile.full_name} style={styles.photo} />
             ) : (
               <div style={styles.photoPlaceholder}>📷</div>
             )}
           </div>
-          <label>
-            <span style={{...styles.button, display: 'block', cursor: 'pointer'}}>
-              {uploading ? 'Uploading...' : 'Change Photo'}
-            </span>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handlePhotoUpload}
-              disabled={uploading}
-              style={{display: 'none'}}
-            />
-          </label>
+          {!isViewingOther && (
+            <label>
+              <span style={{...styles.button, display: 'block', cursor: 'pointer'}}>
+                {uploading ? 'Uploading...' : 'Change Photo'}
+              </span>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handlePhotoUpload}
+                disabled={uploading}
+                style={{display: 'none'}}
+              />
+            </label>
+          )}
         </div>
 
-        {!editMode ? (
+        {!editMode && !isViewingOther ? (
           <>
             <div style={styles.topContact}>
               <div style={styles.contactCol}>
@@ -253,6 +310,42 @@ export default function ProfilePage() {
             <button onClick={() => setEditMode(true)} style={{...styles.button, marginTop: '2rem', fontSize: '1.1rem', padding: '1rem 2rem'}}>
               Edit Profile
             </button>
+          </>
+        ) : isViewingOther ? (
+          <>
+            <div style={styles.section}>
+              <div style={styles.label}>Full Name</div>
+              <div style={styles.value}>{displayProfile?.full_name || 'Not set'}</div>
+            </div>
+
+            <div style={styles.section}>
+              <div style={styles.label}>Bio</div>
+              <div style={styles.value}>{displayProfile?.bio || 'No bio added'}</div>
+            </div>
+
+            <div style={styles.section}>
+              <div style={styles.label}>Sailing Experience</div>
+              <div style={styles.value}>{displayProfile?.sailing_experience ? displayProfile.sailing_experience.charAt(0).toUpperCase() + displayProfile.sailing_experience.slice(1) : 'Not set'}</div>
+            </div>
+
+            {displayProfile?.user_type === 'owner' && displayBoats.length > 0 && (
+              <div style={styles.section}>
+                <div style={styles.sectionTitle}>Boat</div>
+                {displayBoats.map((boat) => (
+                  <div key={boat.id} style={styles.boat}>
+                    <div style={{fontSize: '1.25rem', fontWeight: 'bold', color: '#111', marginBottom: '0.5rem'}}>{boat.name}</div>
+                    <div style={{fontSize: '1rem', color: '#666', marginBottom: '1rem'}}>{[boat.brand, boat.model, boat.color].filter(Boolean).join(' / ')}</div>
+                    <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', fontSize: '1rem', color: '#333'}}>
+                      <div>Size: {boat.size_ft}ft</div>
+                      <div>Capacity: {boat.capacity}</div>
+                      {boat.mooring_location && (
+                        <div style={{gridColumn: '1/-1'}}>Location: {boat.mooring_location}</div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </>
         ) : (
           <form onSubmit={handleSubmit}>

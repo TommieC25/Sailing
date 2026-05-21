@@ -175,19 +175,33 @@ export default function ProfilePage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setMessage('');
+
+    if (!formData.full_name?.trim()) {
+      setMessage('Please enter your full name');
+      return;
+    }
+
+    if (!formData.gender) {
+      setMessage('Please select your gender');
+      return;
+    }
+
+    if (!formData.sailing_experience) {
+      setMessage('Please select your sailing experience level');
+      return;
+    }
+
     try {
       setSaving(true);
 
       const updateData = {
         full_name: formData.full_name,
+        gender: formData.gender,
         bio: formData.bio,
         sailing_experience: formData.sailing_experience,
         phone: formData.phone,
       };
-
-      if (formData.gender) {
-        updateData.gender = formData.gender;
-      }
 
       await updateProfile(updateData);
 
@@ -372,12 +386,12 @@ export default function ProfilePage() {
               <div style={{fontSize: '1.25rem', fontWeight: 900, color: '#1e293b', marginBottom: '1.5rem', paddingBottom: '12px', borderBottom: '2px solid #e0f2fe'}}>Profile Information</div>
 
               <div>
-                <div style={styles.label}>Full Name</div>
+                <div style={styles.label}>Full Name *</div>
                 <input type="text" name="full_name" value={formData.full_name} onChange={handleChange} style={styles.input} />
               </div>
 
               <div>
-                <div style={styles.label}>Gender</div>
+                <div style={styles.label}>Gender *</div>
                 <select name="gender" value={formData.gender} onChange={handleChange} style={styles.select}>
                   <option value="">Select gender</option>
                   <option value="M">Male</option>
@@ -393,7 +407,7 @@ export default function ProfilePage() {
               </div>
 
               <div>
-                <div style={styles.label}>Sailing Experience</div>
+                <div style={styles.label}>Sailing Experience *</div>
                 <select name="sailing_experience" value={formData.sailing_experience} onChange={handleChange} style={styles.select}>
                   <option value="beginner">Beginner</option>
                   <option value="intermediate">Intermediate</option>

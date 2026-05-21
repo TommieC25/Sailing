@@ -96,11 +96,15 @@ export default function Layout({ children }) {
 
   const handleSignOut = async () => {
     try {
+      console.log('Starting sign out...');
       setMobileMenuOpen(false);
       await signOut();
-      navigate('/login');
+      console.log('Sign out complete, navigating to login');
+      // Use replace to prevent back button issues
+      navigate('/login', { replace: true });
     } catch (err) {
       console.error('Sign out error:', err);
+      alert('Sign out failed: ' + err.message);
     }
   };
 

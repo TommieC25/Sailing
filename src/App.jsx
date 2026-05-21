@@ -6,6 +6,7 @@ import ProfilePage from './pages/ProfilePage';
 import CommunityPage from './pages/CommunityPage';
 import OutingDetailPage from './pages/OutingDetailPage';
 import SkipperDashboard from './pages/SkipperDashboard';
+import AdminDashboard from './pages/AdminDashboard';
 import CreateOutingPage from './pages/CreateOutingPage';
 import BugReportPage from './pages/BugReportPage';
 import FeatureRequestPage from './pages/FeatureRequestPage';
@@ -64,6 +65,24 @@ function AuthRoute({ children }) {
   return children;
 }
 
+function AdminRoute({ children }) {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <Layout>
+        <Spinner />
+      </Layout>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <Layout>{children}</Layout>;
+}
+
 function App() {
   return (
     <AuthProvider>
@@ -84,6 +103,7 @@ function App() {
           <Route path="/feature-request" element={<ProtectedRoute><FeatureRequestPage /></ProtectedRoute>} />
           <Route path="/contact-admin" element={<ProtectedRoute><ContactAdminPage /></ProtectedRoute>} />
           <Route path="/admin/inbox" element={<ProtectedRoute><AdminInboxPage /></ProtectedRoute>} />
+          <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
           <Route path="/announcements" element={<ProtectedRoute><AnnouncementsFeed /></ProtectedRoute>} />
         </Routes>
       </Router>

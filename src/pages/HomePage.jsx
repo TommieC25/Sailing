@@ -138,9 +138,9 @@ function OutingCard({ outing, isYours }) {
     >
       <div style={{background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.1)'}}>
         <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '12px'}}>
-          <h3 style={{fontSize: '1.25rem', fontWeight: 900, color: '#1e293b', margin: 0}}>{outing.title}</h3>
+          <h3 style={{fontSize: '1.5rem', fontWeight: 900, color: '#1e293b', margin: 0}}>{outing.title}</h3>
           {availableSpots > 0 && !isYours && (
-            <span style={{background: '#dcfce7', color: '#166534', padding: '6px 12px', borderRadius: '8px', fontSize: '0.875rem', fontWeight: 700, flexShrink: 0}}>
+            <span style={{background: '#dcfce7', color: '#166534', padding: '6px 12px', borderRadius: '8px', fontSize: '1rem', fontWeight: 700, flexShrink: 0}}>
               {availableSpots} spot{availableSpots !== 1 ? 's' : ''}
             </span>
           )}
@@ -156,7 +156,7 @@ function OutingCard({ outing, isYours }) {
           )}
         </div>
 
-        <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '1rem', color: '#64748b', marginBottom: '16px', fontWeight: 600}}>
+        <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '1.125rem', color: '#64748b', marginBottom: '16px', fontWeight: 600}}>
           <div>📅 {new Date(outing.outing_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} at {outing.outing_time}</div>
           <div>🚢 {outing.boats?.name} ({outing.boats?.size_ft}ft)</div>
           <div>👤 {outing.skipper?.full_name || 'TBD'}</div>
@@ -164,12 +164,12 @@ function OutingCard({ outing, isYours }) {
         </div>
 
         {outing.description && (
-          <p style={{color: '#64748b', margin: '0 0 16px 0', fontSize: '0.95rem', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden'}}>
+          <p style={{color: '#64748b', margin: '0 0 16px 0', fontSize: '1.1rem', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden'}}>
             {outing.description}
           </p>
         )}
 
-        <div style={{background: '#06b6d4', color: '#ffffff', padding: '12px 20px', borderRadius: '8px', textAlign: 'center', fontWeight: 900, fontSize: '1rem'}}>
+        <div style={{background: '#06b6d4', color: '#ffffff', padding: '12px 20px', borderRadius: '8px', textAlign: 'center', fontWeight: 900, fontSize: '1.125rem'}}>
           View Details →
         </div>
       </div>

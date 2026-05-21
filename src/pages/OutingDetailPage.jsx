@@ -5,7 +5,7 @@ import { supabase } from '../utils/supabaseClient';
 
 const styles = {
   container: { display: 'grid', gap: '24px' },
-  backButton: { background: 'none', border: 'none', color: '#0369a1', fontSize: '1.125rem', fontWeight: 600, marginBottom: '16px', cursor: 'pointer', textDecoration: 'none' },
+  backButton: { background: '#e0f2fe', border: '2px solid #0369a1', color: '#0369a1', fontSize: '1.125rem', fontWeight: 900, padding: '12px 16px', borderRadius: '8px', marginBottom: '16px', cursor: 'pointer', textDecoration: 'none', transition: 'all 0.2s' },
   mainCard: { background: '#ffffff', borderRadius: '8px', boxShadow: '0 10px 15px rgba(0,0,0,0.1)', padding: '32px' },
   header: { display: 'grid', gap: '16px', marginBottom: '24px' },
   title: { fontSize: '1.875rem', fontWeight: 'bold', color: '#1f2937', margin: 0 },
@@ -253,6 +253,26 @@ export default function OutingDetailPage() {
     }
   };
 
+  const handleDeleteOuting = async () => {
+    if (!window.confirm('Are you sure you want to delete this outing? This cannot be undone.')) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const { error } = await supabase
+        .from('outings')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      navigate('/');
+    } catch (err) {
+      setError(err.message || 'Failed to delete outing');
+      setLoading(false);
+    }
+  };
+
   const generateCalendarLink = (outing) => {
     const date = new Date(outing.outing_date);
     const year = date.getFullYear();
@@ -296,7 +316,12 @@ export default function OutingDetailPage() {
 
   return (
     <div style={styles.container}>
-      <button onClick={() => navigate('/')} style={styles.backButton}>
+      <button
+        onClick={() => navigate('/')}
+        style={styles.backButton}
+        onMouseEnter={(e) => e.target.style.background = '#bfdbfe'}
+        onMouseLeave={(e) => e.target.style.background = '#e0f2fe'}
+      >
         ← Back to Outings
       </button>
 
@@ -307,6 +332,19 @@ export default function OutingDetailPage() {
             {outing.status}
           </span>
         </div>
+
+        {isSkipper && (
+          <div style={{marginBottom: '24px'}}>
+            <button
+              onClick={handleDeleteOuting}
+              style={{background: '#dc2626', color: '#ffffff', padding: '12px 16px', borderRadius: '8px', fontSize: '1rem', fontWeight: 900, border: 'none', cursor: 'pointer', transition: 'all 0.2s'}}
+              onMouseEnter={(e) => e.target.style.background = '#b91c1c'}
+              onMouseLeave={(e) => e.target.style.background = '#dc2626'}
+            >
+              🗑️ Delete Outing
+            </button>
+          </div>
+        )}
 
         <div style={styles.grid}>
           <div style={styles.section}>

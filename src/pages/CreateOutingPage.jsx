@@ -40,9 +40,7 @@ export default function CreateOutingPage() {
     location: '',
     capacityAvailable: '',
     boatName: '',
-    boatBrand: '',
-    boatModel: '',
-    boatColor: '',
+    boatBrandModelColor: '',
     boatSize: '',
     boatCapacity: '',
     mooringLocation: '',
@@ -66,12 +64,13 @@ export default function CreateOutingPage() {
 
         if (boats && boats.length > 0) {
           const boat = boats[0];
+          const brandModelColor = [boat.brand, boat.model, boat.color]
+            .filter(Boolean)
+            .join(' / ') || '';
           setFormData((prev) => ({
             ...prev,
             boatName: boat.name || '',
-            boatBrand: boat.brand || '',
-            boatModel: boat.model || '',
-            boatColor: boat.color || '',
+            boatBrandModelColor: brandModelColor,
             boatSize: boat.size_ft ? String(boat.size_ft) : '',
             boatCapacity: boat.capacity ? String(boat.capacity) : '',
             mooringLocation: boat.mooring_location || '',
@@ -107,15 +106,17 @@ export default function CreateOutingPage() {
 
       let boatId;
 
+      const parts = formData.boatBrandModelColor.split('/').map(s => s.trim());
+
       if (existingBoats && existingBoats.length > 0) {
         boatId = existingBoats[0].id;
         const { error: updateError } = await supabase
           .from('boats')
           .update({
             name: formData.boatName,
-            brand: formData.boatBrand || null,
-            model: formData.boatModel || null,
-            color: formData.boatColor || null,
+            brand: parts[0] || null,
+            model: parts[1] || null,
+            color: parts[2] || null,
             size_ft: formData.boatSize ? parseInt(formData.boatSize) : null,
             capacity: parseInt(formData.boatCapacity) || 1,
             mooring_location: formData.mooringLocation || null,
@@ -128,9 +129,9 @@ export default function CreateOutingPage() {
           .insert([{
             owner_id: user.id,
             name: formData.boatName,
-            brand: formData.boatBrand || null,
-            model: formData.boatModel || null,
-            color: formData.boatColor || null,
+            brand: parts[0] || null,
+            model: parts[1] || null,
+            color: parts[2] || null,
             size_ft: formData.boatSize ? parseInt(formData.boatSize) : null,
             capacity: parseInt(formData.boatCapacity) || 1,
             mooring_location: formData.mooringLocation || null,
@@ -282,29 +283,16 @@ export default function CreateOutingPage() {
             />
           </div>
 
-          <div style={styles.grid}>
-            <div style={styles.fieldGroup}>
-              <label style={styles.label}>Brand</label>
-              <input
-                type="text"
-                name="boatBrand"
-                value={formData.boatBrand}
-                onChange={handleInputChange}
-                style={styles.input}
-                placeholder="e.g., Beneteau"
-              />
-            </div>
-            <div style={styles.fieldGroup}>
-              <label style={styles.label}>Model</label>
-              <input
-                type="text"
-                name="boatModel"
-                value={formData.boatModel}
-                onChange={handleInputChange}
-                style={styles.input}
-                placeholder="e.g., Oceanis 38"
-              />
-            </div>
+          <div style={styles.fieldGroup}>
+            <label style={styles.label}>Brand / Model / Color</label>
+            <input
+              type="text"
+              name="boatBrandModelColor"
+              value={formData.boatBrandModelColor}
+              onChange={handleInputChange}
+              style={styles.input}
+              placeholder="e.g., Beneteau / Oceanis 38 / blue"
+            />
           </div>
 
           <div style={styles.grid}>

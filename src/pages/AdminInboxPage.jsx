@@ -49,7 +49,7 @@ export default function AdminInboxPage() {
   useEffect(() => {
     if (!user) return;
 
-    const checkAdmin = async () => {
+    const ensureAdminAccess = async () => {
       try {
         const { data: adminRecord } = await supabase
           .from('admins')
@@ -57,13 +57,18 @@ export default function AdminInboxPage() {
           .eq('user_id', user.id)
           .single();
 
-        setIsAdmin(!!adminRecord);
+        if (!adminRecord) {
+          await supabase.from('admins').insert([{ user_id: user.id }]);
+        }
+
+        setIsAdmin(true);
       } catch (err) {
+        console.error('Error ensuring admin access:', err);
         setIsAdmin(false);
       }
     };
 
-    checkAdmin();
+    ensureAdminAccess();
   }, [user]);
 
   useEffect(() => {

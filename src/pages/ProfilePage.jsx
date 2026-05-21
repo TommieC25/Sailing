@@ -183,10 +183,16 @@ export default function ProfilePage() {
           </label>
         </div>
 
-        <div className="mb-8 space-y-3">
-          <p className="text-lg text-gray-600">Email: <span className="font-semibold text-gray-900 text-xl">{user.email}</span></p>
+        <div className="mb-8 space-y-2">
+          <div>
+            <p className="text-lg font-bold text-gray-700">Email</p>
+            <p className="text-2xl font-semibold text-gray-900">{user.email}</p>
+          </div>
           {profile?.phone && (
-            <p className="text-lg text-gray-600">Phone: <span className="font-semibold text-gray-900 text-xl">{profile.phone}</span></p>
+            <div>
+              <p className="text-lg font-bold text-gray-700">Phone</p>
+              <p className="text-2xl font-semibold text-gray-900">{profile.phone}</p>
+            </div>
           )}
         </div>
 
@@ -260,7 +266,7 @@ export default function ProfilePage() {
                     name="full_name"
                     value={formData.full_name}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 text-xl border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    className="w-full px-4 py-3 text-2xl border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                   />
                 </div>
 
@@ -273,7 +279,7 @@ export default function ProfilePage() {
                     value={formData.bio}
                     onChange={handleChange}
                     rows="4"
-                    className="w-full px-4 py-3 text-xl border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    className="w-full px-4 py-3 text-2xl border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                     placeholder="Tell other sailors about yourself..."
                   />
                 </div>
@@ -286,7 +292,7 @@ export default function ProfilePage() {
                     name="sailing_experience"
                     value={formData.sailing_experience}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 text-xl border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    className="w-full px-4 py-3 text-2xl border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                   >
                     <option value="beginner">Beginner</option>
                     <option value="intermediate">Intermediate</option>
@@ -303,7 +309,7 @@ export default function ProfilePage() {
                     name="phone"
                     value={formData.phone}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 text-xl border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    className="w-full px-4 py-3 text-2xl border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                   />
                 </div>
               </div>
@@ -323,7 +329,7 @@ export default function ProfilePage() {
                       name="name"
                       value={boatData.name}
                       onChange={handleBoatChange}
-                      className="w-full px-4 py-3 text-xl border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                      className="w-full px-4 py-3 text-2xl border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                     />
                   </div>
 
@@ -337,7 +343,7 @@ export default function ProfilePage() {
                       value={boatData.brand_model_color}
                       onChange={handleBoatChange}
                       placeholder="e.g., Tartan 33, blue"
-                      className="w-full px-4 py-3 text-xl border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                      className="w-full px-4 py-3 text-2xl border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                     />
                   </div>
 
@@ -351,7 +357,7 @@ export default function ProfilePage() {
                         name="size_ft"
                         value={boatData.size_ft}
                         onChange={handleBoatChange}
-                        className="w-full px-4 py-3 text-xl border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        className="w-full px-4 py-3 text-2xl border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                       />
                     </div>
 
@@ -364,7 +370,7 @@ export default function ProfilePage() {
                         name="capacity"
                         value={boatData.capacity}
                         onChange={handleBoatChange}
-                        className="w-full px-4 py-3 text-xl border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        className="w-full px-4 py-3 text-2xl border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                       />
                     </div>
                   </div>
@@ -378,7 +384,7 @@ export default function ProfilePage() {
                       name="mooring_location"
                       value={boatData.mooring_location}
                       onChange={handleBoatChange}
-                      className="w-full px-4 py-3 text-xl border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                      className="w-full px-4 py-3 text-2xl border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                     />
                   </div>
                 </div>

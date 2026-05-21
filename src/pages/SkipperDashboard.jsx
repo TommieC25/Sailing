@@ -229,9 +229,14 @@ export default function SkipperDashboard() {
                   </div>
                   <div style={styles.outingMeta}>
                     {pending.length > 0 && (
-                      <span style={styles.badge}>
-                        {pending.length} pending
-                      </span>
+                      <div style={{position: 'relative', display: 'flex', alignItems: 'center'}}>
+                        <svg style={{width: '24px', height: '24px', color: '#fbbf24'}} fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M10 20h4c0 1.1-.9 2-2 2s-2-.9-2-2zm10-2v-5c0-3.07-1.64-5.64-4.5-6.32V2h-3v4.68C7.64 7.36 6 9.93 6 13v5H4v2h16v-2h-2z"/>
+                        </svg>
+                        <span style={{position: 'absolute', top: '-4px', right: '-4px', background: '#ef4444', color: '#ffffff', borderRadius: '50%', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 900}}>
+                          {pending.length}
+                        </span>
+                      </div>
                     )}
                     <svg style={{width: '24px', height: '24px', color: '#9ca3af', transition: 'transform 0.3s', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)'}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />

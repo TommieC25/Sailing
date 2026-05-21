@@ -38,8 +38,7 @@ export default function CommunityPage() {
       try {
         const { data, error } = await supabase
           .from('profiles')
-          .select('id, full_name, photo_url, sailing_experience')
-          .not('id', 'eq', user.id);
+          .select('id, full_name, photo_url, sailing_experience');
 
         if (error) throw error;
         setProfiles(data || []);

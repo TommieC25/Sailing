@@ -107,12 +107,15 @@ export function AuthProvider({ children }) {
   const signOut = async () => {
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      // Manually clear state first to ensure immediate UI update
       setUser(null);
       setProfile(null);
+      // Then clear Supabase session
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
     } catch (err) {
       setError(err.message);
+      throw err;
     } finally {
       setLoading(false);
     }

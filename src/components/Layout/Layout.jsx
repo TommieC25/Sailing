@@ -99,9 +99,7 @@ export default function Layout({ children }) {
       console.log('Starting sign out...');
       setMobileMenuOpen(false);
       await signOut();
-      console.log('Sign out complete, navigating to login');
-      // Use replace to prevent back button issues
-      navigate('/login', { replace: true });
+      console.log('Sign out complete - ProtectedRoute will redirect');
     } catch (err) {
       console.error('Sign out error:', err);
       alert('Sign out failed: ' + err.message);

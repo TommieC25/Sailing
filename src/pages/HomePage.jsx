@@ -101,7 +101,7 @@ export default function HomePage() {
               <h2 style={{fontSize: '1.5rem', fontWeight: 900, color: '#1e293b', margin: 0}}>📋 Your Outings ({yourOutings.length})</h2>
               <Link to="/create-outing" style={{fontSize: '1rem', fontWeight: 900, color: '#0369a1', textDecoration: 'none'}}>+ New</Link>
             </div>
-            <div style={{display: 'grid', gap: '16px'}}>
+            <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '16px'}}>
               {yourOutings.map((outing) => (
                 <OutingCard key={outing.id} outing={outing} isYours={true} />
               ))}
@@ -115,7 +115,7 @@ export default function HomePage() {
             <h2 style={{fontSize: '1.5rem', fontWeight: 900, color: '#1e293b', marginBottom: '16px', margin: '0 0 16px 0'}}>
               {isSkipper ? '⛵ Available Outings' : '⛵ Outings'}
             </h2>
-            <div style={{display: 'grid', gap: '16px'}}>
+            <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '16px'}}>
               {otherOutings.map((outing) => (
                 <OutingCard key={outing.id} outing={outing} isYours={false} />
               ))}
@@ -145,40 +145,42 @@ function OutingCard({ outing, isYours }) {
       to={`/outing/${outing.id}`}
       style={{display: 'block', textDecoration: 'none', color: 'inherit'}}
     >
-      <div style={{background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.1)'}}>
-        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '12px'}}>
-          <h3 style={{fontSize: '1.5rem', fontWeight: 900, color: '#1e293b', margin: 0}}>{outing.title}</h3>
+      <div style={{background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.1)'}}>
+        {/* Title and availability badge */}
+        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px', gap: '8px'}}>
+          <h3 style={{fontSize: '1.25rem', fontWeight: 900, color: '#1e293b', margin: 0}}>{outing.title}</h3>
           {availableSpots > 0 && !isYours && (
-            <span style={{background: '#dcfce7', color: '#166534', padding: '6px 12px', borderRadius: '8px', fontSize: '1rem', fontWeight: 700, flexShrink: 0}}>
+            <span style={{background: '#dcfce7', color: '#166534', padding: '4px 10px', borderRadius: '6px', fontSize: '0.875rem', fontWeight: 700, flexShrink: 0, whiteSpace: 'nowrap'}}>
               {availableSpots} spot{availableSpots !== 1 ? 's' : ''}
             </span>
           )}
           {availableSpots === 0 && !isYours && (
-            <span style={{background: '#fee2e2', color: '#991b1b', padding: '6px 12px', borderRadius: '8px', fontSize: '0.875rem', fontWeight: 700, flexShrink: 0}}>
+            <span style={{background: '#fee2e2', color: '#991b1b', padding: '4px 10px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700, flexShrink: 0}}>
               Full
             </span>
           )}
           {isYours && (
-            <span style={{background: '#fef3c7', color: '#92400e', padding: '6px 12px', borderRadius: '8px', fontSize: '0.875rem', fontWeight: 700}}>
+            <span style={{background: '#fef3c7', color: '#92400e', padding: '4px 10px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700, flexShrink: 0}}>
               Your outing
             </span>
           )}
         </div>
 
-        <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '1.125rem', color: '#64748b', marginBottom: '16px', fontWeight: 600}}>
+        {/* Condensed info line */}
+        <div style={{fontSize: '0.95rem', color: '#64748b', marginBottom: '10px', fontWeight: 600, lineHeight: '1.4'}}>
           <div>📅 {new Date(outing.outing_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} at {outing.outing_time}</div>
-          <div>🚢 {outing.boats?.name} ({outing.boats?.size_ft}ft)</div>
-          <div>👤 {outing.skipper?.full_name || 'TBD'}</div>
-          <div>{filledSpots} of {totalSpots} crew</div>
+          <div>🚢 {outing.boats?.name} ({outing.boats?.size_ft}ft) • 👤 {outing.skipper?.full_name || 'TBD'} • {filledSpots}/{totalSpots} crew</div>
         </div>
 
+        {/* Description - condensed */}
         {outing.description && (
-          <p style={{color: '#64748b', margin: '0 0 16px 0', fontSize: '1.1rem', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden'}}>
+          <p style={{color: '#64748b', margin: '0 0 10px 0', fontSize: '0.95rem', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden'}}>
             {outing.description}
           </p>
         )}
 
-        <div style={{background: '#06b6d4', color: '#ffffff', padding: '12px 20px', borderRadius: '8px', textAlign: 'center', fontWeight: 900, fontSize: '1.125rem'}}>
+        {/* Button - touch-friendly (44px minimum height) */}
+        <div style={{background: '#06b6d4', color: '#ffffff', padding: '10px 16px', borderRadius: '8px', textAlign: 'center', fontWeight: 900, fontSize: '1rem', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
           View Details →
         </div>
       </div>

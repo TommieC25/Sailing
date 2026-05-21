@@ -9,6 +9,7 @@ export default function ProfilePage() {
     full_name: '',
     bio: '',
     sailing_experience: '',
+    phone: '',
   });
   const [boatData, setBoatData] = useState({
     name: '',
@@ -29,6 +30,7 @@ export default function ProfilePage() {
         full_name: profile.full_name || '',
         bio: profile.bio || '',
         sailing_experience: profile.sailing_experience || '',
+        phone: profile.phone || '',
       });
     }
   }, [profile]);
@@ -181,8 +183,11 @@ export default function ProfilePage() {
           </label>
         </div>
 
-        <div className="mb-8">
+        <div className="mb-8 space-y-3">
           <p className="text-lg text-gray-600">Email: <span className="font-semibold text-gray-900 text-xl">{user.email}</span></p>
+          {profile?.phone && (
+            <p className="text-lg text-gray-600">Phone: <span className="font-semibold text-gray-900 text-xl">{profile.phone}</span></p>
+          )}
         </div>
 
         {!editMode ? (
@@ -287,6 +292,19 @@ export default function ProfilePage() {
                     <option value="intermediate">Intermediate</option>
                     <option value="advanced">Advanced</option>
                   </select>
+                </div>
+
+                <div>
+                  <label className="block text-xl font-bold text-gray-700 mb-2">
+                    Phone
+                  </label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 text-xl border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  />
                 </div>
               </div>
             </div>

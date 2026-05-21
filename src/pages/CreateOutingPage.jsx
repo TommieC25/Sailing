@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
 
 const styles = {
   container: { maxWidth: '800px', margin: '0 auto' },
-  backButton: { background: 'none', border: 'none', color: '#0369a1', fontWeight: 900, fontSize: '1.125rem', marginBottom: '16px', cursor: 'pointer', textDecoration: 'none' },
+  backButton: { background: '#e0f2fe', border: '2px solid #0369a1', color: '#0369a1', fontWeight: 900, fontSize: '1.125rem', marginBottom: '16px', cursor: 'pointer', textDecoration: 'none', padding: '12px 16px', borderRadius: '8px', transition: 'all 0.2s' },
   header: { borderRadius: '12px', padding: '24px', marginBottom: '24px', background: 'linear-gradient(135deg, #0c2340 0%, #0369a1 100%)' },
   headerTitle: { fontSize: '1.875rem', fontWeight: 900, color: '#ffffff', margin: '0 0 8px 0' },
   headerSubtitle: { color: '#e0f2fe', fontSize: '1.125rem', fontWeight: 600, margin: 0 },
@@ -52,6 +52,38 @@ export default function CreateOutingPage() {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
+
+  useEffect(() => {
+    const loadExistingBoatData = async () => {
+      if (!user || profile?.user_type !== 'owner') return;
+
+      try {
+        const { data: boats } = await supabase
+          .from('boats')
+          .select('*')
+          .eq('owner_id', user.id)
+          .limit(1);
+
+        if (boats && boats.length > 0) {
+          const boat = boats[0];
+          setFormData((prev) => ({
+            ...prev,
+            boatName: boat.name || '',
+            boatBrand: boat.brand || '',
+            boatModel: boat.model || '',
+            boatColor: boat.color || '',
+            boatSize: boat.size_ft ? String(boat.size_ft) : '',
+            boatCapacity: boat.capacity ? String(boat.capacity) : '',
+            mooringLocation: boat.mooring_location || '',
+          }));
+        }
+      } catch (err) {
+        console.error('Error loading boat data:', err);
+      }
+    };
+
+    loadExistingBoatData();
+  }, [user, profile]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -140,7 +172,12 @@ export default function CreateOutingPage() {
 
   return (
     <div style={styles.container}>
-      <button onClick={() => navigate('/skipper-dashboard')} style={styles.backButton}>
+      <button
+        onClick={() => navigate('/skipper-dashboard')}
+        style={styles.backButton}
+        onMouseEnter={(e) => e.target.style.background = '#bfdbfe'}
+        onMouseLeave={(e) => e.target.style.background = '#e0f2fe'}
+      >
         ← Back to My Outings
       </button>
 

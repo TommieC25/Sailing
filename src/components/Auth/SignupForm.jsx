@@ -82,8 +82,8 @@ export default function SignupForm() {
         {/* Logo */}
         <div style={styles.header}>
           <img src="/Sailing/Club Logo.jpg" alt="CGSC Logo" style={styles.logo} />
-          <h1 style={styles.title}>Join CGSC</h1>
-          <p style={styles.subtitle}>Coconut Grove Sailing Club</p>
+          <h1 style={styles.title}>Set Sail</h1>
+          <p style={styles.subtitle}>Find outings and crew • Connect with sailors</p>
         </div>
 
         {/* Form Card */}

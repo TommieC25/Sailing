@@ -17,9 +17,11 @@ export default function LoginForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    const email = e.target.email.value;
+    const password = e.target.password.value;
     try {
       setLoading(true);
-      await signIn(formData.email, formData.password);
+      await signIn(email, password);
       navigate('/');
     } catch (err) {
       setError(err.message || 'Failed to sign in');

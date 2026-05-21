@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { supabase } from '../../utils/supabaseClient';
 
 const styles = {
   container: { minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(to bottom right, #0c3880, #0369a1, #06b6d4)', paddingLeft: '1rem', paddingRight: '1rem', paddingTop: '2rem', paddingBottom: '2rem' },
@@ -36,12 +37,30 @@ export default function SignupForm() {
     userType: 'crew',
     sailingExperience: 'beginner',
   });
+  const [photoFile, setPhotoFile] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handlePhotoChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setPhotoFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhotoPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -61,11 +80,29 @@ export default function SignupForm() {
     }
     try {
       setLoading(true);
+
+      let photoUrl = null;
+      if (photoFile) {
+        const fileExt = photoFile.name.split('.').pop();
+        const fileName = `${Date.now()}.${fileExt}`;
+        const filePath = `profile-photos/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('profiles')
+          .upload(filePath, photoFile, { upsert: true });
+
+        if (uploadError) throw uploadError;
+
+        const { data } = supabase.storage.from('profiles').getPublicUrl(filePath);
+        photoUrl = data.publicUrl;
+      }
+
       await signUp(formData.email, formData.password, {
         full_name: formData.fullName,
         gender: formData.gender,
         user_type: formData.userType,
         sailing_experience: formData.sailingExperience,
+        photo_url: photoUrl,
       });
       navigate('/');
     } catch (err) {
@@ -121,6 +158,25 @@ export default function SignupForm() {
                 <option value="Other">Other</option>
                 <option value="Prefer not to say">Prefer not to say</option>
               </select>
+            </div>
+
+            <div style={styles.fieldGroup}>
+              <label style={styles.label}>Profile Photo (optional)</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handlePhotoChange}
+                style={{...styles.input, padding: '8px 12px', cursor: 'pointer'}}
+              />
+              {photoPreview && (
+                <div style={{marginTop: '12px'}}>
+                  <img
+                    src={photoPreview}
+                    alt="Preview"
+                    style={{width: '80px', height: '80px', borderRadius: '8px', objectFit: 'cover', border: '2px solid #93c5fd'}}
+                  />
+                </div>
+              )}
             </div>
 
             <div style={styles.fieldGroup}>

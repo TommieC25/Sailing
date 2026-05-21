@@ -11,6 +11,7 @@ export default function Layout({ children }) {
 
   const handleSignOut = async () => {
     try {
+      setMobileMenuOpen(false);
       await signOut();
       navigate('/login');
     } catch (err) {

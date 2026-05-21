@@ -3,6 +3,58 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
 
+const styles = {
+  container: { display: 'grid', gap: '24px' },
+  backButton: { background: 'none', border: 'none', color: '#0369a1', fontSize: '1.125rem', fontWeight: 600, marginBottom: '16px', cursor: 'pointer', textDecoration: 'none' },
+  mainCard: { background: '#ffffff', borderRadius: '8px', boxShadow: '0 10px 15px rgba(0,0,0,0.1)', padding: '32px' },
+  header: { display: 'grid', gap: '16px', marginBottom: '24px' },
+  title: { fontSize: '1.875rem', fontWeight: 'bold', color: '#1f2937', margin: 0 },
+  statusBadge: { display: 'inline-block', padding: '8px 12px', borderRadius: '999px', fontSize: '0.875rem', fontWeight: 600, textTransform: 'capitalize', width: 'fit-content' },
+  grid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px', marginBottom: '32px' },
+  section: { display: 'grid', gap: '12px' },
+  sectionTitle: { fontSize: '1.25rem', fontWeight: 600, color: '#1f2937', margin: 0 },
+  detailLabel: { fontSize: '0.875rem', color: '#6b7280' },
+  detailValue: { fontSize: '1.125rem', fontWeight: 500, color: '#1f2937' },
+  skipperCard: { border: '1px solid #e5e7eb', borderRadius: '8px', padding: '16px' },
+  skipperPhoto: { width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', marginBottom: '12px' },
+  skipperPhotoPlaceholder: { width: '64px', height: '64px', borderRadius: '50%', background: '#e5e7eb', marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' },
+  skipperName: { fontWeight: 600, color: '#1f2937', margin: '0 0 4px 0' },
+  skipperSkill: { fontSize: '0.875rem', color: '#6b7280', marginBottom: '8px', textTransform: 'capitalize' },
+  skipperBio: { fontSize: '0.875rem', color: '#374151', marginTop: '8px' },
+  crewRequestsSection: { borderTop: '1px solid #e5e7eb', paddingTop: '24px', marginTop: '24px' },
+  crewRequestsTitle: { fontSize: '1.5rem', fontWeight: 'bold', color: '#1f2937', marginBottom: '16px', margin: '0 0 16px 0' },
+  requestsList: { display: 'grid', gap: '16px' },
+  requestCard: { borderRadius: '8px', padding: '16px', display: 'flex', gap: '16px', alignItems: 'flex-start' },
+  requestCardPending: { borderLeft: '4px solid #fbbf24', background: '#fffbeb' },
+  requestCardApproved: { borderLeft: '4px solid #34d399', background: '#f0fdf4' },
+  requestCardDeclined: { borderLeft: '4px solid #f87171', background: '#fef2f2' },
+  requestPhoto: { width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 },
+  requestPhotoPlaceholder: { width: '48px', height: '48px', borderRadius: '50%', background: '#e5e7eb', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' },
+  requestInfo: { flex: 1 },
+  requestName: { fontWeight: 'bold', color: '#1f2937', margin: '0 0 4px 0', fontSize: '1.125rem' },
+  requestSkill: { fontSize: '0.875rem', color: '#6b7280', marginBottom: '8px', textTransform: 'capitalize' },
+  requestBio: { fontSize: '0.875rem', color: '#374151', marginBottom: '8px' },
+  requestDate: { fontSize: '0.75rem', color: '#9ca3af' },
+  requestActions: { display: 'flex', gap: '8px', flexDirection: 'column', flexShrink: 0 },
+  approveBtn: { padding: '8px 16px', background: '#16a34a', color: '#ffffff', border: 'none', fontWeight: 'bold', fontSize: '0.875rem', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s' },
+  declineBtn: { padding: '8px 16px', background: '#dc2626', color: '#ffffff', border: 'none', fontWeight: 'bold', fontSize: '0.875rem', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s' },
+  statusText: { padding: '8px 12px', borderRadius: '8px', fontSize: '0.875rem', fontWeight: 'bold', textAlign: 'center' },
+  statusApproved: { background: '#16a34a', color: '#ffffff' },
+  statusDeclined: { background: '#dc2626', color: '#ffffff' },
+  joinSection: { borderTop: '1px solid #e5e7eb', paddingTop: '24px', marginTop: '24px' },
+  joinTitle: { fontSize: '1.25rem', fontWeight: 600, color: '#1f2937', marginBottom: '16px', margin: '0 0 16px 0' },
+  infoBox: { borderRadius: '8px', padding: '16px', border: '1px solid #e5e7eb' },
+  infoPending: { background: '#fef3c7', border: '1px solid #fcd34d' },
+  infoApproved: { background: '#d1fae5', border: '1px solid #a7f3d0' },
+  infoDeclined: { background: '#fee2e2', border: '1px solid #fecaca' },
+  infoSignIn: { background: '#eff6ff', border: '1px solid #bfdbfe', color: '#1e40af' },
+  joinButton: { color: '#ffffff', padding: '12px 24px', borderRadius: '8px', fontWeight: 600, transition: 'all 0.2s', border: 'none', cursor: 'pointer', fontSize: '1rem' },
+  loadingSpinner: { display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '48px' },
+  spinner: { width: '32px', height: '32px', borderRadius: '50%', border: '4px solid #e5e7eb', borderTopColor: '#0369a1', animation: 'spin 0.8s linear infinite' },
+  errorBox: { background: '#fef2f2', border: '1px solid #fecaca', color: '#991b1b', padding: '16px', borderRadius: '8px' },
+  noRequestsText: { color: '#6b7280' },
+};
+
 export default function OuttingDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -30,7 +82,7 @@ export default function OuttingDetailPage() {
         setOuting(outingData);
 
         const { data: skipperData, error: skipperError } = await supabase
-          .from('users')
+          .from('profiles')
           .select('*')
           .eq('id', outingData.skipper_id)
           .single();
@@ -57,7 +109,6 @@ export default function OuttingDetailPage() {
 
           setCrewRequest(requestData || null);
 
-          // If skipper, fetch all crew requests
           if (user.id === outingData.skipper_id) {
             const { data: allRequests } = await supabase
               .from('crew_requests')
@@ -145,237 +196,167 @@ export default function OuttingDetailPage() {
     }
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'approved':
-        return 'bg-green-100 text-green-800';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'declined':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ocean-600"></div>
+      <div style={styles.loadingSpinner}>
+        <div style={styles.spinner} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
 
   if (error || !outing || !skipper || !boat) {
-    return (
-      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-        {error || 'Outing not found'}
-      </div>
-    );
+    return <div style={styles.errorBox}>{error || 'Outing not found'}</div>;
   }
 
   const isSkipper = user && user.id === outing.skipper_id;
+  const statusColors = {
+    approved: { bg: '#d1fae5', text: '#065f46' },
+    pending: { bg: '#fef3c7', text: '#92400e' },
+    declined: { bg: '#fee2e2', text: '#991b1b' },
+  };
 
   return (
-    <div className="space-y-6">
-      <button
-        onClick={() => navigate('/')}
-        className="text-ocean-600 hover:text-ocean-700 font-medium mb-4"
-      >
+    <div style={styles.container}>
+      <button onClick={() => navigate('/')} style={styles.backButton}>
         ← Back to Outings
       </button>
 
-      <div className="bg-white rounded-lg shadow-lg p-6 md:p-8">
-        <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4 mb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              {outing.title}
-            </h1>
-            <span className={`inline-block px-3 py-1 rounded-full text-sm font-semibold capitalize ${getStatusColor(outing.status)}`}>
-              {outing.status}
-            </span>
-          </div>
+      <div style={styles.mainCard}>
+        <div style={styles.header}>
+          <h1 style={styles.title}>{outing.title}</h1>
+          <span style={{ ...styles.statusBadge, background: statusColors[outing.status]?.bg, color: statusColors[outing.status]?.text }}>
+            {outing.status}
+          </span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
-              Outing Details
-            </h2>
-            <div className="space-y-3">
+        <div style={styles.grid}>
+          <div style={styles.section}>
+            <h2 style={styles.sectionTitle}>Outing Details</h2>
+            <div style={styles.section}>
               <div>
-                <p className="text-sm text-gray-600">Date & Time</p>
-                <p className="text-lg font-medium text-gray-900">
-                  {new Date(outing.outing_date).toLocaleDateString()} at{' '}
-                  {outing.outing_time}
+                <p style={styles.detailLabel}>Date & Time</p>
+                <p style={styles.detailValue}>
+                  {new Date(outing.outing_date).toLocaleDateString()} at {outing.outing_time}
                 </p>
               </div>
 
               <div>
-                <p className="text-sm text-gray-600">Crew Spots Available</p>
-                <p className="text-lg font-medium text-gray-900">
-                  {outing.capacity_available} available
-                </p>
+                <p style={styles.detailLabel}>Crew Spots Available</p>
+                <p style={styles.detailValue}>{outing.capacity_available} available</p>
               </div>
 
               <div>
-                <p className="text-sm text-gray-600">Description</p>
-                <p className="text-gray-900 leading-relaxed">
-                  {outing.description}
-                </p>
+                <p style={styles.detailLabel}>Description</p>
+                <p style={{ ...styles.detailValue, lineHeight: '1.6' }}>{outing.description}</p>
               </div>
             </div>
           </div>
 
-          <div className="space-y-8">
+          <div style={styles.section}>
             <div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                Boat Information
-              </h2>
-              <div className="space-y-3">
+              <h2 style={styles.sectionTitle}>Boat Information</h2>
+              <div style={styles.section}>
                 <div>
-                  <p className="text-sm text-gray-600">Boat Name</p>
-                  <p className="text-lg font-medium text-gray-900">
-                    {boat.name}
-                  </p>
+                  <p style={styles.detailLabel}>Boat Name</p>
+                  <p style={styles.detailValue}>{boat.name}</p>
                 </div>
 
                 <div>
-                  <p className="text-sm text-gray-600">Boat Type</p>
-                  <p className="text-lg font-medium text-gray-900 capitalize">
-                    {boat.boat_type}
-                  </p>
+                  <p style={styles.detailLabel}>Boat Type</p>
+                  <p style={{ ...styles.detailValue, textTransform: 'capitalize' }}>{boat.boat_type}</p>
                 </div>
 
                 <div>
-                  <p className="text-sm text-gray-600">Size</p>
-                  <p className="text-lg font-medium text-gray-900">
-                    {boat.size_ft} ft
-                  </p>
+                  <p style={styles.detailLabel}>Size</p>
+                  <p style={styles.detailValue}>{boat.size_ft} ft</p>
                 </div>
 
                 <div>
-                  <p className="text-sm text-gray-600">Total Capacity</p>
-                  <p className="text-lg font-medium text-gray-900">
-                    {boat.capacity} people
-                  </p>
+                  <p style={styles.detailLabel}>Total Capacity</p>
+                  <p style={styles.detailValue}>{boat.capacity} people</p>
                 </div>
 
                 {boat.mooring_location && (
                   <div>
-                    <p className="text-sm text-gray-600">Mooring Location</p>
-                    <p className="text-lg font-medium text-gray-900">
-                      {boat.mooring_location}
-                    </p>
+                    <p style={styles.detailLabel}>Mooring Location</p>
+                    <p style={styles.detailValue}>{boat.mooring_location}</p>
                   </div>
                 )}
               </div>
             </div>
 
             <div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                Skipper
-              </h2>
-              <div className="border border-gray-200 rounded-lg p-4">
-                {skipper.photo_url && (
-                  <img
-                    src={skipper.photo_url}
-                    alt={skipper.full_name}
-                    className="w-16 h-16 rounded-full mb-3 object-cover"
-                  />
+              <h2 style={styles.sectionTitle}>Skipper</h2>
+              <div style={styles.skipperCard}>
+                {skipper.photo_url ? (
+                  <img src={skipper.photo_url} alt={skipper.full_name} style={styles.skipperPhoto} />
+                ) : (
+                  <div style={styles.skipperPhotoPlaceholder}>📷</div>
                 )}
-                <p className="font-semibold text-gray-900">
-                  {skipper.full_name}
-                </p>
-                <p className="text-sm text-gray-600 capitalize">
-                  {skipper.sailing_experience} sailor
-                </p>
-                {skipper.bio && (
-                  <p className="text-sm text-gray-700 mt-2">{skipper.bio}</p>
-                )}
+                <p style={styles.skipperName}>{skipper.full_name}</p>
+                <p style={{ ...styles.skipperSkill, margin: 0 }}>{skipper.sailing_experience} sailor</p>
+                {skipper.bio && <p style={styles.skipperBio}>{skipper.bio}</p>}
               </div>
             </div>
           </div>
         </div>
 
-        {/* Crew Requests (for skipper) */}
         {isSkipper && (
-          <div className="border-t pt-6 mt-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              Crew Requests ({crewRequests.length})
-            </h2>
+          <div style={styles.crewRequestsSection}>
+            <h2 style={styles.crewRequestsTitle}>Crew Requests ({crewRequests.length})</h2>
 
             {crewRequests.length === 0 ? (
-              <p className="text-gray-600">No crew requests yet</p>
+              <p style={styles.noRequestsText}>No crew requests yet</p>
             ) : (
-              <div className="space-y-4">
+              <div style={styles.requestsList}>
                 {crewRequests.map((req) => (
                   <div
                     key={req.id}
-                    className={`border rounded-lg p-4 ${
-                      req.status === 'pending'
-                        ? 'border-yellow-200 bg-yellow-50'
-                        : req.status === 'approved'
-                        ? 'border-green-200 bg-green-50'
-                        : 'border-red-200 bg-red-50'
-                    }`}
+                    style={{
+                      ...styles.requestCard,
+                      ...(req.status === 'pending' ? styles.requestCardPending : req.status === 'approved' ? styles.requestCardApproved : styles.requestCardDeclined),
+                    }}
                   >
-                    <div className="flex items-start gap-4">
-                      {req.crew?.photo_url && (
-                        <img
-                          src={req.crew.photo_url}
-                          alt={req.crew.full_name}
-                          className="w-12 h-12 rounded-full object-cover flex-shrink-0"
-                        />
-                      )}
-                      <div className="flex-1">
-                        <p className="font-bold text-gray-900 text-lg">
-                          {req.crew?.full_name}
-                        </p>
-                        <p className="text-sm text-gray-600 capitalize">
-                          {req.crew?.sailing_experience} sailor
-                        </p>
-                        {req.crew?.bio && (
-                          <p className="text-sm text-gray-700 mt-2">
-                            {req.crew.bio}
-                          </p>
-                        )}
-                        <p className="text-xs text-gray-500 mt-2">
-                          Requested:{' '}
-                          {new Date(req.requested_at).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <div className="flex gap-2 flex-col flex-shrink-0">
-                        {req.status === 'pending' && (
-                          <>
-                            <button
-                              onClick={() => handleApproveRequest(req.id)}
-                              disabled={actionLoading[req.id]}
-                              className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-bold rounded-lg text-sm transition"
-                            >
-                              ✓ Approve
-                            </button>
-                            <button
-                              onClick={() => handleDeclineRequest(req.id)}
-                              disabled={actionLoading[req.id]}
-                              className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white font-bold rounded-lg text-sm transition"
-                            >
-                              ✗ Decline
-                            </button>
-                          </>
-                        )}
-                        {req.status !== 'pending' && (
-                          <p
-                            className={`px-3 py-2 rounded-lg text-sm font-bold text-center ${
-                              req.status === 'approved'
-                                ? 'bg-green-600 text-white'
-                                : 'bg-red-600 text-white'
-                            }`}
+                    {req.crew?.photo_url ? (
+                      <img src={req.crew.photo_url} alt={req.crew.full_name} style={styles.requestPhoto} />
+                    ) : (
+                      <div style={styles.requestPhotoPlaceholder}>📷</div>
+                    )}
+                    <div style={styles.requestInfo}>
+                      <p style={styles.requestName}>{req.crew?.full_name}</p>
+                      <p style={styles.requestSkill}>{req.crew?.sailing_experience} sailor</p>
+                      {req.crew?.bio && <p style={styles.requestBio}>{req.crew.bio}</p>}
+                      <p style={styles.requestDate}>Requested: {new Date(req.requested_at).toLocaleDateString()}</p>
+                    </div>
+                    <div style={styles.requestActions}>
+                      {req.status === 'pending' && (
+                        <>
+                          <button
+                            onClick={() => handleApproveRequest(req.id)}
+                            disabled={actionLoading[req.id]}
+                            style={{ ...styles.approveBtn, opacity: actionLoading[req.id] ? 0.6 : 1 }}
+                            onMouseEnter={(e) => !actionLoading[req.id] && (e.target.style.background = '#15803d')}
+                            onMouseLeave={(e) => (e.target.style.background = '#16a34a')}
                           >
-                            {req.status === 'approved' ? 'Approved' : 'Declined'}
-                          </p>
-                        )}
-                      </div>
+                            ✓ Approve
+                          </button>
+                          <button
+                            onClick={() => handleDeclineRequest(req.id)}
+                            disabled={actionLoading[req.id]}
+                            style={{ ...styles.declineBtn, opacity: actionLoading[req.id] ? 0.6 : 1 }}
+                            onMouseEnter={(e) => !actionLoading[req.id] && (e.target.style.background = '#b91c1c')}
+                            onMouseLeave={(e) => (e.target.style.background = '#dc2626')}
+                          >
+                            ✗ Decline
+                          </button>
+                        </>
+                      )}
+                      {req.status !== 'pending' && (
+                        <p style={{ ...styles.statusText, ...(req.status === 'approved' ? styles.statusApproved : styles.statusDeclined) }}>
+                          {req.status === 'approved' ? 'Approved' : 'Declined'}
+                        </p>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -384,44 +365,28 @@ export default function OuttingDetailPage() {
           </div>
         )}
 
-        {/* Join/Request Section (for crew) */}
         {!isSkipper && (
-          <div className="border-t pt-6 mt-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
-              Join This Outing
-            </h2>
+          <div style={styles.joinSection}>
+            <h2 style={styles.joinTitle}>Join This Outing</h2>
 
             {!user ? (
-              <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded">
+              <div style={{ ...styles.infoBox, ...styles.infoSignIn }}>
                 <p>Sign in to request to join this outing</p>
               </div>
             ) : crewRequest ? (
-              <div className={`rounded-lg p-4 ${getStatusColor(crewRequest.status)}`}>
-                <p className="font-semibold mb-2 capitalize">
+              <div style={{ ...styles.infoBox, ...(crewRequest.status === 'pending' ? styles.infoPending : crewRequest.status === 'approved' ? styles.infoApproved : styles.infoDeclined) }}>
+                <p style={{ fontWeight: 600, marginBottom: '8px', textTransform: 'capitalize' }}>
                   Request Status: {crewRequest.status}
                 </p>
-                {crewRequest.status === 'pending' && (
-                  <p className="text-sm">
-                    Waiting for the skipper to review your request
-                  </p>
-                )}
-                {crewRequest.status === 'approved' && (
-                  <p className="text-sm">
-                    Great! You're approved to join this outing
-                  </p>
-                )}
-                {crewRequest.status === 'declined' && (
-                  <p className="text-sm">
-                    Your request was not approved for this outing
-                  </p>
-                )}
+                {crewRequest.status === 'pending' && <p style={{ fontSize: '0.875rem' }}>Waiting for the skipper to review your request</p>}
+                {crewRequest.status === 'approved' && <p style={{ fontSize: '0.875rem' }}>Great! You're approved to join this outing</p>}
+                {crewRequest.status === 'declined' && <p style={{ fontSize: '0.875rem' }}>Your request was not approved for this outing</p>}
               </div>
             ) : (
               <button
                 onClick={handleRequestToJoin}
                 disabled={submitting}
-                className="text-white px-6 py-3 rounded-lg font-semibold transition w-full md:w-auto"
-                style={{background: submitting ? '#9ca3af' : '#06b6d4'}}
+                style={{ ...styles.joinButton, background: submitting ? '#9ca3af' : '#06b6d4' }}
               >
                 {submitting ? 'Submitting Request...' : 'Request to Join'}
               </button>

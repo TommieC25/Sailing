@@ -3,8 +3,29 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
 
-const fieldClass = "w-full px-5 py-4 border-2 border-blue-200 rounded-xl text-blue-900 text-xl font-semibold placeholder-blue-300 focus:outline-none focus:border-blue-600 bg-white";
-const labelClass = "block text-xl font-black text-gray-800 mb-2";
+const styles = {
+  container: { maxWidth: '800px', margin: '0 auto' },
+  backButton: { background: 'none', border: 'none', color: '#1e40af', fontWeight: 900, fontSize: '1.25rem', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', textDecoration: 'none' },
+  header: { borderRadius: '16px', padding: '24px', marginBottom: '24px', background: 'linear-gradient(135deg, #0c2340 0%, #0369a1 100%)' },
+  headerTitle: { fontSize: '1.875rem', fontWeight: 900, color: '#ffffff', marginBottom: '8px', margin: '0 0 8px 0' },
+  headerSubtitle: { color: '#e0f2fe', fontSize: '1.125rem', fontWeight: 600, margin: 0 },
+  errorBox: { background: '#fee2e2', border: '2px solid #dc2626', color: '#991b1b', fontSize: '1.25rem', padding: '16px 20px', borderRadius: '12px', marginBottom: '24px', fontWeight: 600 },
+  form: { display: 'grid', gap: '24px', marginBottom: '24px' },
+  section: { background: '#ffffff', borderRadius: '16px', border: '1px solid #e5e7eb', padding: '20px', display: 'grid', gap: '20px' },
+  sectionTitle: { fontSize: '1.5rem', fontWeight: 900, color: '#1f2937', borderBottom: '1px solid #f3f4f6', paddingBottom: '12px', margin: '0 0 12px 0' },
+  fieldGroup: { display: 'grid', gap: '8px' },
+  label: { fontSize: '1.25rem', fontWeight: 900, color: '#1f2937', display: 'block', marginBottom: '8px' },
+  input: { width: '100%', padding: '16px 20px', border: '2px solid #bfdbfe', borderRadius: '12px', fontSize: '1.25rem', fontWeight: 600, color: '#1e3a8a', placeholder: '#93c5fd', fontFamily: 'inherit' },
+  textarea: { width: '100%', padding: '16px 20px', border: '2px solid #bfdbfe', borderRadius: '12px', fontSize: '1.25rem', fontWeight: 600, color: '#1e3a8a', placeholder: '#93c5fd', fontFamily: 'inherit', minHeight: '100px', resize: 'vertical' },
+  grid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' },
+  infoBox: { background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '16px', padding: '20px' },
+  infoTitle: { fontSize: '1.25rem', fontWeight: 900, color: '#1e3a8a', marginBottom: '12px', margin: '0 0 12px 0' },
+  infoText: { fontSize: '1.125rem', color: '#1e40af', fontWeight: 600, margin: 0 },
+  buttons: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', paddingBottom: '16px' },
+  submitButton: { padding: '20px 16px', borderRadius: '16px', fontWeight: 900, fontSize: '1.5rem', color: '#ffffff', border: 'none', cursor: 'pointer', boxShadow: '0 10px 15px rgba(0,0,0,0.2)', transition: 'all 0.2s' },
+  cancelButton: { padding: '20px 16px', borderRadius: '16px', fontWeight: 900, fontSize: '1.5rem', background: '#e5e7eb', color: '#374151', border: 'none', cursor: 'pointer', transition: 'all 0.2s' },
+  restrictedBox: { background: '#fef3c7', border: '2px solid #fcd34d', color: '#92400e', fontSize: '1.25rem', padding: '16px 20px', borderRadius: '12px', fontWeight: 600 },
+};
 
 export default function CreateOutingPage() {
   const navigate = useNavigate();
@@ -114,123 +135,202 @@ export default function CreateOutingPage() {
   };
 
   if (!user || profile?.user_type !== 'owner') {
-    return (
-      <div className="bg-yellow-50 border-2 border-yellow-400 text-yellow-800 text-xl px-5 py-4 rounded-xl font-semibold">
-        Only boat owners can create outings.
-      </div>
-    );
+    return <div style={styles.restrictedBox}>Only boat owners can create outings.</div>;
   }
 
   return (
-    <div>
-      <button onClick={() => navigate('/skipper-dashboard')} className="text-blue-700 font-black text-xl mb-5 flex items-center gap-2">
+    <div style={styles.container}>
+      <button onClick={() => navigate('/skipper-dashboard')} style={styles.backButton}>
         ← Back to My Outings
       </button>
 
-      {/* Header */}
-      <div className="rounded-2xl p-6 mb-6" style={{background: 'linear-gradient(135deg, #0c2340 0%, #0369a1 100%)'}}>
-        <h1 className="text-3xl font-black text-white mb-1">Post New Outing</h1>
-        <p className="text-blue-100 text-lg font-semibold">Fill in the details and crew can request to join</p>
+      <div style={styles.header}>
+        <h1 style={styles.headerTitle}>Post New Outing</h1>
+        <p style={styles.headerSubtitle}>Fill in the details and crew can request to join</p>
       </div>
 
-      {error && (
-        <div className="bg-red-100 border-2 border-red-400 text-red-800 text-xl px-5 py-4 rounded-xl mb-6 font-semibold">{error}</div>
-      )}
+      {error && <div style={styles.errorBox}>{error}</div>}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} style={styles.form}>
 
         {/* Outing Details */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-5 space-y-5">
-          <h2 className="text-2xl font-black text-gray-900 border-b border-gray-100 pb-3">Outing Details</h2>
+        <div style={styles.section}>
+          <h2 style={styles.sectionTitle}>Outing Details</h2>
 
-          <div>
-            <label className={labelClass}>Title *</label>
-            <input type="text" name="title" value={formData.title} onChange={handleInputChange} className={fieldClass} placeholder="e.g., Morning Cruise to Key Biscayne" />
+          <div style={styles.fieldGroup}>
+            <label style={styles.label}>Title *</label>
+            <input
+              type="text"
+              name="title"
+              value={formData.title}
+              onChange={handleInputChange}
+              style={styles.input}
+              placeholder="e.g., Morning Cruise to Key Biscayne"
+            />
           </div>
 
-          <div>
-            <label className={labelClass}>Description</label>
-            <textarea name="description" value={formData.description} onChange={handleInputChange} rows="3" className={fieldClass} placeholder="Tell crew members about this outing..." />
+          <div style={styles.fieldGroup}>
+            <label style={styles.label}>Description</label>
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleInputChange}
+              style={styles.textarea}
+              placeholder="Tell crew members about this outing..."
+            />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className={labelClass}>Date *</label>
-              <input type="date" name="outingDate" value={formData.outingDate} onChange={handleInputChange} className={fieldClass} />
+          <div style={styles.grid}>
+            <div style={styles.fieldGroup}>
+              <label style={styles.label}>Date *</label>
+              <input
+                type="date"
+                name="outingDate"
+                value={formData.outingDate}
+                onChange={handleInputChange}
+                style={styles.input}
+              />
             </div>
-            <div>
-              <label className={labelClass}>Time *</label>
-              <input type="time" name="outingTime" value={formData.outingTime} onChange={handleInputChange} className={fieldClass} />
+            <div style={styles.fieldGroup}>
+              <label style={styles.label}>Time *</label>
+              <input
+                type="time"
+                name="outingTime"
+                value={formData.outingTime}
+                onChange={handleInputChange}
+                style={styles.input}
+              />
             </div>
           </div>
 
-          <div>
-            <label className={labelClass}>Location *</label>
-            <input type="text" name="location" value={formData.location} onChange={handleInputChange} className={fieldClass} placeholder="e.g., Coconut Grove Marina, Slip 42" />
+          <div style={styles.fieldGroup}>
+            <label style={styles.label}>Location *</label>
+            <input
+              type="text"
+              name="location"
+              value={formData.location}
+              onChange={handleInputChange}
+              style={styles.input}
+              placeholder="e.g., Coconut Grove Marina, Slip 42"
+            />
           </div>
 
-          <div>
-            <label className={labelClass}>Available Crew Spots *</label>
-            <input type="number" name="capacityAvailable" value={formData.capacityAvailable} onChange={handleInputChange} min="1" className={fieldClass} placeholder="How many crew members do you need?" />
+          <div style={styles.fieldGroup}>
+            <label style={styles.label}>Available Crew Spots *</label>
+            <input
+              type="number"
+              name="capacityAvailable"
+              value={formData.capacityAvailable}
+              onChange={handleInputChange}
+              min="1"
+              style={styles.input}
+              placeholder="How many crew members do you need?"
+            />
           </div>
         </div>
 
         {/* Boat Details */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-5 space-y-5">
-          <h2 className="text-2xl font-black text-gray-900 border-b border-gray-100 pb-3">Boat Details</h2>
+        <div style={styles.section}>
+          <h2 style={styles.sectionTitle}>Boat Details</h2>
 
-          <div>
-            <label className={labelClass}>Boat Name *</label>
-            <input type="text" name="boatName" value={formData.boatName} onChange={handleInputChange} className={fieldClass} placeholder="e.g., Blue Horizon" />
+          <div style={styles.fieldGroup}>
+            <label style={styles.label}>Boat Name *</label>
+            <input
+              type="text"
+              name="boatName"
+              value={formData.boatName}
+              onChange={handleInputChange}
+              style={styles.input}
+              placeholder="e.g., Blue Horizon"
+            />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className={labelClass}>Brand</label>
-              <input type="text" name="boatBrand" value={formData.boatBrand} onChange={handleInputChange} className={fieldClass} placeholder="e.g., Beneteau" />
+          <div style={styles.grid}>
+            <div style={styles.fieldGroup}>
+              <label style={styles.label}>Brand</label>
+              <input
+                type="text"
+                name="boatBrand"
+                value={formData.boatBrand}
+                onChange={handleInputChange}
+                style={styles.input}
+                placeholder="e.g., Beneteau"
+              />
             </div>
-            <div>
-              <label className={labelClass}>Model</label>
-              <input type="text" name="boatModel" value={formData.boatModel} onChange={handleInputChange} className={fieldClass} placeholder="e.g., Oceanis 38" />
+            <div style={styles.fieldGroup}>
+              <label style={styles.label}>Model</label>
+              <input
+                type="text"
+                name="boatModel"
+                value={formData.boatModel}
+                onChange={handleInputChange}
+                style={styles.input}
+                placeholder="e.g., Oceanis 38"
+              />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className={labelClass}>Length (ft)</label>
-              <input type="number" name="boatSize" value={formData.boatSize} onChange={handleInputChange} className={fieldClass} placeholder="38" />
+          <div style={styles.grid}>
+            <div style={styles.fieldGroup}>
+              <label style={styles.label}>Length (ft)</label>
+              <input
+                type="number"
+                name="boatSize"
+                value={formData.boatSize}
+                onChange={handleInputChange}
+                style={styles.input}
+                placeholder="38"
+              />
             </div>
-            <div>
-              <label className={labelClass}>Total Capacity</label>
-              <input type="number" name="boatCapacity" value={formData.boatCapacity} onChange={handleInputChange} min="1" className={fieldClass} placeholder="Including skipper" />
+            <div style={styles.fieldGroup}>
+              <label style={styles.label}>Total Capacity</label>
+              <input
+                type="number"
+                name="boatCapacity"
+                value={formData.boatCapacity}
+                onChange={handleInputChange}
+                min="1"
+                style={styles.input}
+                placeholder="Including skipper"
+              />
             </div>
           </div>
 
-          <div>
-            <label className={labelClass}>Mooring / Marina</label>
-            <input type="text" name="mooringLocation" value={formData.mooringLocation} onChange={handleInputChange} className={fieldClass} placeholder="e.g., Coconut Grove Marina" />
+          <div style={styles.fieldGroup}>
+            <label style={styles.label}>Mooring / Marina</label>
+            <input
+              type="text"
+              name="mooringLocation"
+              value={formData.mooringLocation}
+              onChange={handleInputChange}
+              style={styles.input}
+              placeholder="e.g., Coconut Grove Marina"
+            />
           </div>
         </div>
 
         {/* Skipper info */}
-        <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5">
-          <h2 className="text-xl font-black text-blue-900 mb-3">Skipper</h2>
-          <p className="text-lg text-blue-800 font-semibold">{profile?.full_name || 'You'} · {user?.email}</p>
+        <div style={styles.infoBox}>
+          <h2 style={styles.infoTitle}>Skipper</h2>
+          <p style={styles.infoText}>{profile?.full_name || 'You'} · {user?.email}</p>
         </div>
 
-        <div className="flex gap-4 pb-4">
+        <div style={styles.buttons}>
           <button
             type="submit"
             disabled={loading}
-            className="flex-1 py-5 rounded-2xl font-black text-white text-2xl shadow-lg transition disabled:opacity-50"
-            style={{background: loading ? '#9ca3af' : '#06b6d4'}}
+            style={{...styles.submitButton, background: loading ? '#9ca3af' : '#06b6d4', opacity: loading ? 0.5 : 1}}
+            onMouseEnter={(e) => !loading && (e.target.style.opacity = '0.9')}
+            onMouseLeave={(e) => !loading && (e.target.style.opacity = '1')}
           >
             {loading ? 'Posting...' : 'Post Outing →'}
           </button>
           <button
             type="button"
             onClick={() => navigate('/skipper-dashboard')}
-            className="flex-1 py-5 rounded-2xl font-black text-gray-700 text-2xl bg-gray-200 hover:bg-gray-300 transition"
+            style={styles.cancelButton}
+            onMouseEnter={(e) => e.target.style.background = '#d1d5db'}
+            onMouseLeave={(e) => e.target.style.background = '#e5e7eb'}
           >
             Cancel
           </button>

@@ -11,6 +11,7 @@ export function useAuth() {
 
   useEffect(() => {
     const initAuth = async () => {
+      const timeout = setTimeout(() => setLoading(false), 6000);
       try {
         const { data: { user } } = await supabase.auth.getUser();
         setUser(user);
@@ -28,6 +29,7 @@ export function useAuth() {
       } catch (err) {
         setError(err.message);
       } finally {
+        clearTimeout(timeout);
         setLoading(false);
       }
     };

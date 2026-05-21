@@ -9,15 +9,24 @@ import CreateOutingPage from './pages/CreateOutingPage';
 import SignupForm from './components/Auth/SignupForm';
 import LoginForm from './components/Auth/LoginForm';
 
+const Spinner = () => (
+  <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '48px'}}>
+    <div style={{
+      width: '40px', height: '40px', borderRadius: '50%',
+      border: '4px solid #e2e8f0', borderTopColor: '#0369a1',
+      animation: 'spin 0.8s linear infinite'
+    }} />
+    <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+  </div>
+);
+
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
 
   if (loading) {
     return (
       <Layout>
-        <div className="flex justify-center items-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ocean-600"></div>
-        </div>
+        <Spinner />
       </Layout>
     );
   }
@@ -34,8 +43,8 @@ function AuthRoute({ children }) {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ocean-600"></div>
+      <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh'}}>
+        <Spinner />
       </div>
     );
   }
@@ -53,46 +62,11 @@ function App() {
       <Routes>
         <Route path="/signup" element={<AuthRoute><SignupForm /></AuthRoute>} />
         <Route path="/login" element={<AuthRoute><LoginForm /></AuthRoute>} />
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <HomePage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <ProfilePage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/outing/:id"
-          element={
-            <ProtectedRoute>
-              <OuttingDetailPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/skipper-dashboard"
-          element={
-            <ProtectedRoute>
-              <SkipperDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/create-outing"
-          element={
-            <ProtectedRoute>
-              <CreateOutingPage />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+        <Route path="/outing/:id" element={<ProtectedRoute><OuttingDetailPage /></ProtectedRoute>} />
+        <Route path="/skipper-dashboard" element={<ProtectedRoute><SkipperDashboard /></ProtectedRoute>} />
+        <Route path="/create-outing" element={<ProtectedRoute><CreateOutingPage /></ProtectedRoute>} />
       </Routes>
     </Router>
   );

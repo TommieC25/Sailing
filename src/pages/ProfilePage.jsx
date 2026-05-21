@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
+import { supabase } from '../utils/supabaseClient';
 
 export default function ProfilePage() {
   const { user, profile, updateProfile } = useAuth();
@@ -11,6 +12,7 @@ export default function ProfilePage() {
   });
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     if (profile) {
@@ -25,6 +27,40 @@ export default function ProfilePage() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploading(true);
+      setMessage('');
+
+      // Upload to Supabase Storage
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+      const filePath = `profile-photos/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('profiles')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data } = supabase.storage.from('profiles').getPublicUrl(filePath);
+      const photoUrl = data.publicUrl;
+
+      // Update profile
+      await updateProfile({ photo_url: photoUrl });
+      setMessage('Photo updated successfully!');
+      setTimeout(() => setMessage(''), 3000);
+    } catch (err) {
+      setMessage('Error uploading photo: ' + err.message);
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -56,6 +92,35 @@ export default function ProfilePage() {
             {message}
           </div>
         )}
+
+        {/* Photo Section */}
+        <div className="mb-8 text-center">
+          <div className="inline-block mb-4">
+            {profile?.photo_url ? (
+              <img
+                src={profile.photo_url}
+                alt={profile.full_name}
+                className="w-32 h-32 rounded-full object-cover border-4 border-gray-200"
+              />
+            ) : (
+              <div className="w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 text-4xl border-4 border-gray-200">
+                📷
+              </div>
+            )}
+          </div>
+          <label className="block">
+            <span className="inline-block px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg font-medium cursor-pointer transition">
+              {uploading ? 'Uploading...' : 'Change Photo'}
+            </span>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handlePhotoUpload}
+              disabled={uploading}
+              className="hidden"
+            />
+          </label>
+        </div>
 
         <div className="mb-6">
           <p className="text-gray-600">Email: <span className="font-semibold text-gray-900">{user.email}</span></p>
@@ -89,7 +154,8 @@ export default function ProfilePage() {
 
             <button
               onClick={() => setEditMode(true)}
-              className="mt-6 bg-ocean-600 hover:bg-ocean-700 text-white px-6 py-2 rounded-lg font-medium transition"
+              className="mt-6 text-white px-6 py-2 rounded-lg font-medium transition hover:opacity-90"
+              style={{background: '#06b6d4'}}
             >
               Edit Profile
             </button>
@@ -143,7 +209,8 @@ export default function ProfilePage() {
               <button
                 type="submit"
                 disabled={saving}
-                className="flex-1 bg-ocean-600 hover:bg-ocean-700 disabled:bg-gray-400 text-white py-2 rounded-lg font-medium transition"
+                className="flex-1 text-white py-2 rounded-lg font-medium transition disabled:opacity-50"
+                style={{background: saving ? '#9ca3af' : '#06b6d4'}}
               >
                 {saving ? 'Saving...' : 'Save Changes'}
               </button>

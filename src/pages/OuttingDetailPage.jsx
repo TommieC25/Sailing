@@ -11,9 +11,11 @@ export default function OuttingDetailPage() {
   const [skipper, setSkipper] = useState(null);
   const [boat, setBoat] = useState(null);
   const [crewRequest, setCrewRequest] = useState(null);
+  const [crewRequests, setCrewRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [actionLoading, setActionLoading] = useState({});
 
   useEffect(() => {
     const fetchOuttingDetails = async () => {
@@ -54,6 +56,17 @@ export default function OuttingDetailPage() {
             .single();
 
           setCrewRequest(requestData || null);
+
+          // If skipper, fetch all crew requests
+          if (user.id === outingData.skipper_id) {
+            const { data: allRequests } = await supabase
+              .from('crew_requests')
+              .select(`*, crew:crew_id (id, full_name, photo_url, bio, sailing_experience)`)
+              .eq('outing_id', id)
+              .order('requested_at', { ascending: false });
+
+            setCrewRequests(allRequests || []);
+          }
         }
       } catch (err) {
         setError(err.message);
@@ -87,6 +100,48 @@ export default function OuttingDetailPage() {
       setError(err.message);
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleApproveRequest = async (requestId) => {
+    try {
+      setActionLoading((prev) => ({ ...prev, [requestId]: true }));
+      const { error } = await supabase
+        .from('crew_requests')
+        .update({ status: 'approved', responded_at: new Date().toISOString() })
+        .eq('id', requestId);
+
+      if (error) throw error;
+      setCrewRequests((prev) =>
+        prev.map((req) =>
+          req.id === requestId ? { ...req, status: 'approved' } : req
+        )
+      );
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setActionLoading((prev) => ({ ...prev, [requestId]: false }));
+    }
+  };
+
+  const handleDeclineRequest = async (requestId) => {
+    try {
+      setActionLoading((prev) => ({ ...prev, [requestId]: true }));
+      const { error } = await supabase
+        .from('crew_requests')
+        .update({ status: 'declined', responded_at: new Date().toISOString() })
+        .eq('id', requestId);
+
+      if (error) throw error;
+      setCrewRequests((prev) =>
+        prev.map((req) =>
+          req.id === requestId ? { ...req, status: 'declined' } : req
+        )
+      );
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setActionLoading((prev) => ({ ...prev, [requestId]: false }));
     }
   };
 
@@ -243,55 +298,136 @@ export default function OuttingDetailPage() {
           </div>
         </div>
 
-        <div className="border-t pt-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">
-            Join This Outing
-          </h2>
+        {/* Crew Requests (for skipper) */}
+        {isSkipper && (
+          <div className="border-t pt-6 mt-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+              Crew Requests ({crewRequests.length})
+            </h2>
 
-          {!user ? (
-            <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded">
-              <p>Sign in to request to join this outing</p>
-            </div>
-          ) : isSkipper ? (
-            <div className="space-y-4">
-              <p className="text-gray-600">
-                You are the skipper of this outing
-              </p>
-              <button className="bg-ocean-600 hover:bg-ocean-700 text-white px-6 py-2 rounded-lg font-medium transition">
-                Manage Requests
+            {crewRequests.length === 0 ? (
+              <p className="text-gray-600">No crew requests yet</p>
+            ) : (
+              <div className="space-y-4">
+                {crewRequests.map((req) => (
+                  <div
+                    key={req.id}
+                    className={`border rounded-lg p-4 ${
+                      req.status === 'pending'
+                        ? 'border-yellow-200 bg-yellow-50'
+                        : req.status === 'approved'
+                        ? 'border-green-200 bg-green-50'
+                        : 'border-red-200 bg-red-50'
+                    }`}
+                  >
+                    <div className="flex items-start gap-4">
+                      {req.crew?.photo_url && (
+                        <img
+                          src={req.crew.photo_url}
+                          alt={req.crew.full_name}
+                          className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+                        />
+                      )}
+                      <div className="flex-1">
+                        <p className="font-bold text-gray-900 text-lg">
+                          {req.crew?.full_name}
+                        </p>
+                        <p className="text-sm text-gray-600 capitalize">
+                          {req.crew?.sailing_experience} sailor
+                        </p>
+                        {req.crew?.bio && (
+                          <p className="text-sm text-gray-700 mt-2">
+                            {req.crew.bio}
+                          </p>
+                        )}
+                        <p className="text-xs text-gray-500 mt-2">
+                          Requested:{' '}
+                          {new Date(req.requested_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="flex gap-2 flex-col flex-shrink-0">
+                        {req.status === 'pending' && (
+                          <>
+                            <button
+                              onClick={() => handleApproveRequest(req.id)}
+                              disabled={actionLoading[req.id]}
+                              className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-bold rounded-lg text-sm transition"
+                            >
+                              ✓ Approve
+                            </button>
+                            <button
+                              onClick={() => handleDeclineRequest(req.id)}
+                              disabled={actionLoading[req.id]}
+                              className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white font-bold rounded-lg text-sm transition"
+                            >
+                              ✗ Decline
+                            </button>
+                          </>
+                        )}
+                        {req.status !== 'pending' && (
+                          <p
+                            className={`px-3 py-2 rounded-lg text-sm font-bold text-center ${
+                              req.status === 'approved'
+                                ? 'bg-green-600 text-white'
+                                : 'bg-red-600 text-white'
+                            }`}
+                          >
+                            {req.status === 'approved' ? 'Approved' : 'Declined'}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Join/Request Section (for crew) */}
+        {!isSkipper && (
+          <div className="border-t pt-6 mt-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">
+              Join This Outing
+            </h2>
+
+            {!user ? (
+              <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded">
+                <p>Sign in to request to join this outing</p>
+              </div>
+            ) : crewRequest ? (
+              <div className={`rounded-lg p-4 ${getStatusColor(crewRequest.status)}`}>
+                <p className="font-semibold mb-2 capitalize">
+                  Request Status: {crewRequest.status}
+                </p>
+                {crewRequest.status === 'pending' && (
+                  <p className="text-sm">
+                    Waiting for the skipper to review your request
+                  </p>
+                )}
+                {crewRequest.status === 'approved' && (
+                  <p className="text-sm">
+                    Great! You're approved to join this outing
+                  </p>
+                )}
+                {crewRequest.status === 'declined' && (
+                  <p className="text-sm">
+                    Your request was not approved for this outing
+                  </p>
+                )}
+              </div>
+            ) : (
+              <button
+                onClick={handleRequestToJoin}
+                disabled={submitting}
+                className="text-white px-6 py-3 rounded-lg font-semibold transition w-full md:w-auto"
+                style={{background: submitting ? '#9ca3af' : '#06b6d4'}}
+              >
+                {submitting ? 'Submitting Request...' : 'Request to Join'}
               </button>
-            </div>
-          ) : crewRequest ? (
-            <div className={`rounded-lg p-4 ${getStatusColor(crewRequest.status)}`}>
-              <p className="font-semibold mb-2 capitalize">
-                Request Status: {crewRequest.status}
-              </p>
-              {crewRequest.status === 'pending' && (
-                <p className="text-sm">
-                  Waiting for the skipper to review your request
-                </p>
-              )}
-              {crewRequest.status === 'approved' && (
-                <p className="text-sm">
-                  Great! You're approved to join this outing
-                </p>
-              )}
-              {crewRequest.status === 'declined' && (
-                <p className="text-sm">
-                  Your request was not approved for this outing
-                </p>
-              )}
-            </div>
-          ) : (
-            <button
-              onClick={handleRequestToJoin}
-              disabled={submitting}
-              className="bg-ocean-600 hover:bg-ocean-700 disabled:bg-gray-400 text-white px-6 py-3 rounded-lg font-semibold transition w-full md:w-auto"
-            >
-              {submitting ? 'Submitting Request...' : 'Request to Join'}
-            </button>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -156,10 +156,10 @@ export default function ProfilePage() {
               <img
                 src={profile.photo_url}
                 alt={profile.full_name}
-                className="w-32 h-32 rounded-full object-cover border-4 border-gray-200"
+                className="w-16 h-16 rounded-full object-cover border-4 border-gray-200"
               />
             ) : (
-              <div className="w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 text-4xl border-4 border-gray-200">
+              <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 text-2xl border-4 border-gray-200">
                 📷
               </div>
             )}

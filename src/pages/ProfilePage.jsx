@@ -6,9 +6,9 @@ const styles = {
   container: { maxWidth: '800px', margin: '0 auto' },
   card: { background: 'white', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', padding: '1.5rem' },
   title: { fontSize: '2rem', fontWeight: 'bold', color: '#111', marginBottom: '2rem' },
-  photo: { width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', border: '4px solid #ddd' },
-  photoSection: { marginBottom: '2rem', textAlign: 'center' },
-  photoPlaceholder: { width: '80px', height: '80px', borderRadius: '50%', background: '#ddd', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', border: '4px solid #ddd' },
+  photo: { width: '160px', height: '160px', borderRadius: '50%', objectFit: 'cover', border: '4px solid #ddd' },
+  photoSection: { marginBottom: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2rem' },
+  photoPlaceholder: { width: '160px', height: '160px', borderRadius: '50%', background: '#ddd', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3rem', border: '4px solid #ddd', flexShrink: 0 },
   button: { background: '#06b6d4', color: 'white', padding: '0.75rem 1.5rem', borderRadius: '6px', border: 'none', fontWeight: 'bold', cursor: 'pointer', fontSize: '1rem' },
   label: { fontSize: '1.125rem', fontWeight: 'bold', color: '#555', marginBottom: '0.5rem', display: 'block' },
   value: { fontSize: '1.5rem', fontWeight: '600', color: '#111', marginBottom: '1.5rem' },
@@ -175,7 +175,7 @@ export default function ProfilePage() {
         )}
 
         <div style={styles.photoSection}>
-          <div style={{marginBottom: '1rem', display: 'inline-block'}}>
+          <div>
             {profile?.photo_url ? (
               <img src={profile.photo_url} alt={profile.full_name} style={styles.photo} />
             ) : (
@@ -183,7 +183,7 @@ export default function ProfilePage() {
             )}
           </div>
           <label>
-            <span style={{...styles.button, display: 'inline-block', cursor: 'pointer'}}>
+            <span style={{...styles.button, display: 'block', cursor: 'pointer'}}>
               {uploading ? 'Uploading...' : 'Change Photo'}
             </span>
             <input

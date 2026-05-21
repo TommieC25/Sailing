@@ -63,7 +63,7 @@ export default function SkipperDashboard() {
       try {
         const { data: outingsData, error: outingsError } = await supabase
           .from('outings')
-          .select(`*, boats (name, boat_type, size_ft)`)
+          .select(`*, boats (name, size_ft)`)
           .eq('skipper_id', user.id)
           .order('outing_date', { ascending: true });
 

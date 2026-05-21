@@ -20,7 +20,7 @@ export default function HomePage() {
           .from('outings')
           .select(`
             *,
-            boats (name, boat_type, size_ft, capacity, owner_id),
+            boats (name, size_ft, capacity, owner_id),
             skipper:skipper_id (full_name)
           `)
           .gte('outing_date', new Date().toISOString().split('T')[0])

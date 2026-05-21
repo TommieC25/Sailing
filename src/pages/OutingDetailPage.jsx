@@ -341,11 +341,6 @@ export default function OutingDetailPage() {
                 </div>
 
                 <div>
-                  <p style={styles.detailLabel}>Boat Type</p>
-                  <p style={{ ...styles.detailValue, textTransform: 'capitalize' }}>{boat.boat_type}</p>
-                </div>
-
-                <div>
                   <p style={styles.detailLabel}>Size</p>
                   <p style={styles.detailValue}>{boat.size_ft} ft</p>
                 </div>

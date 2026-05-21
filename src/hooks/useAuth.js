@@ -3,7 +3,7 @@ import { supabase } from '../utils/supabaseClient';
 
 const AuthContext = createContext(null);
 
-export function useAuth() {
+export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -113,7 +113,6 @@ export function useAuth() {
       setProfile(null);
     } catch (err) {
       setError(err.message);
-      throw err;
     } finally {
       setLoading(false);
     }
@@ -139,16 +138,17 @@ export function useAuth() {
     }
   };
 
-  return {
-    user,
-    profile,
-    loading,
-    error,
-    signUp,
-    signIn,
-    signOut,
-    updateProfile,
-  };
+  return (
+    <AuthContext.Provider value={{ user, profile, loading, error, signUp, signIn, signOut, updateProfile }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
-export { AuthContext };
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within AuthProvider');
+  }
+  return context;
+

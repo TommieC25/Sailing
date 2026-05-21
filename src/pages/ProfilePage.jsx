@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
+import { supabase } from '../utils/supabaseClient';
 
 export default function ProfilePage() {
   const { user, profile, updateProfile } = useAuth();
@@ -11,6 +12,8 @@ export default function ProfilePage() {
   });
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [boats, setBoats] = useState([]);
 
   useEffect(() => {
     if (profile) {
@@ -22,9 +25,62 @@ export default function ProfilePage() {
     }
   }, [profile]);
 
+  useEffect(() => {
+    const fetchBoats = async () => {
+      console.log('Boats fetch check - user:', user?.id, 'profile:', profile, 'user_type:', profile?.user_type);
+      if (!user || profile?.user_type !== 'owner') {
+        console.log('Skipping boats fetch - user exists:', !!user, 'is owner:', profile?.user_type === 'owner');
+        return;
+      }
+      try {
+        console.log('Fetching boats for owner:', user.id);
+        const { data } = await supabase
+          .from('boats')
+          .select('*')
+          .eq('owner_id', user.id);
+        console.log('Boats data:', data);
+        setBoats(data || []);
+      } catch (err) {
+        console.error('Error fetching boats:', err);
+      }
+    };
+    fetchBoats();
+  }, [user, profile]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploading(true);
+      setMessage('');
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+      const filePath = `profile-photos/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('profiles')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from('profiles').getPublicUrl(filePath);
+      const photoUrl = data.publicUrl;
+
+      await updateProfile({ photo_url: photoUrl });
+      setMessage('Photo updated successfully!');
+      setTimeout(() => setMessage(''), 3000);
+    } catch (err) {
+      setMessage('Error uploading photo: ' + err.message);
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -57,6 +113,35 @@ export default function ProfilePage() {
           </div>
         )}
 
+        {/* Photo Section */}
+        <div className="mb-8 text-center">
+          <div className="inline-block mb-4">
+            {profile?.photo_url ? (
+              <img
+                src={profile.photo_url}
+                alt={profile.full_name}
+                className="w-32 h-32 rounded-full object-cover border-4 border-gray-200"
+              />
+            ) : (
+              <div className="w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 text-4xl border-4 border-gray-200">
+                📷
+              </div>
+            )}
+          </div>
+          <label className="block">
+            <span className="inline-block px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg font-medium cursor-pointer transition">
+              {uploading ? 'Uploading...' : 'Change Photo'}
+            </span>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handlePhotoUpload}
+              disabled={uploading}
+              className="hidden"
+            />
+          </label>
+        </div>
+
         <div className="mb-6">
           <p className="text-gray-600">Email: <span className="font-semibold text-gray-900">{user.email}</span></p>
         </div>
@@ -87,9 +172,35 @@ export default function ProfilePage() {
               </p>
             </div>
 
+            {profile?.user_type === 'owner' && (
+              <div>
+                <p className="text-gray-600">Your Boats</p>
+                {boats.length === 0 ? (
+                  <p className="text-lg text-gray-500">No boats added yet</p>
+                ) : (
+                  <div className="space-y-3 mt-2">
+                    {boats.map((boat) => (
+                      <div key={boat.id} className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                        <p className="font-semibold text-gray-900 text-lg">{boat.name}</p>
+                        <p className="text-sm text-gray-600">{boat.brand} {boat.model}</p>
+                        <div className="grid grid-cols-2 gap-2 mt-2 text-sm text-gray-700">
+                          <div>Size: {boat.size_ft}ft</div>
+                          <div>Capacity: {boat.capacity} people</div>
+                          {boat.mooring_location && (
+                            <div className="col-span-2">Location: {boat.mooring_location}</div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             <button
               onClick={() => setEditMode(true)}
-              className="mt-6 bg-ocean-600 hover:bg-ocean-700 text-white px-6 py-2 rounded-lg font-medium transition"
+              className="mt-6 text-white px-6 py-2 rounded-lg font-medium transition hover:opacity-90"
+              style={{background: '#06b6d4'}}
             >
               Edit Profile
             </button>
@@ -143,7 +254,8 @@ export default function ProfilePage() {
               <button
                 type="submit"
                 disabled={saving}
-                className="flex-1 bg-ocean-600 hover:bg-ocean-700 disabled:bg-gray-400 text-white py-2 rounded-lg font-medium transition"
+                className="flex-1 text-white py-2 rounded-lg font-medium transition disabled:opacity-50"
+                style={{background: saving ? '#9ca3af' : '#06b6d4'}}
               >
                 {saving ? 'Saving...' : 'Save Changes'}
               </button>

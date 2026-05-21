@@ -59,6 +59,7 @@ export function useAuth() {
       const { data: { user }, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
+        options: { data: userProfile },
       });
 
       if (signUpError) throw signUpError;

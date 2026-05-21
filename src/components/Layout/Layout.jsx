@@ -25,33 +25,33 @@ export default function Layout({ children }) {
           <div className="flex justify-between items-center h-16">
 
             <Link to="/" className="flex items-center gap-2">
-              <img src="/Sailing/Club Logo.jpg" alt="CGSC" className="h-10 w-auto" />
-              <span className="text-white text-xl font-black tracking-tight">CGSC Sailing</span>
+              <img src="/Sailing/Club Logo.jpg" alt="CGSC" className="h-10 w-auto rounded" />
+              <span style={{color: '#ffffff', fontSize: '1.25rem', fontWeight: 900, letterSpacing: '-0.02em', textShadow: '0 1px 4px rgba(0,0,0,0.5)'}}>CGSC Sailing</span>
             </Link>
 
             {/* Desktop nav links */}
             <div className="hidden md:flex items-center gap-5">
               {user ? (
                 <>
-                  <Link to="/" className="text-blue-100 hover:text-white text-lg font-bold">Outings</Link>
+                  <Link to="/" className="text-white hover:text-cyan-200 text-lg font-bold">Outings</Link>
                   {profile?.user_type === 'owner' && (
-                    <Link to="/skipper-dashboard" className="text-blue-100 hover:text-white text-lg font-bold">My Outings</Link>
+                    <Link to="/skipper-dashboard" className="text-white hover:text-cyan-200 text-lg font-bold">My Outings</Link>
                   )}
-                  <Link to="/profile" className="text-blue-100 hover:text-white text-lg font-bold">Profile</Link>
-                  <button onClick={handleSignOut} className="bg-white text-blue-900 font-black px-4 py-2 rounded-xl text-lg hover:bg-blue-50 transition">
+                  <Link to="/profile" className="text-white hover:text-cyan-200 text-lg font-bold">Profile</Link>
+                  <button onClick={handleSignOut} className="bg-white text-blue-900 font-black px-4 py-2 rounded-xl text-lg hover:bg-cyan-100 transition">
                     Sign Out
                   </button>
                 </>
               ) : (
                 <>
-                  <Link to="/login" className="text-blue-100 hover:text-white text-lg font-bold">Sign In</Link>
-                  <Link to="/signup" className="bg-white text-blue-900 font-black px-4 py-2 rounded-xl text-lg hover:bg-blue-50 transition">Sign Up</Link>
+                  <Link to="/login" className="text-white hover:text-cyan-200 text-lg font-bold">Sign In</Link>
+                  <Link to="/signup" className="bg-white text-blue-900 font-black px-4 py-2 rounded-xl text-lg hover:bg-cyan-100 transition">Sign Up</Link>
                 </>
               )}
             </div>
 
             {/* Mobile hamburger */}
-            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden text-white p-1">
+            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden p-1" style={{color: '#ffffff'}}>
               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={mobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
               </svg>
@@ -60,7 +60,7 @@ export default function Layout({ children }) {
 
           {/* Mobile menu */}
           {mobileMenuOpen && (
-            <div className="md:hidden pb-4 space-y-1 border-t border-blue-600 mt-1 pt-3">
+            <div className="md:hidden pb-4 space-y-1 border-t border-blue-400 mt-1 pt-3">
               {user ? (
                 <>
                   <Link to="/" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-3 text-white text-xl font-bold rounded-xl hover:bg-white hover:bg-opacity-10">⛵ Outings</Link>
@@ -68,7 +68,7 @@ export default function Layout({ children }) {
                     <Link to="/skipper-dashboard" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-3 text-white text-xl font-bold rounded-xl hover:bg-white hover:bg-opacity-10">📋 My Outings</Link>
                   )}
                   <Link to="/profile" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-3 text-white text-xl font-bold rounded-xl hover:bg-white hover:bg-opacity-10">👤 Profile</Link>
-                  <button onClick={handleSignOut} className="w-full text-left px-3 py-3 text-red-300 text-xl font-bold rounded-xl hover:bg-white hover:bg-opacity-10">
+                  <button onClick={handleSignOut} className="w-full text-left px-3 py-3 text-red-200 text-xl font-bold rounded-xl hover:bg-white hover:bg-opacity-10">
                     🚪 Sign Out
                   </button>
                 </>

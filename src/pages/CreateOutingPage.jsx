@@ -29,7 +29,7 @@ const styles = {
 
 export default function CreateOutingPage() {
   const navigate = useNavigate();
-  const { user, profile } = useAuth();
+  const { user, profile, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({
@@ -167,8 +167,17 @@ export default function CreateOutingPage() {
     }
   };
 
+  if (authLoading) {
+    return (
+      <div style={{textAlign: 'center', padding: '40px'}}>
+        <div style={{display: 'inline-block', width: '40px', height: '40px', borderRadius: '50%', border: '4px solid #e2e8f0', borderTopColor: '#0369a1', animation: 'spin 0.8s linear infinite'}} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
+
   if (!user || profile?.user_type !== 'owner') {
-    return <div style={styles.restrictedBox}>Only boat owners can create outings.</div>;
+    return <div style={styles.restrictedBox}>Only boat owners can create outings. Please update your profile to set your account type to "Boat Owner".</div>;
   }
 
   return (

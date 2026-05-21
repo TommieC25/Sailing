@@ -14,6 +14,16 @@ export default function ProfilePage() {
   const [message, setMessage] = useState('');
   const [uploading, setUploading] = useState(false);
   const [boats, setBoats] = useState([]);
+  const [editingBoatId, setEditingBoatId] = useState(null);
+  const [boatFormData, setBoatFormData] = useState({
+    name: '',
+    brand: '',
+    model: '',
+    size_ft: '',
+    capacity: '',
+    mooring_location: '',
+  });
+  const [boatSaving, setBoatSaving] = useState(false);
 
   useEffect(() => {
     if (profile) {
@@ -95,6 +105,63 @@ export default function ProfilePage() {
       setMessage('Error updating profile: ' + err.message);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleEditBoat = (boat) => {
+    setEditingBoatId(boat.id);
+    setBoatFormData({
+      name: boat.name || '',
+      brand: boat.brand || '',
+      model: boat.model || '',
+      size_ft: boat.size_ft || '',
+      capacity: boat.capacity || '',
+      mooring_location: boat.mooring_location || '',
+    });
+  };
+
+  const handleBoatChange = (e) => {
+    const { name, value } = e.target;
+    setBoatFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSaveBoat = async (boatId) => {
+    try {
+      setBoatSaving(true);
+      const { error } = await supabase
+        .from('boats')
+        .update({
+          name: boatFormData.name,
+          brand: boatFormData.brand || null,
+          model: boatFormData.model || null,
+          size_ft: boatFormData.size_ft ? parseInt(boatFormData.size_ft) : null,
+          capacity: parseInt(boatFormData.capacity) || 1,
+          mooring_location: boatFormData.mooring_location || null,
+        })
+        .eq('id', boatId);
+
+      if (error) throw error;
+
+      setBoats((prev) =>
+        prev.map((b) =>
+          b.id === boatId
+            ? {
+                ...b,
+                ...boatFormData,
+                size_ft: boatFormData.size_ft ? parseInt(boatFormData.size_ft) : null,
+                capacity: parseInt(boatFormData.capacity) || 1,
+              }
+            : b
+        )
+      );
+
+      setEditingBoatId(null);
+      setMessage('Boat updated successfully!');
+      setTimeout(() => setMessage(''), 3000);
+    } catch (err) {
+      setMessage('Error updating boat: ' + err.message);
+    } finally {
+      setBoatSaving(false);
     }
   };
 
@@ -181,15 +248,109 @@ export default function ProfilePage() {
                   <div className="space-y-3 mt-2">
                     {boats.map((boat) => (
                       <div key={boat.id} className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                        <p className="font-semibold text-gray-900 text-lg">{boat.name}</p>
-                        <p className="text-sm text-gray-600">{boat.brand} {boat.model}</p>
-                        <div className="grid grid-cols-2 gap-2 mt-2 text-sm text-gray-700">
-                          <div>Size: {boat.size_ft}ft</div>
-                          <div>Capacity: {boat.capacity} people</div>
-                          {boat.mooring_location && (
-                            <div className="col-span-2">Location: {boat.mooring_location}</div>
-                          )}
-                        </div>
+                        {editingBoatId === boat.id ? (
+                          <div className="space-y-3">
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">Boat Name</label>
+                              <input
+                                type="text"
+                                name="name"
+                                value={boatFormData.name}
+                                onChange={handleBoatChange}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                              />
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Brand</label>
+                                <input
+                                  type="text"
+                                  name="brand"
+                                  value={boatFormData.brand}
+                                  onChange={handleBoatChange}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Model</label>
+                                <input
+                                  type="text"
+                                  name="model"
+                                  value={boatFormData.model}
+                                  onChange={handleBoatChange}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                />
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Size (ft)</label>
+                                <input
+                                  type="number"
+                                  name="size_ft"
+                                  value={boatFormData.size_ft}
+                                  onChange={handleBoatChange}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Capacity</label>
+                                <input
+                                  type="number"
+                                  name="capacity"
+                                  value={boatFormData.capacity}
+                                  onChange={handleBoatChange}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                />
+                              </div>
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">Mooring Location</label>
+                              <input
+                                type="text"
+                                name="mooring_location"
+                                value={boatFormData.mooring_location}
+                                onChange={handleBoatChange}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                              />
+                            </div>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => handleSaveBoat(boat.id)}
+                                disabled={boatSaving}
+                                className="flex-1 text-white py-2 rounded-lg font-medium transition disabled:opacity-50"
+                                style={{background: boatSaving ? '#9ca3af' : '#06b6d4'}}
+                              >
+                                {boatSaving ? 'Saving...' : 'Save'}
+                              </button>
+                              <button
+                                onClick={() => setEditingBoatId(null)}
+                                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-900 py-2 rounded-lg font-medium transition"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <p className="font-semibold text-gray-900 text-lg">{boat.name}</p>
+                            <p className="text-sm text-gray-600">{boat.brand} {boat.model}</p>
+                            <div className="grid grid-cols-2 gap-2 mt-2 text-sm text-gray-700">
+                              <div>Size: {boat.size_ft}ft</div>
+                              <div>Capacity: {boat.capacity} people</div>
+                              {boat.mooring_location && (
+                                <div className="col-span-2">Location: {boat.mooring_location}</div>
+                              )}
+                            </div>
+                            <button
+                              onClick={() => handleEditBoat(boat)}
+                              className="mt-3 text-white px-4 py-2 rounded-lg font-medium text-sm transition hover:opacity-90"
+                              style={{background: '#06b6d4'}}
+                            >
+                              Edit Boat
+                            </button>
+                          </>
+                        )}
                       </div>
                     ))}
                   </div>

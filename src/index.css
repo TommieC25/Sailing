@@ -6,6 +6,13 @@
   box-sizing: border-box;
 }
 
+input::placeholder,
+textarea::placeholder,
+select::placeholder {
+  font-size: inherit;
+  opacity: 0.75;
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',

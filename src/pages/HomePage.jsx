@@ -139,10 +139,25 @@ export default function HomePage() {
         )}
 
         {!loading && outings.length === 0 && (
-          <div className="text-center py-10 bg-white rounded-2xl border border-gray-100">
-            <p className="text-4xl mb-3">⛵</p>
-            <p className="text-gray-600 font-medium">No outings scheduled yet.</p>
-            <p className="text-gray-400 text-sm mt-1">Check back soon or post one yourself!</p>
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+            <div className="text-center py-10 px-6" style={{background: 'linear-gradient(135deg, #0c2340 0%, #0369a1 100%)'}}>
+              <p className="text-6xl mb-4">⛵</p>
+              <p className="text-white text-2xl font-black mb-2">No outings posted yet</p>
+              <p className="text-blue-100 text-lg font-semibold">Be the first — or check back soon as skippers add their upcoming sails.</p>
+            </div>
+            <div className="p-6 space-y-4">
+              <p className="text-gray-800 text-xl font-black">While you wait:</p>
+              {[
+                { emoji: '👤', text: 'Complete your profile so skippers know who you are' },
+                { emoji: '🔔', text: 'Check back regularly — outings get posted weekly' },
+                { emoji: '🚢', text: 'Own a boat? Post the first outing from My Outings' },
+              ].map(({ emoji, text }) => (
+                <div key={emoji} className="flex items-start gap-3">
+                  <span className="text-2xl">{emoji}</span>
+                  <p className="text-gray-700 text-lg font-semibold">{text}</p>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 

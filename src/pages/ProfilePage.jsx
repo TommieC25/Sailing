@@ -144,7 +144,7 @@ export default function ProfilePage() {
         <h1 className="text-3xl font-bold text-gray-900 mb-6">My Profile</h1>
 
         {message && (
-          <div className={`mb-4 p-4 rounded ${message.includes('Error') ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>
+          <div className={`mb-4 p-4 rounded text-lg ${message.includes('Error') ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>
             {message}
           </div>
         )}
@@ -165,7 +165,7 @@ export default function ProfilePage() {
             )}
           </div>
           <label className="block">
-            <span className="inline-block px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg font-medium cursor-pointer transition">
+            <span className="inline-block px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg font-medium cursor-pointer transition text-base">
               {uploading ? 'Uploading...' : 'Change Photo'}
             </span>
             <input
@@ -179,43 +179,43 @@ export default function ProfilePage() {
         </div>
 
         <div className="mb-6">
-          <p className="text-gray-600">Email: <span className="font-semibold text-gray-900">{user.email}</span></p>
+          <p className="text-gray-600 text-base">Email: <span className="font-semibold text-gray-900">{user.email}</span></p>
         </div>
 
         {!editMode ? (
           <div className="space-y-4">
             <div>
-              <p className="text-gray-600">Full Name</p>
-              <p className="text-lg font-semibold text-gray-900">{profile?.full_name || 'Not set'}</p>
+              <p className="text-gray-600 text-base">Full Name</p>
+              <p className="text-xl font-semibold text-gray-900">{profile?.full_name || 'Not set'}</p>
             </div>
 
             <div>
-              <p className="text-gray-600">Bio</p>
+              <p className="text-gray-600 text-base">Bio</p>
               <p className="text-lg text-gray-900">{profile?.bio || 'No bio added'}</p>
             </div>
 
             <div>
-              <p className="text-gray-600">Sailing Experience</p>
-              <p className="text-lg font-semibold text-gray-900 capitalize">
+              <p className="text-gray-600 text-base">Sailing Experience</p>
+              <p className="text-xl font-semibold text-gray-900 capitalize">
                 {profile?.sailing_experience || 'Not set'}
               </p>
             </div>
 
             <div>
-              <p className="text-gray-600">Account Type</p>
-              <p className="text-lg font-semibold text-gray-900 capitalize">
+              <p className="text-gray-600 text-base">Account Type</p>
+              <p className="text-xl font-semibold text-gray-900 capitalize">
                 {profile?.user_type || 'Not set'}
               </p>
             </div>
 
             {profile?.user_type === 'owner' && boats.length > 0 && (
               <div>
-                <p className="text-gray-600">Your Boat</p>
+                <p className="text-gray-600 text-base">Your Boat</p>
                 {boats.map((boat) => (
                   <div key={boat.id} className="bg-gray-50 border border-gray-200 rounded-lg p-4 mt-2">
                     <p className="font-semibold text-gray-900 text-lg">{boat.name}</p>
-                    <p className="text-sm text-gray-600">{boat.brand} {boat.model}</p>
-                    <div className="grid grid-cols-2 gap-2 mt-2 text-sm text-gray-700">
+                    <p className="text-base text-gray-600">{boat.brand} {boat.model}</p>
+                    <div className="grid grid-cols-2 gap-2 mt-2 text-base text-gray-700">
                       <div>Size: {boat.size_ft}ft</div>
                       <div>Capacity: {boat.capacity} people</div>
                       {boat.mooring_location && (
@@ -229,7 +229,7 @@ export default function ProfilePage() {
 
             <button
               onClick={() => setEditMode(true)}
-              className="mt-6 text-white px-6 py-2 rounded-lg font-medium transition hover:opacity-90"
+              className="mt-6 text-white px-6 py-3 rounded-lg font-bold transition hover:opacity-90 text-lg"
               style={{background: '#06b6d4'}}
             >
               Edit Profile
@@ -238,11 +238,11 @@ export default function ProfilePage() {
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Profile Information</h3>
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Profile Information</h3>
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-base font-semibold text-gray-700 mb-2">
                     Full Name
                   </label>
                   <input
@@ -250,12 +250,12 @@ export default function ProfilePage() {
                     name="full_name"
                     value={formData.full_name}
                     onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    className="w-full px-4 py-3 text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-base font-semibold text-gray-700 mb-2">
                     Bio
                   </label>
                   <textarea
@@ -263,20 +263,20 @@ export default function ProfilePage() {
                     value={formData.bio}
                     onChange={handleChange}
                     rows="4"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    className="w-full px-4 py-3 text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                     placeholder="Tell other sailors about yourself..."
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-base font-semibold text-gray-700 mb-2">
                     Sailing Experience
                   </label>
                   <select
                     name="sailing_experience"
                     value={formData.sailing_experience}
                     onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    className="w-full px-4 py-3 text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                   >
                     <option value="beginner">Beginner</option>
                     <option value="intermediate">Intermediate</option>
@@ -288,11 +288,11 @@ export default function ProfilePage() {
 
             {profile?.user_type === 'owner' && (
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Boat Information</h3>
+                <h3 className="text-xl font-bold text-gray-900 mb-4">Boat Information</h3>
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-base font-semibold text-gray-700 mb-2">
                       Boat Name
                     </label>
                     <input
@@ -300,13 +300,13 @@ export default function ProfilePage() {
                       name="name"
                       value={boatData.name}
                       onChange={handleBoatChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                      className="w-full px-4 py-3 text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-base font-semibold text-gray-700 mb-2">
                         Brand
                       </label>
                       <input
@@ -314,12 +314,12 @@ export default function ProfilePage() {
                         name="brand"
                         value={boatData.brand}
                         onChange={handleBoatChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        className="w-full px-4 py-3 text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-base font-semibold text-gray-700 mb-2">
                         Model
                       </label>
                       <input
@@ -327,14 +327,14 @@ export default function ProfilePage() {
                         name="model"
                         value={boatData.model}
                         onChange={handleBoatChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        className="w-full px-4 py-3 text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-base font-semibold text-gray-700 mb-2">
                         Size (ft)
                       </label>
                       <input
@@ -342,12 +342,12 @@ export default function ProfilePage() {
                         name="size_ft"
                         value={boatData.size_ft}
                         onChange={handleBoatChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        className="w-full px-4 py-3 text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-base font-semibold text-gray-700 mb-2">
                         Capacity (people)
                       </label>
                       <input
@@ -355,13 +355,13 @@ export default function ProfilePage() {
                         name="capacity"
                         value={boatData.capacity}
                         onChange={handleBoatChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        className="w-full px-4 py-3 text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-base font-semibold text-gray-700 mb-2">
                       Mooring Location
                     </label>
                     <input
@@ -369,7 +369,7 @@ export default function ProfilePage() {
                       name="mooring_location"
                       value={boatData.mooring_location}
                       onChange={handleBoatChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                      className="w-full px-4 py-3 text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                     />
                   </div>
                 </div>
@@ -380,7 +380,7 @@ export default function ProfilePage() {
               <button
                 type="submit"
                 disabled={saving}
-                className="flex-1 text-white py-2 rounded-lg font-medium transition disabled:opacity-50"
+                className="flex-1 text-white py-3 rounded-lg font-bold transition disabled:opacity-50 text-lg"
                 style={{background: saving ? '#9ca3af' : '#06b6d4'}}
               >
                 {saving ? 'Saving...' : 'Save Changes'}
@@ -388,7 +388,7 @@ export default function ProfilePage() {
               <button
                 type="button"
                 onClick={() => setEditMode(false)}
-                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-900 py-2 rounded-lg font-medium transition"
+                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-900 py-3 rounded-lg font-bold transition text-lg"
               >
                 Cancel
               </button>

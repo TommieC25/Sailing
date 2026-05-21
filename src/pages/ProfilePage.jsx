@@ -33,6 +33,7 @@ export default function ProfilePage() {
   const [editMode, setEditMode] = useState(false);
   const [formData, setFormData] = useState({
     full_name: '',
+    gender: '',
     bio: '',
     sailing_experience: '',
     phone: '',
@@ -92,6 +93,7 @@ export default function ProfilePage() {
     if (profile && !isViewingOther) {
       setFormData({
         full_name: profile.full_name || '',
+        gender: profile.gender || '',
         bio: profile.bio || '',
         sailing_experience: profile.sailing_experience || '',
         phone: profile.phone || '',
@@ -319,6 +321,11 @@ export default function ProfilePage() {
             </div>
 
             <div style={styles.section}>
+              <div style={styles.label}>Gender</div>
+              <div style={styles.value}>{displayProfile?.gender || 'Not set'}</div>
+            </div>
+
+            <div style={styles.section}>
               <div style={styles.label}>Bio</div>
               <div style={styles.value}>{displayProfile?.bio || 'No bio added'}</div>
             </div>
@@ -355,6 +362,17 @@ export default function ProfilePage() {
               <div>
                 <div style={styles.label}>Full Name</div>
                 <input type="text" name="full_name" value={formData.full_name} onChange={handleChange} style={styles.input} />
+              </div>
+
+              <div>
+                <div style={styles.label}>Gender</div>
+                <select name="gender" value={formData.gender} onChange={handleChange} style={styles.select}>
+                  <option value="">Select gender</option>
+                  <option value="M">Male</option>
+                  <option value="F">Female</option>
+                  <option value="Other">Other</option>
+                  <option value="Prefer not to say">Prefer not to say</option>
+                </select>
               </div>
 
               <div>

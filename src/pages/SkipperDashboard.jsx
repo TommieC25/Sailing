@@ -173,25 +173,34 @@ export default function SkipperDashboard() {
         <p style={styles.headerSubtitle}>Manage your sails and review crew requests</p>
       </div>
 
-      {error && <div style={styles.errorBox}>{error}</div>}
-
-      <button
-        onClick={() => navigate('/create-outing')}
-        style={styles.button}
-        onMouseEnter={(e) => e.target.style.opacity = '0.9'}
-        onMouseLeave={(e) => e.target.style.opacity = '1'}
-      >
-        + Post New Outing
-      </button>
-
-      {outings.length === 0 ? (
-        <div style={styles.emptyBox}>
-          <div style={styles.emptyIcon}>⛵</div>
-          <p style={styles.emptyTitle}>No outings yet</p>
-          <p style={styles.emptyText}>Post your first outing above and crew will start requesting to join.</p>
+      {loading && (
+        <div style={{textAlign: 'center', padding: '40px'}}>
+          <div style={{display: 'inline-block', width: '40px', height: '40px', borderRadius: '50%', border: '4px solid #e2e8f0', borderTopColor: '#0369a1', animation: 'spin 0.8s linear infinite'}} />
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
-      ) : (
-        <div style={styles.outingsList}>
+      )}
+
+      {!loading && (
+        <>
+          {error && <div style={styles.errorBox}>{error}</div>}
+
+          <button
+            onClick={() => navigate('/create-outing')}
+            style={styles.button}
+            onMouseEnter={(e) => e.target.style.opacity = '0.9'}
+            onMouseLeave={(e) => e.target.style.opacity = '1'}
+          >
+            + Post New Outing
+          </button>
+
+          {outings.length === 0 ? (
+            <div style={styles.emptyBox}>
+              <div style={styles.emptyIcon}>⛵</div>
+              <p style={styles.emptyTitle}>No outings yet</p>
+              <p style={styles.emptyText}>Post your first outing above and crew will start requesting to join.</p>
+            </div>
+          ) : (
+            <div style={styles.outingsList}>
           {outings.map((outing) => {
             const isExpanded = expandedOutings[outing.id];
             const pending = outing.crew_requests.filter((r) => r.status === 'pending');
@@ -319,7 +328,9 @@ export default function SkipperDashboard() {
               </div>
             );
           })}
-        </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

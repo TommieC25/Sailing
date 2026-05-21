@@ -38,7 +38,7 @@ export default function LoginForm() {
         </div>
 
         <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-8">
-          <h2 className="text-2xl font-extrabold mb-6 text-center" style={{color: '#0c2340'}}>Sign In</h2>
+          <h2 className="text-2xl font-extrabold mb-6 text-center" style={{color: '#0c2340'}}>⚓ Sign In</h2>
 
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-lg mb-5">

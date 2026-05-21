@@ -78,7 +78,7 @@ export default function HomePage() {
             <p style={{fontSize: '1.125rem', color: '#64748b', margin: '0 0 24px 0'}}>Post your first outing to find crew and get sailing!</p>
             <Link
               to="/create-outing"
-              style={{display: 'inline-block', background: '#0369a1', color: '#ffffff', padding: '16px 32px', borderRadius: '12px', fontWeight: 900, fontSize: '1.125rem', textDecoration: 'none'}}
+              style={{display: 'inline-block', background: '#06b6d4', color: '#ffffff', padding: '16px 32px', borderRadius: '12px', fontWeight: 900, fontSize: '1.125rem', textDecoration: 'none'}}
             >
               + Post Outing
             </Link>
@@ -156,7 +156,7 @@ function OutingCard({ outing, isYours }) {
           )}
         </div>
 
-        <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '1rem', color: '#64748b', marginBottom: '12px', fontWeight: 600}}>
+        <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '1rem', color: '#64748b', marginBottom: '16px', fontWeight: 600}}>
           <div>📅 {new Date(outing.outing_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} at {outing.outing_time}</div>
           <div>🚢 {outing.boats?.name} ({outing.boats?.size_ft}ft)</div>
           <div>👤 {outing.skipper?.full_name || 'TBD'}</div>
@@ -164,10 +164,14 @@ function OutingCard({ outing, isYours }) {
         </div>
 
         {outing.description && (
-          <p style={{color: '#64748b', margin: '12px 0 0 0', fontSize: '0.95rem', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden'}}>
+          <p style={{color: '#64748b', margin: '0 0 16px 0', fontSize: '0.95rem', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden'}}>
             {outing.description}
           </p>
         )}
+
+        <div style={{background: '#06b6d4', color: '#ffffff', padding: '12px 20px', borderRadius: '8px', textAlign: 'center', fontWeight: 900, fontSize: '1rem'}}>
+          View Details →
+        </div>
       </div>
     </Link>
   );

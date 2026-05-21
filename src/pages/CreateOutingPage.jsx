@@ -223,7 +223,7 @@ export default function CreateOutingPage() {
             type="submit"
             disabled={loading}
             className="flex-1 py-5 rounded-2xl font-black text-white text-2xl shadow-lg transition disabled:opacity-50"
-            style={{background: loading ? '#9ca3af' : 'linear-gradient(135deg, #0c2340 0%, #0369a1 100%)'}}
+            style={{background: loading ? '#9ca3af' : '#06b6d4'}}
           >
             {loading ? 'Posting...' : 'Post Outing →'}
           </button>

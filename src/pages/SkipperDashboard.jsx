@@ -117,8 +117,8 @@ export default function SkipperDashboard() {
 
       <button
         onClick={() => navigate('/create-outing')}
-        className="w-full py-5 rounded-2xl font-black text-white text-2xl mb-6 shadow-lg transition"
-        style={{background: 'linear-gradient(135deg, #0c2340 0%, #0369a1 100%)'}}
+        className="w-full py-5 rounded-2xl font-black text-white text-2xl mb-6 shadow-lg transition hover:opacity-90"
+        style={{background: '#06b6d4'}}
       >
         + Post New Outing
       </button>

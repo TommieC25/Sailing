@@ -48,14 +48,14 @@ export default function Layout({ children }) {
                     <Link to="/skipper-dashboard" style={navLinkStyle}>My Outings</Link>
                   )}
                   <Link to="/profile" style={navLinkStyle}>Profile</Link>
-                  <button onClick={handleSignOut} style={{background: '#ffffff', color: '#1e3a5f', fontWeight: 900, padding: '8px 16px', borderRadius: '12px', border: 'none', cursor: 'pointer', fontSize: '1rem'}}>
+                  <button onClick={handleSignOut} style={{background: '#06b6d4', color: '#ffffff', fontWeight: 900, padding: '8px 16px', borderRadius: '12px', border: 'none', cursor: 'pointer', fontSize: '1rem'}}>
                     Sign Out
                   </button>
                 </>
               ) : (
                 <>
                   <Link to="/login" style={navLinkStyle}>Sign In</Link>
-                  <Link to="/signup" style={{...navLinkStyle, background: '#ffffff', color: '#1e3a5f', padding: '8px 16px', borderRadius: '12px', fontWeight: 900}}>Sign Up</Link>
+                  <Link to="/signup" style={{...navLinkStyle, background: '#06b6d4', color: '#ffffff', padding: '8px 16px', borderRadius: '12px', fontWeight: 900}}>Sign Up</Link>
                 </>
               )}
             </div>

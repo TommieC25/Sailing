@@ -21,22 +21,8 @@ const AdminDashboard = () => {
   const [newAdminEmail, setNewAdminEmail] = useState('');
 
   useEffect(() => {
-    const ensureAdminAccess = async () => {
-      if (!user) return;
-
-      const { data: existing } = await supabase
-        .from('admins')
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
-
-      if (!existing) {
-        await supabase.from('admins').insert([{ user_id: user.id }]);
-      }
-    };
-
-    ensureAdminAccess().then(() => loadDashboardData());
-  }, [user]);
+    loadDashboardData();
+  }, []);
 
   const loadDashboardData = async () => {
     try {

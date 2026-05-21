@@ -49,26 +49,16 @@ export default function AdminInboxPage() {
   useEffect(() => {
     if (!user) return;
 
-    const ensureAdminAccess = async () => {
-      try {
-        const { data: adminRecord } = await supabase
-          .from('admins')
-          .select('id')
-          .eq('user_id', user.id)
-          .single();
-
-        if (!adminRecord) {
-          await supabase.from('admins').insert([{ user_id: user.id }]);
-        }
-
-        setIsAdmin(true);
-      } catch (err) {
-        console.error('Error ensuring admin access:', err);
-        setIsAdmin(false);
-      }
+    const checkAdmin = async () => {
+      const { data } = await supabase
+        .from('admins')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+      setIsAdmin(!!data);
     };
 
-    ensureAdminAccess();
+    checkAdmin();
   }, [user]);
 
   useEffect(() => {

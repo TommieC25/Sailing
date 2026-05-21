@@ -37,6 +37,7 @@ export default function ProfilePage() {
     bio: '',
     sailing_experience: '',
     phone: '',
+    user_type: '',
   });
   const [boatData, setBoatData] = useState({
     name: '',
@@ -97,6 +98,7 @@ export default function ProfilePage() {
         bio: profile.bio || '',
         sailing_experience: profile.sailing_experience || '',
         phone: profile.phone || '',
+        user_type: profile.user_type || '',
       });
     }
   }, [profile, isViewingOther]);
@@ -201,6 +203,7 @@ export default function ProfilePage() {
         bio: formData.bio,
         sailing_experience: formData.sailing_experience,
         phone: formData.phone,
+        user_type: formData.user_type,
       };
 
       await updateProfile(updateData);
@@ -418,6 +421,14 @@ export default function ProfilePage() {
               <div>
                 <div style={styles.label}>Phone</div>
                 <input type="tel" name="phone" value={formData.phone} onChange={handleChange} style={styles.input} />
+              </div>
+
+              <div>
+                <div style={styles.label}>Account Type</div>
+                <select name="user_type" value={formData.user_type} onChange={handleChange} style={styles.select}>
+                  <option value="crew">Crew Member</option>
+                  <option value="owner">Boat Owner / Skipper</option>
+                </select>
               </div>
             </div>
 

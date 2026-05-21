@@ -55,7 +55,7 @@ const styles = {
   noRequestsText: { color: '#6b7280' },
 };
 
-export default function OuttingDetailPage() {
+export default function OutingDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user, profile } = useAuth();
@@ -70,7 +70,7 @@ export default function OuttingDetailPage() {
   const [actionLoading, setActionLoading] = useState({});
 
   useEffect(() => {
-    const fetchOuttingDetails = async () => {
+    const fetchOutingDetails = async () => {
       try {
         const { data: outingData, error: outingError } = await supabase
           .from('outings')
@@ -82,15 +82,12 @@ export default function OuttingDetailPage() {
         setOuting(outingData);
 
         const { data: skipperData, error: skipperError } = await supabase
-          .from('profiles')
-          .select('id, full_name, photo_url, bio, sailing_experience')
+          .from('users')
+          .select('*')
           .eq('id', outingData.skipper_id)
           .single();
 
-        if (skipperError) {
-          console.error('Skipper fetch error:', skipperError);
-          throw skipperError;
-        }
+        if (skipperError) throw skipperError;
         setSkipper(skipperData);
 
         const { data: boatData, error: boatError } = await supabase
@@ -129,7 +126,7 @@ export default function OuttingDetailPage() {
       }
     };
 
-    fetchOuttingDetails();
+    fetchOutingDetails();
   }, [id, user]);
 
   const handleRequestToJoin = async () => {

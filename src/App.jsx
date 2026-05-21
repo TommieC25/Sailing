@@ -4,7 +4,7 @@ import Layout from './components/Layout/Layout';
 import HomePage from './pages/HomePage';
 import ProfilePage from './pages/ProfilePage';
 import CommunityPage from './pages/CommunityPage';
-import OuttingDetailPage from './pages/OuttingDetailPage';
+import OutingDetailPage from './pages/OutingDetailPage';
 import SkipperDashboard from './pages/SkipperDashboard';
 import CreateOutingPage from './pages/CreateOutingPage';
 import SignupForm from './components/Auth/SignupForm';
@@ -67,7 +67,7 @@ function App() {
         <Route path="/community" element={<ProtectedRoute><CommunityPage /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
         <Route path="/profile/:id" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-        <Route path="/outing/:id" element={<ProtectedRoute><OuttingDetailPage /></ProtectedRoute>} />
+        <Route path="/outing/:id" element={<ProtectedRoute><OutingDetailPage /></ProtectedRoute>} />
         <Route path="/skipper-dashboard" element={<ProtectedRoute><SkipperDashboard /></ProtectedRoute>} />
         <Route path="/create-outing" element={<ProtectedRoute><CreateOutingPage /></ProtectedRoute>} />
       </Routes>

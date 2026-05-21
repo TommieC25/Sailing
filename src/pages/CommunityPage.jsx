@@ -37,7 +37,7 @@ export default function CommunityPage() {
     const fetchProfiles = async () => {
       try {
         const { data, error } = await supabase
-          .from('profiles')
+          .from('users')
           .select('id, full_name, photo_url, sailing_experience');
 
         if (error) throw error;

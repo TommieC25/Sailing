@@ -12,8 +12,7 @@ export default function ProfilePage() {
   });
   const [boatData, setBoatData] = useState({
     name: '',
-    brand: '',
-    model: '',
+    brand_model_color: '',
     size_ft: '',
     capacity: '',
     mooring_location: '',
@@ -46,10 +45,12 @@ export default function ProfilePage() {
           .eq('owner_id', user.id);
         if (data && data.length > 0) {
           setBoatId(data[0].id);
+          const brandModelColor = [data[0].brand, data[0].model, data[0].color]
+            .filter(Boolean)
+            .join(' / ') || '';
           setBoatData({
             name: data[0].name || '',
-            brand: data[0].brand || '',
-            model: data[0].model || '',
+            brand_model_color: brandModelColor,
             size_ft: data[0].size_ft || '',
             capacity: data[0].capacity || '',
             mooring_location: data[0].mooring_location || '',
@@ -111,12 +112,14 @@ export default function ProfilePage() {
       await updateProfile(formData);
 
       if (profile?.user_type === 'owner' && boatId) {
+        const parts = boatData.brand_model_color.split('/').map(s => s.trim());
         await supabase
           .from('boats')
           .update({
             name: boatData.name,
-            brand: boatData.brand || null,
-            model: boatData.model || null,
+            brand: parts[0] || null,
+            model: parts[1] || null,
+            color: parts[2] || null,
             size_ft: boatData.size_ft ? parseInt(boatData.size_ft) : null,
             capacity: parseInt(boatData.capacity) || 1,
             mooring_location: boatData.mooring_location || null,
@@ -141,10 +144,10 @@ export default function ProfilePage() {
   return (
     <div className="max-w-2xl mx-auto">
       <div className="bg-white rounded-lg shadow-lg p-6 md:p-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">My Profile</h1>
+        <h1 className="text-4xl font-bold text-gray-900 mb-8">My Profile</h1>
 
         {message && (
-          <div className={`mb-4 p-4 rounded text-lg ${message.includes('Error') ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>
+          <div className={`mb-6 p-4 rounded text-xl ${message.includes('Error') ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>
             {message}
           </div>
         )}
@@ -156,16 +159,16 @@ export default function ProfilePage() {
               <img
                 src={profile.photo_url}
                 alt={profile.full_name}
-                className="w-16 h-16 rounded-full object-cover border-4 border-gray-200"
+                className="w-20 h-20 rounded-full object-cover border-4 border-gray-200"
               />
             ) : (
-              <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 text-2xl border-4 border-gray-200">
+              <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 text-3xl border-4 border-gray-200">
                 📷
               </div>
             )}
           </div>
           <label className="block">
-            <span className="inline-block px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg font-medium cursor-pointer transition text-base">
+            <span className="inline-block px-6 py-3 bg-teal-500 hover:bg-teal-600 text-white rounded-lg font-bold cursor-pointer transition text-lg">
               {uploading ? 'Uploading...' : 'Change Photo'}
             </span>
             <input
@@ -178,46 +181,48 @@ export default function ProfilePage() {
           </label>
         </div>
 
-        <div className="mb-6">
-          <p className="text-gray-600 text-base">Email: <span className="font-semibold text-gray-900">{user.email}</span></p>
+        <div className="mb-8">
+          <p className="text-lg text-gray-600">Email: <span className="font-semibold text-gray-900 text-xl">{user.email}</span></p>
         </div>
 
         {!editMode ? (
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div>
-              <p className="text-gray-600 text-base">Full Name</p>
-              <p className="text-xl font-semibold text-gray-900">{profile?.full_name || 'Not set'}</p>
+              <p className="text-lg text-gray-600 mb-1">Full Name</p>
+              <p className="text-2xl font-semibold text-gray-900">{profile?.full_name || 'Not set'}</p>
             </div>
 
             <div>
-              <p className="text-gray-600 text-base">Bio</p>
-              <p className="text-lg text-gray-900">{profile?.bio || 'No bio added'}</p>
+              <p className="text-lg text-gray-600 mb-1">Bio</p>
+              <p className="text-xl text-gray-900">{profile?.bio || 'No bio added'}</p>
             </div>
 
             <div>
-              <p className="text-gray-600 text-base">Sailing Experience</p>
-              <p className="text-xl font-semibold text-gray-900 capitalize">
+              <p className="text-lg text-gray-600 mb-1">Sailing Experience</p>
+              <p className="text-2xl font-semibold text-gray-900 capitalize">
                 {profile?.sailing_experience || 'Not set'}
               </p>
             </div>
 
             <div>
-              <p className="text-gray-600 text-base">Account Type</p>
-              <p className="text-xl font-semibold text-gray-900 capitalize">
+              <p className="text-lg text-gray-600 mb-1">Account Type</p>
+              <p className="text-2xl font-semibold text-gray-900 capitalize">
                 {profile?.user_type || 'Not set'}
               </p>
             </div>
 
             {profile?.user_type === 'owner' && boats.length > 0 && (
               <div>
-                <p className="text-gray-600 text-base">Your Boat</p>
+                <p className="text-lg text-gray-600 mb-2">Your Boat</p>
                 {boats.map((boat) => (
-                  <div key={boat.id} className="bg-gray-50 border border-gray-200 rounded-lg p-4 mt-2">
-                    <p className="font-semibold text-gray-900 text-lg">{boat.name}</p>
-                    <p className="text-base text-gray-600">{boat.brand} {boat.model}</p>
-                    <div className="grid grid-cols-2 gap-2 mt-2 text-base text-gray-700">
+                  <div key={boat.id} className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                    <p className="font-bold text-gray-900 text-2xl">{boat.name}</p>
+                    <p className="text-lg text-gray-600 mt-1">
+                      {[boat.brand, boat.model, boat.color].filter(Boolean).join(' / ')}
+                    </p>
+                    <div className="grid grid-cols-2 gap-2 mt-3 text-lg text-gray-700">
                       <div>Size: {boat.size_ft}ft</div>
-                      <div>Capacity: {boat.capacity} people</div>
+                      <div>Capacity: {boat.capacity}</div>
                       {boat.mooring_location && (
                         <div className="col-span-2">Location: {boat.mooring_location}</div>
                       )}
@@ -229,20 +234,20 @@ export default function ProfilePage() {
 
             <button
               onClick={() => setEditMode(true)}
-              className="mt-6 text-white px-6 py-3 rounded-lg font-bold transition hover:opacity-90 text-lg"
+              className="mt-8 text-white px-8 py-4 rounded-lg font-bold transition hover:opacity-90 text-xl"
               style={{background: '#06b6d4'}}
             >
               Edit Profile
             </button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-8">
             <div>
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Profile Information</h3>
+              <h3 className="text-2xl font-bold text-gray-900 mb-6">Profile Information</h3>
 
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div>
-                  <label className="block text-base font-semibold text-gray-700 mb-2">
+                  <label className="block text-xl font-bold text-gray-700 mb-2">
                     Full Name
                   </label>
                   <input
@@ -250,12 +255,12 @@ export default function ProfilePage() {
                     name="full_name"
                     value={formData.full_name}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    className="w-full px-4 py-3 text-xl border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-base font-semibold text-gray-700 mb-2">
+                  <label className="block text-xl font-bold text-gray-700 mb-2">
                     Bio
                   </label>
                   <textarea
@@ -263,20 +268,20 @@ export default function ProfilePage() {
                     value={formData.bio}
                     onChange={handleChange}
                     rows="4"
-                    className="w-full px-4 py-3 text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    className="w-full px-4 py-3 text-xl border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                     placeholder="Tell other sailors about yourself..."
                   />
                 </div>
 
                 <div>
-                  <label className="block text-base font-semibold text-gray-700 mb-2">
+                  <label className="block text-xl font-bold text-gray-700 mb-2">
                     Sailing Experience
                   </label>
                   <select
                     name="sailing_experience"
                     value={formData.sailing_experience}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    className="w-full px-4 py-3 text-xl border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                   >
                     <option value="beginner">Beginner</option>
                     <option value="intermediate">Intermediate</option>
@@ -288,11 +293,11 @@ export default function ProfilePage() {
 
             {profile?.user_type === 'owner' && (
               <div>
-                <h3 className="text-xl font-bold text-gray-900 mb-4">Boat Information</h3>
+                <h3 className="text-2xl font-bold text-gray-900 mb-6">Boat Information</h3>
 
-                <div className="space-y-4">
+                <div className="space-y-6">
                   <div>
-                    <label className="block text-base font-semibold text-gray-700 mb-2">
+                    <label className="block text-xl font-bold text-gray-700 mb-2">
                       Boat Name
                     </label>
                     <input
@@ -300,41 +305,27 @@ export default function ProfilePage() {
                       name="name"
                       value={boatData.name}
                       onChange={handleBoatChange}
-                      className="w-full px-4 py-3 text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                      className="w-full px-4 py-3 text-xl border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-base font-semibold text-gray-700 mb-2">
-                        Brand
-                      </label>
-                      <input
-                        type="text"
-                        name="brand"
-                        value={boatData.brand}
-                        onChange={handleBoatChange}
-                        className="w-full px-4 py-3 text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-base font-semibold text-gray-700 mb-2">
-                        Model
-                      </label>
-                      <input
-                        type="text"
-                        name="model"
-                        value={boatData.model}
-                        onChange={handleBoatChange}
-                        className="w-full px-4 py-3 text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-                      />
-                    </div>
+                  <div>
+                    <label className="block text-xl font-bold text-gray-700 mb-2">
+                      Brand / Model / Color
+                    </label>
+                    <input
+                      type="text"
+                      name="brand_model_color"
+                      value={boatData.brand_model_color}
+                      onChange={handleBoatChange}
+                      placeholder="e.g., Tartan 33, blue"
+                      className="w-full px-4 py-3 text-xl border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-base font-semibold text-gray-700 mb-2">
+                      <label className="block text-xl font-bold text-gray-700 mb-2">
                         Size (ft)
                       </label>
                       <input
@@ -342,34 +333,34 @@ export default function ProfilePage() {
                         name="size_ft"
                         value={boatData.size_ft}
                         onChange={handleBoatChange}
-                        className="w-full px-4 py-3 text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        className="w-full px-4 py-3 text-xl border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-base font-semibold text-gray-700 mb-2">
-                        Capacity (people)
+                      <label className="block text-xl font-bold text-gray-700 mb-2">
+                        Capacity
                       </label>
                       <input
                         type="number"
                         name="capacity"
                         value={boatData.capacity}
                         onChange={handleBoatChange}
-                        className="w-full px-4 py-3 text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        className="w-full px-4 py-3 text-xl border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-base font-semibold text-gray-700 mb-2">
-                      Mooring Location
+                    <label className="block text-xl font-bold text-gray-700 mb-2">
+                      Location (Club Mooring / Marina & Slip)
                     </label>
                     <input
                       type="text"
                       name="mooring_location"
                       value={boatData.mooring_location}
                       onChange={handleBoatChange}
-                      className="w-full px-4 py-3 text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                      className="w-full px-4 py-3 text-xl border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                     />
                   </div>
                 </div>
@@ -380,7 +371,7 @@ export default function ProfilePage() {
               <button
                 type="submit"
                 disabled={saving}
-                className="flex-1 text-white py-3 rounded-lg font-bold transition disabled:opacity-50 text-lg"
+                className="flex-1 text-white py-4 rounded-lg font-bold transition disabled:opacity-50 text-xl"
                 style={{background: saving ? '#9ca3af' : '#06b6d4'}}
               >
                 {saving ? 'Saving...' : 'Save Changes'}
@@ -388,7 +379,7 @@ export default function ProfilePage() {
               <button
                 type="button"
                 onClick={() => setEditMode(false)}
-                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-900 py-3 rounded-lg font-bold transition text-lg"
+                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-900 py-4 rounded-lg font-bold transition text-xl"
               >
                 Cancel
               </button>

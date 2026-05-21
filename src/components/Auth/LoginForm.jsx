@@ -103,10 +103,11 @@ export default function LoginForm() {
         <div style={styles.section}>
           <h2 style={styles.sectionTitle}>Getting Started</h2>
           {[
-            { n: '1️⃣', text: 'Complete your profile — Add a photo and tell us about your sailing experience.' },
-            { n: '2️⃣', text: 'Browse outings — Tap "Outings" to see what\'s sailing this week.' },
-            { n: '3️⃣', text: 'Request to join — Found something fun? Request it. Skippers respond fast.' },
-            { n: '4️⃣', text: 'Show up and sail — That\'s it. Enjoy the water.' },
+            { n: '1️⃣', text: 'Create Your Account — Sign up with your email and password.' },
+            { n: '2️⃣', text: 'Complete Your Profile — Add a photo and tell us about your sailing experience.' },
+            { n: '3️⃣', text: 'Create or Browse Outings — Skippers post, crew explore what\'s available.' },
+            { n: '4️⃣', text: 'Plan Your Cruise — Connect with your team, confirm details, get ready.' },
+            { n: '5️⃣', text: 'Show Up and Shove Off! — Hit the water and make memories.' },
           ].map(({ n, text }) => (
             <div key={n} style={{display: 'flex', alignItems: 'flex-start', gap: '1rem', background: 'rgba(255,255,255,0.1)', borderRadius: '0.75rem', padding: '1rem', border: '1px solid rgba(255,255,255,0.2)', marginBottom: '0.75rem'}}>
               <span style={{fontSize: '1.375rem', flexShrink: 0}}>{n}</span>
@@ -115,9 +116,13 @@ export default function LoginForm() {
           ))}
         </div>
 
+        <div style={{...styles.section, textAlign: 'center', padding: '1.5rem', background: 'rgba(255,255,255,0.1)', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.2)'}}>
+          <p style={{...styles.description, margin: 0, fontSize: '1.25rem'}}>Ready to set sail?</p>
+          <p style={{...styles.sectionTitle, marginTop: '0.5rem', color: '#a5f3fc'}}>Permission Granted to Come Aboard! ⛵</p>
+        </div>
+
         {/* Sign In Form */}
         <div style={{marginBottom: '1.5rem'}}>
-          <h2 style={{...styles.sectionTitle, textAlign: 'center', marginBottom: '2rem'}}>Sign In</h2>
 
           {error && <div style={styles.error}>{error}</div>}
 
@@ -153,14 +158,14 @@ export default function LoginForm() {
               disabled={loading}
               style={{...styles.button, ...(loading ? styles.buttonDisabled : {})}}
             >
-              {loading ? 'Signing In...' : 'Sign In'}
+              {loading ? 'Setting Sail...' : "Let's Go Sailing!"}
             </button>
           </form>
         </div>
 
         {/* Sign Up CTA */}
         <div style={{textAlign: 'center', paddingBottom: '2.5rem'}}>
-          <p style={styles.signUpText}>Don't have an account?</p>
+          <p style={styles.signUpText}>New Here?</p>
           <Link to="/signup" style={styles.signUpLink}>
             Create Account →
           </Link>

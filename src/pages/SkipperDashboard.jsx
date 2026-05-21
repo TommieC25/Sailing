@@ -1,7 +1,47 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
+
+const styles = {
+  container: { maxWidth: '800px', margin: '0 auto' },
+  header: { borderRadius: '16px', padding: '24px', marginBottom: '24px', background: 'linear-gradient(135deg, #0c2340 0%, #0369a1 100%)' },
+  headerTitle: { fontSize: '1.875rem', fontWeight: 900, color: '#ffffff', marginBottom: '8px', margin: '0 0 8px 0' },
+  headerSubtitle: { color: '#e0f2fe', fontSize: '1.125rem', fontWeight: 600 },
+  errorBox: { background: '#fee2e2', border: '2px solid #dc2626', color: '#7f1d1d', fontSize: '1.125rem', padding: '16px 20px', borderRadius: '12px', marginBottom: '24px', fontWeight: 600 },
+  button: { width: '100%', padding: '20px 16px', borderRadius: '16px', fontWeight: 900, fontSize: '1.25rem', background: '#06b6d4', color: '#ffffff', border: 'none', cursor: 'pointer', marginBottom: '24px', transition: 'all 0.2s' },
+  emptyBox: { background: '#ffffff', borderRadius: '16px', border: '1px solid #e2e8f0', padding: '32px', textAlign: 'center' },
+  emptyIcon: { fontSize: '3rem', marginBottom: '16px' },
+  emptyTitle: { fontSize: '1.5rem', fontWeight: 900, color: '#1e293b', marginBottom: '8px', margin: '0 0 8px 0' },
+  emptyText: { fontSize: '1.125rem', color: '#64748b', fontWeight: 600, margin: 0 },
+  outingsList: { display: 'grid', gap: '16px' },
+  outingCard: { background: '#ffffff', borderRadius: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0', overflow: 'hidden' },
+  outingHeader: { width: '100%', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'none', border: 'none', cursor: 'pointer', transition: 'all 0.2s' },
+  outingHeaderHover: { background: '#f9fafb' },
+  outingTitle: { fontSize: '1.25rem', fontWeight: 900, color: '#1e293b', margin: 0 },
+  outingDetails: { fontSize: '1rem', color: '#64748b', fontWeight: 600, marginTop: '8px' },
+  outingMeta: { display: 'flex', alignItems: 'center', gap: '12px', marginLeft: '12px' },
+  badge: { background: '#fef3c7', color: '#92400e', fontSize: '1.125rem', fontWeight: 900, padding: '4px 12px', borderRadius: '999px' },
+  expandedSection: { borderTop: '1px solid #f3f4f6', padding: '20px', display: 'grid', gap: '20px' },
+  sectionTitle: { fontSize: '1.25rem', fontWeight: 900, color: '#1e293b', marginBottom: '12px', margin: '0 0 12px 0' },
+  requestsList: { display: 'grid', gap: '12px' },
+  pendingRequest: { background: '#fffbeb', border: '2px solid #fcd34d', borderRadius: '12px', padding: '16px' },
+  requestHeader: { display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '12px' },
+  photo: { width: '56px', height: '56px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 },
+  photoPlaceholder: { width: '56px', height: '56px', borderRadius: '50%', background: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '1.5rem' },
+  requestName: { fontSize: '1.25rem', fontWeight: 900, color: '#1e293b', margin: 0 },
+  requestSkill: { fontSize: '1rem', color: '#64748b', fontWeight: 600, marginTop: '4px', textTransform: 'capitalize' },
+  requestBio: { fontSize: '1rem', color: '#374151', marginTop: '8px' },
+  requestActions: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' },
+  approveBtn: { padding: '12px 16px', borderRadius: '12px', fontWeight: 900, fontSize: '1rem', background: '#16a34a', color: '#ffffff', border: 'none', cursor: 'pointer', transition: 'all 0.2s' },
+  declineBtn: { padding: '12px 16px', borderRadius: '12px', fontWeight: 900, fontSize: '1rem', background: '#dc2626', color: '#ffffff', border: 'none', cursor: 'pointer', transition: 'all 0.2s' },
+  approvedRequest: { background: '#f0fdf4', border: '1px solid #dcfce7', borderRadius: '12px', padding: '16px', display: 'flex', alignItems: 'center', gap: '12px' },
+  approvedSmallPhoto: { width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover' },
+  approvedName: { fontSize: '1.125rem', fontWeight: 900, color: '#1e293b', margin: 0 },
+  approvedSkill: { fontSize: '1rem', color: '#64748b', fontWeight: 600, marginTop: '2px', textTransform: 'capitalize' },
+  declinedText: { fontSize: '1.125rem', color: '#6b7280', fontWeight: 600 },
+  noRequests: { fontSize: '1.125rem', color: '#6b7280', fontWeight: 600 },
+};
 
 export default function SkipperDashboard() {
   const navigate = useNavigate();
@@ -11,6 +51,7 @@ export default function SkipperDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [actionLoading, setActionLoading] = useState({});
+  const [hoveredOutingId, setHoveredOutingId] = useState(null);
 
   useEffect(() => {
     if (!user || profile?.user_type !== 'owner') {
@@ -97,40 +138,39 @@ export default function SkipperDashboard() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-16">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-4 border-blue-600"></div>
+      <div style={{textAlign: 'center', padding: '64px 16px'}}>
+        <div style={{display: 'inline-block', width: '40px', height: '40px', borderRadius: '50%', border: '4px solid #e2e8f0', borderTopColor: '#0369a1', animation: 'spin 0.8s linear infinite'}} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
 
   return (
-    <div>
-      {/* Header */}
-      <div className="rounded-2xl p-6 mb-6" style={{background: 'linear-gradient(135deg, #0c2340 0%, #0369a1 100%)'}}>
-        <h1 className="text-3xl font-black text-white mb-1">📋 My Outings</h1>
-        <p className="text-blue-100 text-lg font-semibold">Manage your sails and review crew requests</p>
+    <div style={styles.container}>
+      <div style={styles.header}>
+        <h1 style={styles.headerTitle}>📋 My Outings</h1>
+        <p style={styles.headerSubtitle}>Manage your sails and review crew requests</p>
       </div>
 
-      {error && (
-        <div className="bg-red-100 border-2 border-red-400 text-red-800 text-xl px-5 py-4 rounded-xl mb-6 font-semibold">{error}</div>
-      )}
+      {error && <div style={styles.errorBox}>{error}</div>}
 
       <button
         onClick={() => navigate('/create-outing')}
-        className="w-full py-5 rounded-2xl font-black text-white text-2xl mb-6 shadow-lg transition hover:opacity-90"
-        style={{background: '#06b6d4'}}
+        style={styles.button}
+        onMouseEnter={(e) => e.target.style.opacity = '0.9'}
+        onMouseLeave={(e) => e.target.style.opacity = '1'}
       >
         + Post New Outing
       </button>
 
       {outings.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-gray-200 p-8 text-center">
-          <p className="text-6xl mb-4">⛵</p>
-          <p className="text-2xl font-black text-gray-800 mb-2">No outings yet</p>
-          <p className="text-lg text-gray-600 font-semibold">Post your first outing above and crew will start requesting to join.</p>
+        <div style={styles.emptyBox}>
+          <div style={styles.emptyIcon}>⛵</div>
+          <p style={styles.emptyTitle}>No outings yet</p>
+          <p style={styles.emptyText}>Post your first outing above and crew will start requesting to join.</p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div style={styles.outingsList}>
           {outings.map((outing) => {
             const isExpanded = expandedOutings[outing.id];
             const pending = outing.crew_requests.filter((r) => r.status === 'pending');
@@ -138,60 +178,71 @@ export default function SkipperDashboard() {
             const declined = outing.crew_requests.filter((r) => r.status === 'declined');
 
             return (
-              <div key={outing.id} className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+              <div key={outing.id} style={styles.outingCard}>
                 <button
                   onClick={() => toggleExpanded(outing.id)}
-                  className="w-full px-5 py-4 flex items-center justify-between hover:bg-gray-50 transition"
+                  style={{
+                    ...styles.outingHeader,
+                    ...(hoveredOutingId === outing.id ? styles.outingHeaderHover : {})
+                  }}
+                  onMouseEnter={() => setHoveredOutingId(outing.id)}
+                  onMouseLeave={() => setHoveredOutingId(null)}
                 >
-                  <div className="flex-1 text-left">
-                    <h3 className="text-xl font-black text-gray-900">{outing.title}</h3>
-                    <p className="text-base text-gray-600 font-semibold mt-1">
+                  <div style={{flex: 1, textAlign: 'left'}}>
+                    <h3 style={styles.outingTitle}>{outing.title}</h3>
+                    <p style={styles.outingDetails}>
                       📅 {new Date(outing.outing_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} · {outing.outing_time}
                     </p>
-                    <p className="text-base text-gray-600 font-semibold">🚢 {outing.boats?.name}</p>
+                    <p style={styles.outingDetails}>🚢 {outing.boats?.name}</p>
                   </div>
-                  <div className="flex items-center gap-3 ml-3">
+                  <div style={styles.outingMeta}>
                     {pending.length > 0 && (
-                      <span className="bg-yellow-100 text-yellow-800 text-lg font-black px-3 py-1 rounded-full">
+                      <span style={styles.badge}>
                         {pending.length} pending
                       </span>
                     )}
-                    <svg className={`w-6 h-6 text-gray-400 transition transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg style={{width: '24px', height: '24px', color: '#9ca3af', transition: 'transform 0.3s', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)'}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </div>
                 </button>
 
                 {isExpanded && (
-                  <div className="border-t border-gray-100 px-5 py-4 space-y-5">
+                  <div style={styles.expandedSection}>
                     {pending.length > 0 && (
                       <div>
-                        <h4 className="text-xl font-black text-gray-900 mb-3">Pending Requests ({pending.length})</h4>
-                        <div className="space-y-3">
+                        <h4 style={styles.sectionTitle}>Pending Requests ({pending.length})</h4>
+                        <div style={styles.requestsList}>
                           {pending.map((req) => (
-                            <div key={req.id} className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4">
-                              <div className="flex items-start gap-3 mb-3">
-                                {req.crew?.photo_url && (
-                                  <img src={req.crew.photo_url} alt={req.crew.full_name} className="w-14 h-14 rounded-full object-cover flex-shrink-0" />
+                            <div key={req.id} style={styles.pendingRequest}>
+                              <div style={styles.requestHeader}>
+                                {req.crew?.photo_url ? (
+                                  <img src={req.crew.photo_url} alt={req.crew.full_name} style={styles.photo} />
+                                ) : (
+                                  <div style={styles.photoPlaceholder}>📷</div>
                                 )}
                                 <div>
-                                  <p className="text-xl font-black text-gray-900">{req.crew?.full_name}</p>
-                                  <p className="text-base text-gray-600 font-semibold capitalize">{req.crew?.sailing_experience} sailor</p>
-                                  {req.crew?.bio && <p className="text-base text-gray-700 mt-1">{req.crew.bio}</p>}
+                                  <p style={styles.requestName}>{req.crew?.full_name}</p>
+                                  <p style={styles.requestSkill}>{req.crew?.sailing_experience} sailor</p>
+                                  {req.crew?.bio && <p style={styles.requestBio}>{req.crew.bio}</p>}
                                 </div>
                               </div>
-                              <div className="flex gap-3">
+                              <div style={styles.requestActions}>
                                 <button
                                   onClick={() => handleApprove(req.id, outing.id)}
                                   disabled={actionLoading[req.id]}
-                                  className="flex-1 py-3 rounded-xl font-black text-white text-xl bg-green-600 hover:bg-green-500 disabled:opacity-50 transition"
+                                  style={{...styles.approveBtn, opacity: actionLoading[req.id] ? 0.5 : 1}}
+                                  onMouseEnter={(e) => !actionLoading[req.id] && (e.target.style.background = '#15803d')}
+                                  onMouseLeave={(e) => (e.target.style.background = '#16a34a')}
                                 >
                                   {actionLoading[req.id] ? '...' : '✓ Approve'}
                                 </button>
                                 <button
                                   onClick={() => handleDecline(req.id, outing.id)}
                                   disabled={actionLoading[req.id]}
-                                  className="flex-1 py-3 rounded-xl font-black text-white text-xl bg-red-600 hover:bg-red-500 disabled:opacity-50 transition"
+                                  style={{...styles.declineBtn, opacity: actionLoading[req.id] ? 0.5 : 1}}
+                                  onMouseEnter={(e) => !actionLoading[req.id] && (e.target.style.background = '#b91c1c')}
+                                  onMouseLeave={(e) => (e.target.style.background = '#dc2626')}
                                 >
                                   {actionLoading[req.id] ? '...' : '✗ Decline'}
                                 </button>
@@ -204,16 +255,18 @@ export default function SkipperDashboard() {
 
                     {approved.length > 0 && (
                       <div>
-                        <h4 className="text-xl font-black text-gray-900 mb-3">✅ Approved Crew ({approved.length})</h4>
-                        <div className="space-y-2">
+                        <h4 style={styles.sectionTitle}>✅ Approved Crew ({approved.length})</h4>
+                        <div style={styles.requestsList}>
                           {approved.map((req) => (
-                            <div key={req.id} className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
-                              {req.crew?.photo_url && (
-                                <img src={req.crew.photo_url} alt={req.crew.full_name} className="w-12 h-12 rounded-full object-cover" />
+                            <div key={req.id} style={styles.approvedRequest}>
+                              {req.crew?.photo_url ? (
+                                <img src={req.crew.photo_url} alt={req.crew.full_name} style={styles.approvedSmallPhoto} />
+                              ) : (
+                                <div style={{...styles.photoPlaceholder, width: '48px', height: '48px'}}>📷</div>
                               )}
                               <div>
-                                <p className="text-lg font-black text-gray-900">{req.crew?.full_name}</p>
-                                <p className="text-base text-gray-600 font-semibold capitalize">{req.crew?.sailing_experience} sailor</p>
+                                <p style={styles.approvedName}>{req.crew?.full_name}</p>
+                                <p style={styles.approvedSkill}>{req.crew?.sailing_experience} sailor</p>
                               </div>
                             </div>
                           ))}
@@ -223,17 +276,17 @@ export default function SkipperDashboard() {
 
                     {declined.length > 0 && (
                       <div>
-                        <h4 className="text-xl font-black text-gray-900 mb-3">Declined ({declined.length})</h4>
-                        <div className="space-y-1">
+                        <h4 style={styles.sectionTitle}>Declined ({declined.length})</h4>
+                        <div>
                           {declined.map((req) => (
-                            <p key={req.id} className="text-lg text-gray-500 font-semibold">{req.crew?.full_name}</p>
+                            <p key={req.id} style={styles.declinedText}>{req.crew?.full_name}</p>
                           ))}
                         </div>
                       </div>
                     )}
 
                     {outing.crew_requests.length === 0 && (
-                      <p className="text-lg text-gray-500 font-semibold">No crew requests yet</p>
+                      <p style={styles.noRequests}>No crew requests yet</p>
                     )}
                   </div>
                 )}

@@ -40,7 +40,9 @@ export default function ProfilePage() {
   });
   const [boatData, setBoatData] = useState({
     name: '',
-    brand_model_color: '',
+    brand: '',
+    model: '',
+    color: '',
     size_ft: '',
     capacity: '',
     mooring_location: '',
@@ -113,12 +115,11 @@ export default function ProfilePage() {
           .eq('owner_id', user.id);
         if (data && data.length > 0) {
           setBoatId(data[0].id);
-          const brandModelColor = [data[0].brand, data[0].model, data[0].color]
-            .filter(Boolean)
-            .join(' / ') || '';
           setBoatData({
             name: data[0].name || '',
-            brand_model_color: brandModelColor,
+            brand: data[0].brand || '',
+            model: data[0].model || '',
+            color: data[0].color || '',
             size_ft: data[0].size_ft || '',
             capacity: data[0].capacity || '',
             mooring_location: data[0].mooring_location || '',
@@ -206,14 +207,13 @@ export default function ProfilePage() {
       await updateProfile(updateData);
 
       if (profile?.user_type === 'owner' && boatId) {
-        const parts = boatData.brand_model_color.split('/').map(s => s.trim());
         await supabase
           .from('boats')
           .update({
             name: boatData.name,
-            brand: parts[0] || null,
-            model: parts[1] || null,
-            color: parts[2] || null,
+            brand: boatData.brand || null,
+            model: boatData.model || null,
+            color: boatData.color || null,
             size_ft: boatData.size_ft ? parseInt(boatData.size_ft) : null,
             capacity: parseInt(boatData.capacity) || 1,
             mooring_location: boatData.mooring_location || null,
@@ -430,9 +430,20 @@ export default function ProfilePage() {
                   <input type="text" name="name" value={boatData.name} onChange={handleBoatChange} style={styles.input} />
                 </div>
 
+                <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem'}}>
+                  <div>
+                    <div style={styles.label}>Brand</div>
+                    <input type="text" name="brand" value={boatData.brand} onChange={handleBoatChange} style={{...styles.input, marginBottom: 0}} placeholder="e.g., Tartan" />
+                  </div>
+                  <div>
+                    <div style={styles.label}>Model</div>
+                    <input type="text" name="model" value={boatData.model} onChange={handleBoatChange} style={{...styles.input, marginBottom: 0}} placeholder="e.g., 33" />
+                  </div>
+                </div>
+
                 <div>
-                  <div style={styles.label}>Brand / Model / Color</div>
-                  <input type="text" name="brand_model_color" value={boatData.brand_model_color} onChange={handleBoatChange} style={styles.input} placeholder="e.g., Tartan 33, blue" />
+                  <div style={styles.label}>Color</div>
+                  <input type="text" name="color" value={boatData.color} onChange={handleBoatChange} style={styles.input} placeholder="e.g., blue" />
                 </div>
 
                 <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem'}}>

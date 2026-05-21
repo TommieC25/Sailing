@@ -45,7 +45,7 @@ const styles = {
 
 export default function SkipperDashboard() {
   const navigate = useNavigate();
-  const { user, profile } = useAuth();
+  const { user, profile, loading: authLoading } = useAuth();
   const [outings, setOutings] = useState([]);
   const [expandedOutings, setExpandedOutings] = useState({});
   const [loading, setLoading] = useState(true);
@@ -54,6 +54,8 @@ export default function SkipperDashboard() {
   const [hoveredOutingId, setHoveredOutingId] = useState(null);
 
   useEffect(() => {
+    if (authLoading) return;
+
     if (!user || profile?.user_type !== 'owner') {
       navigate('/');
       return;

@@ -148,6 +148,17 @@ export default function Layout({ children }) {
               )}
             </div>
 
+            {/* Admin Dashboard button */}
+            {isAdmin && (
+              <button
+                onClick={() => navigate('/admin/dashboard')}
+                style={{color: '#fbbf24', background: 'none', border: 'none', cursor: 'pointer', padding: '4px', position: 'relative', marginRight: '8px', fontSize: '1.5rem', fontWeight: 900}}
+                title="Admin Dashboard"
+              >
+                ⚙️
+              </button>
+            )}
+
             {/* Announcements bell */}
             <button
               onClick={() => navigate('/announcements')}

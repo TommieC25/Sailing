@@ -55,7 +55,7 @@ export default function SignupForm() {
 
         <div className="mb-6 text-center">
           <img src="/Sailing/Club Logo.jpg" alt="CGSC Logo" className="h-24 w-auto mx-auto mb-3 drop-shadow-lg" />
-          <p className="text-white font-semibold text-lg tracking-wide drop-shadow">Coconut Grove Sailing Club</p>
+          <p className="text-white font-semibold text-xl tracking-wide drop-shadow">Coconut Grove Sailing Club</p>
         </div>
 
         <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-8">
@@ -69,7 +69,7 @@ export default function SignupForm() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-base font-semibold text-gray-700 mb-2">Full Name</label>
+              <label className="block text-lg font-semibold text-gray-700 mb-2">Full Name</label>
               <input
                 type="text"
                 name="fullName"
@@ -77,12 +77,12 @@ export default function SignupForm() {
                 onChange={handleChange}
                 required
                 placeholder="Your name"
-                className="w-full px-4 py-4 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
+                className="w-full px-4 py-4 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xl"
               />
             </div>
 
             <div>
-              <label className="block text-base font-semibold text-gray-700 mb-2">Email</label>
+              <label className="block text-lg font-semibold text-gray-700 mb-2">Email</label>
               <input
                 type="email"
                 name="email"
@@ -90,12 +90,12 @@ export default function SignupForm() {
                 onChange={handleChange}
                 required
                 placeholder="your@email.com"
-                className="w-full px-4 py-4 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
+                className="w-full px-4 py-4 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xl"
               />
             </div>
 
             <div>
-              <label className="block text-base font-semibold text-gray-700 mb-2">Password</label>
+              <label className="block text-lg font-semibold text-gray-700 mb-2">Password</label>
               <input
                 type="password"
                 name="password"
@@ -103,12 +103,12 @@ export default function SignupForm() {
                 onChange={handleChange}
                 required
                 placeholder="Min 6 characters"
-                className="w-full px-4 py-4 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
+                className="w-full px-4 py-4 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xl"
               />
             </div>
 
             <div>
-              <label className="block text-base font-semibold text-gray-700 mb-2">Confirm Password</label>
+              <label className="block text-lg font-semibold text-gray-700 mb-2">Confirm Password</label>
               <input
                 type="password"
                 name="confirmPassword"
@@ -116,17 +116,17 @@ export default function SignupForm() {
                 onChange={handleChange}
                 required
                 placeholder="••••••••"
-                className="w-full px-4 py-4 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
+                className="w-full px-4 py-4 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xl"
               />
             </div>
 
             <div>
-              <label className="block text-base font-semibold text-gray-700 mb-2">I am a...</label>
+              <label className="block text-lg font-semibold text-gray-700 mb-2">I am a...</label>
               <select
                 name="userType"
                 value={formData.userType}
                 onChange={handleChange}
-                className="w-full px-4 py-4 border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg bg-white"
+                className="w-full px-4 py-4 border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xl bg-white"
               >
                 <option value="crew">Crew Member</option>
                 <option value="owner">Boat Owner / Skipper</option>
@@ -134,12 +134,12 @@ export default function SignupForm() {
             </div>
 
             <div>
-              <label className="block text-base font-semibold text-gray-700 mb-2">Sailing Experience</label>
+              <label className="block text-lg font-semibold text-gray-700 mb-2">Sailing Experience</label>
               <select
                 name="sailingExperience"
                 value={formData.sailingExperience}
                 onChange={handleChange}
-                className="w-full px-4 py-4 border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg bg-white"
+                className="w-full px-4 py-4 border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xl bg-white"
               >
                 <option value="beginner">Beginner</option>
                 <option value="intermediate">Intermediate</option>
@@ -150,7 +150,7 @@ export default function SignupForm() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-4 rounded-xl font-bold text-white text-lg transition-all mt-2"
+              className="w-full py-4 rounded-xl font-bold text-white text-xl transition-all mt-2"
               style={{background: loading ? '#9ca3af' : 'linear-gradient(135deg, #0c2340, #0369a1)'}}
             >
               {loading ? 'Creating Account...' : 'Create Account'}

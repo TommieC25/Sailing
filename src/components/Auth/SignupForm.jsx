@@ -54,11 +54,12 @@ export default function SignupForm() {
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
 
         <div className="mb-6 text-center">
-          <img src="/Sailing/Club Logo.jpg" alt="CGSC Logo" className="h-20 w-auto mx-auto mb-2" />
+          <img src="/Sailing/Club Logo.jpg" alt="CGSC Logo" className="h-24 w-auto mx-auto mb-3 drop-shadow-lg" />
+          <p className="text-white font-semibold text-lg tracking-wide drop-shadow">Coconut Grove Sailing Club</p>
         </div>
 
         <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-8">
-          <h2 className="text-xl font-bold text-gray-800 mb-6 text-center">Create Account</h2>
+          <h2 className="text-2xl font-extrabold mb-6 text-center" style={{color: '#0c2340'}}>Create Account</h2>
 
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-lg mb-5">
@@ -68,7 +69,7 @@ export default function SignupForm() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Full Name</label>
+              <label className="block text-base font-semibold text-gray-700 mb-2">Full Name</label>
               <input
                 type="text"
                 name="fullName"
@@ -76,12 +77,12 @@ export default function SignupForm() {
                 onChange={handleChange}
                 required
                 placeholder="Your name"
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
+                className="w-full px-4 py-4 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Email</label>
+              <label className="block text-base font-semibold text-gray-700 mb-2">Email</label>
               <input
                 type="email"
                 name="email"
@@ -89,12 +90,12 @@ export default function SignupForm() {
                 onChange={handleChange}
                 required
                 placeholder="your@email.com"
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
+                className="w-full px-4 py-4 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Password</label>
+              <label className="block text-base font-semibold text-gray-700 mb-2">Password</label>
               <input
                 type="password"
                 name="password"
@@ -102,12 +103,12 @@ export default function SignupForm() {
                 onChange={handleChange}
                 required
                 placeholder="Min 6 characters"
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
+                className="w-full px-4 py-4 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Confirm Password</label>
+              <label className="block text-base font-semibold text-gray-700 mb-2">Confirm Password</label>
               <input
                 type="password"
                 name="confirmPassword"
@@ -115,17 +116,17 @@ export default function SignupForm() {
                 onChange={handleChange}
                 required
                 placeholder="••••••••"
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
+                className="w-full px-4 py-4 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">I am a...</label>
+              <label className="block text-base font-semibold text-gray-700 mb-2">I am a...</label>
               <select
                 name="userType"
                 value={formData.userType}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base bg-white"
+                className="w-full px-4 py-4 border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg bg-white"
               >
                 <option value="crew">Crew Member</option>
                 <option value="owner">Boat Owner / Skipper</option>
@@ -133,12 +134,12 @@ export default function SignupForm() {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Sailing Experience</label>
+              <label className="block text-base font-semibold text-gray-700 mb-2">Sailing Experience</label>
               <select
                 name="sailingExperience"
                 value={formData.sailingExperience}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base bg-white"
+                className="w-full px-4 py-4 border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg bg-white"
               >
                 <option value="beginner">Beginner</option>
                 <option value="intermediate">Intermediate</option>
@@ -149,14 +150,14 @@ export default function SignupForm() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3.5 rounded-xl font-bold text-white text-base transition-all mt-2"
+              className="w-full py-4 rounded-xl font-bold text-white text-lg transition-all mt-2"
               style={{background: loading ? '#9ca3af' : 'linear-gradient(135deg, #0c2340, #0369a1)'}}
             >
               {loading ? 'Creating Account...' : 'Create Account'}
             </button>
           </form>
 
-          <p className="text-center text-gray-500 text-sm mt-6">
+          <p className="text-center text-gray-500 text-base mt-6">
             Already have an account?{' '}
             <Link to="/login" className="text-blue-600 font-semibold hover:text-blue-700">
               Sign In

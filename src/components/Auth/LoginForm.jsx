@@ -33,11 +33,12 @@ export default function LoginForm() {
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
 
         <div className="mb-8 text-center">
-          <img src="/Sailing/Club Logo.jpg" alt="CGSC Logo" className="h-24 w-auto mx-auto mb-2" />
+          <img src="/Sailing/Club Logo.jpg" alt="CGSC Logo" className="h-28 w-auto mx-auto mb-3 drop-shadow-lg" />
+          <p className="text-white font-semibold text-lg tracking-wide drop-shadow">Coconut Grove Sailing Club</p>
         </div>
 
         <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-8">
-          <h2 className="text-xl font-bold text-gray-800 mb-6 text-center">Sign In</h2>
+          <h2 className="text-2xl font-extrabold mb-6 text-center" style={{color: '#0c2340'}}>Sign In</h2>
 
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-lg mb-5">
@@ -47,7 +48,7 @@ export default function LoginForm() {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Email</label>
+              <label className="block text-base font-semibold text-gray-700 mb-2">Email</label>
               <input
                 type="email"
                 name="email"
@@ -55,12 +56,12 @@ export default function LoginForm() {
                 onChange={handleChange}
                 required
                 placeholder="your@email.com"
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
+                className="w-full px-4 py-4 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Password</label>
+              <label className="block text-base font-semibold text-gray-700 mb-2">Password</label>
               <input
                 type="password"
                 name="password"
@@ -68,21 +69,21 @@ export default function LoginForm() {
                 onChange={handleChange}
                 required
                 placeholder="••••••••"
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
+                className="w-full px-4 py-4 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
               />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3.5 rounded-xl font-bold text-white text-base transition-all"
+              className="w-full py-4 rounded-xl font-bold text-white text-lg transition-all"
               style={{background: loading ? '#9ca3af' : 'linear-gradient(135deg, #0c2340, #0369a1)'}}
             >
               {loading ? 'Signing In...' : 'Sign In'}
             </button>
           </form>
 
-          <p className="text-center text-gray-500 text-sm mt-6">
+          <p className="text-center text-gray-500 text-base mt-6">
             No account?{' '}
             <Link to="/signup" className="text-blue-600 font-semibold hover:text-blue-700">
               Sign Up

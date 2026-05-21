@@ -13,6 +13,7 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [boats, setBoats] = useState([]);
 
   useEffect(() => {
     if (profile) {
@@ -23,6 +24,22 @@ export default function ProfilePage() {
       });
     }
   }, [profile]);
+
+  useEffect(() => {
+    const fetchBoats = async () => {
+      if (!user || profile?.user_type !== 'owner') return;
+      try {
+        const { data } = await supabase
+          .from('boats')
+          .select('*')
+          .eq('owner_id', user.id);
+        setBoats(data || []);
+      } catch (err) {
+        console.error('Error fetching boats:', err);
+      }
+    };
+    fetchBoats();
+  }, [user, profile]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -151,6 +168,31 @@ export default function ProfilePage() {
                 {profile?.user_type || 'Not set'}
               </p>
             </div>
+
+            {profile?.user_type === 'owner' && (
+              <div>
+                <p className="text-gray-600">Your Boats</p>
+                {boats.length === 0 ? (
+                  <p className="text-lg text-gray-500">No boats added yet</p>
+                ) : (
+                  <div className="space-y-3 mt-2">
+                    {boats.map((boat) => (
+                      <div key={boat.id} className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                        <p className="font-semibold text-gray-900 text-lg">{boat.name}</p>
+                        <p className="text-sm text-gray-600">{boat.brand} {boat.model}</p>
+                        <div className="grid grid-cols-2 gap-2 mt-2 text-sm text-gray-700">
+                          <div>Size: {boat.size_ft}ft</div>
+                          <div>Capacity: {boat.capacity} people</div>
+                          {boat.mooring_location && (
+                            <div className="col-span-2">Location: {boat.mooring_location}</div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             <button
               onClick={() => setEditMode(true)}

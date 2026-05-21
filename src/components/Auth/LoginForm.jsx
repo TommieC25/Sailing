@@ -165,7 +165,7 @@ export default function LoginForm() {
 
         {/* Sign Up CTA */}
         <div style={{textAlign: 'center', paddingBottom: '2.5rem'}}>
-          <p style={styles.signUpText}>New Here?</p>
+          <p style={{...styles.signUpText, fontSize: '1.5rem', fontWeight: 900, marginBottom: '1rem'}}>New Here?</p>
           <Link to="/signup" style={styles.signUpLink}>
             Create Account →
           </Link>

@@ -55,7 +55,7 @@ export default function ProfilePage() {
       const fetchViewedProfile = async () => {
         try {
           const { data, error } = await supabase
-            .from('profiles')
+            .from('users')
             .select('*')
             .eq('id', profileId)
             .single();

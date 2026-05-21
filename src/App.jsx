@@ -1,5 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import { useAuth, AuthProvider } from './hooks/useAuth';
+import { supabase } from './utils/supabaseClient';
 import Layout from './components/Layout/Layout';
 import HomePage from './pages/HomePage';
 import ProfilePage from './pages/ProfilePage';
@@ -67,8 +69,32 @@ function AuthRoute({ children }) {
 
 function AdminRoute({ children }) {
   const { user, loading } = useAuth();
+  const [isAdmin, setIsAdmin] = useState(null);
 
-  if (loading) {
+  useEffect(() => {
+    const checkAdmin = async () => {
+      if (!user) {
+        setIsAdmin(false);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('admins')
+          .select('id')
+          .eq('user_id', user.id)
+          .single();
+
+        setIsAdmin(!error && !!data);
+      } catch {
+        setIsAdmin(false);
+      }
+    };
+
+    checkAdmin();
+  }, [user]);
+
+  if (loading || isAdmin === null) {
     return (
       <Layout>
         <Spinner />
@@ -76,8 +102,8 @@ function AdminRoute({ children }) {
     );
   }
 
-  if (!user) {
-    return <Navigate to="/login" replace />;
+  if (!user || !isAdmin) {
+    return <Navigate to="/" replace />;
   }
 
   return <Layout>{children}</Layout>;

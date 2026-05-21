@@ -3,17 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../utils/supabaseClient';
 
-const checkIsAdmin = async (userId) => {
-  try {
-    const { data } = await supabase
-      .from('admins')
-      .select('id')
-      .eq('user_id', userId)
-      .single();
-    return !!data;
-  } catch {
-    return false;
-  }
+const checkIsAdmin = (user) => {
+  return user?.app_metadata?.role === 'admin';
 };
 
 const NAV_BG = 'linear-gradient(135deg, #0c2340 0%, #0369a1 100%)';
@@ -61,13 +52,7 @@ export default function Layout({ children }) {
   useEffect(() => {
     if (!user) return;
 
-    const checkAdmin = async () => {
-      const adminStatus = await checkIsAdmin(user.id);
-      console.log('🔐 Admin check:', { userId: user.id, isAdmin: adminStatus });
-      setIsAdmin(adminStatus);
-    };
-
-    checkAdmin();
+    setIsAdmin(checkIsAdmin(user));
   }, [user]);
 
   useEffect(() => {

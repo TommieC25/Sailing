@@ -48,17 +48,7 @@ export default function AdminInboxPage() {
 
   useEffect(() => {
     if (!user) return;
-
-    const checkAdmin = async () => {
-      const { data } = await supabase
-        .from('admins')
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
-      setIsAdmin(!!data);
-    };
-
-    checkAdmin();
+    setIsAdmin(user?.app_metadata?.role === 'admin');
   }, [user]);
 
   useEffect(() => {

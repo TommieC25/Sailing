@@ -177,7 +177,19 @@ export default function ProfilePage() {
     e.preventDefault();
     try {
       setSaving(true);
-      await updateProfile(formData);
+
+      const updateData = {
+        full_name: formData.full_name,
+        bio: formData.bio,
+        sailing_experience: formData.sailing_experience,
+        phone: formData.phone,
+      };
+
+      if (formData.gender) {
+        updateData.gender = formData.gender;
+      }
+
+      await updateProfile(updateData);
 
       if (profile?.user_type === 'owner' && boatId) {
         const parts = boatData.brand_model_color.split('/').map(s => s.trim());

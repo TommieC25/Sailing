@@ -136,6 +136,27 @@ export default function SkipperDashboard() {
     }
   };
 
+  const generateCalendarLink = (outing) => {
+    const date = new Date(outing.outing_date);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const dateStr = `${year}${month}${day}`;
+
+    const timeParts = outing.outing_time.match(/(\d+):(\d+)/);
+    const hour = timeParts ? String(timeParts[1]).padStart(2, '0') : '09';
+    const minute = timeParts ? String(timeParts[2]).padStart(2, '0') : '00';
+
+    const startTime = `${dateStr}T${hour}${minute}00`;
+    const endHour = String((parseInt(hour) + 2) % 24).padStart(2, '0');
+    const endTime = `${dateStr}T${endHour}${minute}00`;
+
+    const title = encodeURIComponent(outing.title);
+    const details = encodeURIComponent(`${outing.description || ''}\n\nBoat: ${outing.boats?.name || 'TBD'}`);
+
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startTime}/${endTime}&details=${details}`;
+  };
+
   if (loading) {
     return (
       <div style={{textAlign: 'center', padding: '64px 16px'}}>
@@ -255,7 +276,12 @@ export default function SkipperDashboard() {
 
                     {approved.length > 0 && (
                       <div>
-                        <h4 style={styles.sectionTitle}>✅ Approved Crew ({approved.length})</h4>
+                        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px'}}>
+                          <h4 style={styles.sectionTitle}>✅ Approved Crew ({approved.length})</h4>
+                          <a href={generateCalendarLink(outing)} target="_blank" rel="noopener noreferrer" style={{fontSize: '1rem', fontWeight: 900, color: '#0369a1', textDecoration: 'none', padding: '8px 12px', background: '#e0f2fe', borderRadius: '8px', display: 'inline-block'}}>
+                            📅 Add to Calendar
+                          </a>
+                        </div>
                         <div style={styles.requestsList}>
                           {approved.map((req) => (
                             <div key={req.id} style={styles.approvedRequest}>

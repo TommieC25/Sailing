@@ -55,10 +55,10 @@ const AdminDashboard = () => {
       // Load detailed data
       const [usersData, adminsData, bugsData, featuresData, msgsData, announcementsData] = await Promise.all([
         supabase.from('users').select('*').limit(100),
-        supabase.from('admins').select('*, users(*)'),
-        supabase.from('bug_reports').select('*, users(email)').order('created_at', { ascending: false }).limit(50),
-        supabase.from('feature_requests').select('*, users(email)').order('created_at', { ascending: false }).limit(50),
-        supabase.from('contact_messages').select('*, users(email)').order('created_at', { ascending: false }).limit(50),
+        supabase.from('admins').select('*'),
+        supabase.from('bug_reports').select('*').order('created_at', { ascending: false }).limit(50),
+        supabase.from('feature_requests').select('*').order('created_at', { ascending: false }).limit(50),
+        supabase.from('contact_messages').select('*').order('created_at', { ascending: false }).limit(50),
         supabase.from('announcements').select('*').order('created_at', { ascending: false }).limit(20),
       ]);
 
@@ -310,8 +310,8 @@ const AdminDashboard = () => {
         {activeTab === 'community' && (
           <div>
             <h2 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '24px' }}>👥 Community Management</h2>
-            <div style={{ background: '#ffffff', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <div style={{ background: '#ffffff', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '500px' }}>
                 <thead>
                   <tr style={{ background: '#f3f4f6', borderBottom: '2px solid #e5e7eb' }}>
                     <th style={{ padding: '12px', textAlign: 'left', fontWeight: 700 }}>User</th>
@@ -383,7 +383,7 @@ const AdminDashboard = () => {
                     <div>
                       <h4 style={{ margin: 0, fontWeight: 900, color: '#000' }}>{bug.title}</h4>
                       <p style={{ margin: '4px 0', fontSize: '0.9rem', color: '#666' }}>{bug.description?.substring(0, 100)}...</p>
-                      <p style={{ margin: '4px 0', fontSize: '0.85rem', color: '#999' }}>By {bug.users?.email} • {new Date(bug.created_at).toLocaleDateString()}</p>
+                      <p style={{ margin: '4px 0', fontSize: '0.85rem', color: '#999' }}>Submitted {new Date(bug.created_at).toLocaleDateString()}</p>
                     </div>
                     <select
                       value={bug.status}
@@ -408,7 +408,7 @@ const AdminDashboard = () => {
                     <div>
                       <h4 style={{ margin: 0, fontWeight: 900, color: '#000' }}>{feature.title}</h4>
                       <p style={{ margin: '4px 0', fontSize: '0.9rem', color: '#666' }}>{feature.description?.substring(0, 100)}...</p>
-                      <p style={{ margin: '4px 0', fontSize: '0.85rem', color: '#999' }}>By {feature.users?.email} • {new Date(feature.created_at).toLocaleDateString()}</p>
+                      <p style={{ margin: '4px 0', fontSize: '0.85rem', color: '#999' }}>Submitted {new Date(feature.created_at).toLocaleDateString()}</p>
                     </div>
                     <select
                       value={feature.status}
@@ -434,7 +434,7 @@ const AdminDashboard = () => {
                     <div>
                       <h4 style={{ margin: 0, fontWeight: 900, color: '#000' }}>{msg.subject}</h4>
                       <p style={{ margin: '4px 0', fontSize: '0.9rem', color: '#666' }}>{msg.message?.substring(0, 100)}...</p>
-                      <p style={{ margin: '4px 0', fontSize: '0.85rem', color: '#999' }}>By {msg.users?.email} • {new Date(msg.created_at).toLocaleDateString()}</p>
+                      <p style={{ margin: '4px 0', fontSize: '0.85rem', color: '#999' }}>Submitted {new Date(msg.created_at).toLocaleDateString()}</p>
                     </div>
                     <select
                       value={msg.status}

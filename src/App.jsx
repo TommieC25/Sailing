@@ -13,7 +13,6 @@ import CreateOutingPage from './pages/CreateOutingPage';
 import BugReportPage from './pages/BugReportPage';
 import FeatureRequestPage from './pages/FeatureRequestPage';
 import ContactAdminPage from './pages/ContactAdminPage';
-import AdminInboxPage from './pages/AdminInboxPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import AnnouncementsFeed from './pages/AnnouncementsFeed';
@@ -128,8 +127,7 @@ function App() {
           <Route path="/bug-report" element={<ProtectedRoute><BugReportPage /></ProtectedRoute>} />
           <Route path="/feature-request" element={<ProtectedRoute><FeatureRequestPage /></ProtectedRoute>} />
           <Route path="/contact-admin" element={<ProtectedRoute><ContactAdminPage /></ProtectedRoute>} />
-          <Route path="/admin/inbox" element={<AdminRoute><AdminInboxPage /></AdminRoute>} />
-          <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+<Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
           <Route path="/announcements" element={<ProtectedRoute><AnnouncementsFeed /></ProtectedRoute>} />
         </Routes>
       </Router>

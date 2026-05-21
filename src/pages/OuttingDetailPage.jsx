@@ -83,11 +83,14 @@ export default function OuttingDetailPage() {
 
         const { data: skipperData, error: skipperError } = await supabase
           .from('profiles')
-          .select('*')
+          .select('id, full_name, photo_url, bio, sailing_experience')
           .eq('id', outingData.skipper_id)
           .single();
 
-        if (skipperError) throw skipperError;
+        if (skipperError) {
+          console.error('Skipper fetch error:', skipperError);
+          throw skipperError;
+        }
         setSkipper(skipperData);
 
         const { data: boatData, error: boatError } = await supabase

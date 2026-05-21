@@ -5,20 +5,20 @@ import { supabase } from '../utils/supabaseClient';
 
 const styles = {
   container: { maxWidth: '800px', margin: '0 auto' },
-  card: { background: 'white', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', padding: '1.5rem' },
-  title: { fontSize: '2rem', fontWeight: 'bold', color: '#111', marginBottom: '2rem' },
-  photo: { width: '160px', height: '160px', borderRadius: '50%', objectFit: 'cover', border: '4px solid #ddd' },
+  card: { background: '#ffffff', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', padding: '32px', border: '1px solid #e5e7eb' },
+  title: { fontSize: '2rem', fontWeight: 900, color: '#1e293b', marginBottom: '2rem', margin: '0 0 2rem 0' },
+  photo: { width: '160px', height: '160px', borderRadius: '50%', objectFit: 'cover', border: '4px solid #dbeafe' },
   photoSection: { marginBottom: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2rem' },
-  photoPlaceholder: { width: '160px', height: '160px', borderRadius: '50%', background: '#ddd', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3rem', border: '4px solid #ddd', flexShrink: 0 },
-  button: { background: '#06b6d4', color: 'white', padding: '0.75rem 1.5rem', borderRadius: '6px', border: 'none', fontWeight: 'bold', cursor: 'pointer', fontSize: '1rem' },
-  label: { fontSize: '1.125rem', fontWeight: 'bold', color: '#555', marginBottom: '0.5rem', display: 'block' },
-  value: { fontSize: '1.5rem', fontWeight: '600', color: '#111', marginBottom: '1.5rem' },
-  input: { width: '100%', padding: '0.75rem', fontSize: '1.1rem', border: '1px solid #ccc', borderRadius: '6px', fontFamily: 'inherit', marginBottom: '1.5rem' },
-  select: { width: '100%', padding: '0.75rem', fontSize: '1.1rem', border: '1px solid #ccc', borderRadius: '6px', fontFamily: 'inherit', marginBottom: '1.5rem' },
-  textarea: { width: '100%', padding: '0.75rem', fontSize: '1.1rem', border: '1px solid #ccc', borderRadius: '6px', fontFamily: 'inherit', marginBottom: '1.5rem', minHeight: '100px' },
+  photoPlaceholder: { width: '160px', height: '160px', borderRadius: '50%', background: '#f0f9ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3rem', border: '4px solid #bfdbfe', flexShrink: 0 },
+  button: { background: '#06b6d4', color: '#ffffff', padding: '12px 24px', borderRadius: '8px', border: 'none', fontWeight: 900, cursor: 'pointer', fontSize: '1rem', transition: 'all 0.2s' },
+  label: { fontSize: '1rem', fontWeight: 700, color: '#1e293b', marginBottom: '8px', display: 'block' },
+  value: { fontSize: '1.125rem', fontWeight: 600, color: '#1e293b', marginBottom: '1.5rem' },
+  input: { width: '100%', padding: '12px 16px', fontSize: '1rem', border: '2px solid #dbeafe', borderRadius: '8px', fontFamily: 'inherit', marginBottom: '1.5rem', color: '#1e293b', background: '#ffffff' },
+  select: { width: '100%', padding: '12px 16px', fontSize: '1rem', border: '2px solid #dbeafe', borderRadius: '8px', fontFamily: 'inherit', marginBottom: '1.5rem', color: '#1e293b', background: '#ffffff' },
+  textarea: { width: '100%', padding: '12px 16px', fontSize: '1rem', border: '2px solid #dbeafe', borderRadius: '8px', fontFamily: 'inherit', marginBottom: '1.5rem', minHeight: '100px', color: '#1e293b', background: '#ffffff', resize: 'vertical' },
   section: { marginBottom: '2rem' },
-  sectionTitle: { fontSize: '1.5rem', fontWeight: 'bold', color: '#111', marginBottom: '1.5rem' },
-  boat: { background: '#f5f5f5', border: '1px solid #ddd', borderRadius: '6px', padding: '1rem', marginBottom: '1rem' },
+  sectionTitle: { fontSize: '1.25rem', fontWeight: 900, color: '#1e293b', marginBottom: '1.5rem', margin: '0 0 1.5rem 0', paddingBottom: '12px', borderBottom: '2px solid #e0f2fe' },
+  boat: { background: '#f0f9ff', border: '2px solid #bfdbfe', borderRadius: '8px', padding: '16px', marginBottom: '1rem' },
   topContact: { display: 'block', marginBottom: '2rem' },
   contactCol: { marginBottom: '1.5rem' },
 };
@@ -226,7 +226,7 @@ export default function ProfilePage() {
         <h1 style={styles.title}>{isViewingOther ? displayProfile?.full_name : 'My Profile'}</h1>
 
         {message && (
-          <div style={{marginBottom: '1.5rem', padding: '1rem', borderRadius: '6px', fontSize: '1.1rem', background: message.includes('Error') ? '#fee' : '#efe', color: message.includes('Error') ? '#c00' : '#060'}}>
+          <div style={{marginBottom: '1.5rem', padding: '16px', borderRadius: '8px', fontSize: '1rem', fontWeight: 600, background: message.includes('Error') ? '#fee2e2' : '#f0fdf4', color: message.includes('Error') ? '#991b1b' : '#166534', border: message.includes('Error') ? '2px solid #dc2626' : '2px solid #16a34a'}}>
             {message}
           </div>
         )}
@@ -295,9 +295,9 @@ export default function ProfilePage() {
                 <div style={styles.sectionTitle}>Your Boat</div>
                 {boats.map((boat) => (
                   <div key={boat.id} style={styles.boat}>
-                    <div style={{fontSize: '1.25rem', fontWeight: 'bold', color: '#111', marginBottom: '0.5rem'}}>{boat.name}</div>
-                    <div style={{fontSize: '1rem', color: '#666', marginBottom: '1rem'}}>{[boat.brand, boat.model, boat.color].filter(Boolean).join(' / ')}</div>
-                    <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', fontSize: '1rem', color: '#333'}}>
+                    <div style={{fontSize: '1.25rem', fontWeight: 900, color: '#0c2340', marginBottom: '8px'}}>{boat.name}</div>
+                    <div style={{fontSize: '1rem', color: '#64748b', marginBottom: '1rem', fontWeight: 600}}>{[boat.brand, boat.model, boat.color].filter(Boolean).join(' / ')}</div>
+                    <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', fontSize: '1rem', color: '#475569'}}>
                       <div>Size: {boat.size_ft}ft</div>
                       <div>Capacity: {boat.capacity}</div>
                       {boat.mooring_location && (
@@ -309,7 +309,7 @@ export default function ProfilePage() {
               </div>
             )}
 
-            <button onClick={() => setEditMode(true)} style={{...styles.button, marginTop: '2rem', fontSize: '1.1rem', padding: '1rem 2rem'}}>
+            <button onClick={() => setEditMode(true)} style={{...styles.button, marginTop: '2rem', fontSize: '1.125rem', padding: '12px 24px'}}>
               Edit Profile
             </button>
           </>
@@ -340,9 +340,9 @@ export default function ProfilePage() {
                 <div style={styles.sectionTitle}>Boat</div>
                 {displayBoats.map((boat) => (
                   <div key={boat.id} style={styles.boat}>
-                    <div style={{fontSize: '1.25rem', fontWeight: 'bold', color: '#111', marginBottom: '0.5rem'}}>{boat.name}</div>
-                    <div style={{fontSize: '1rem', color: '#666', marginBottom: '1rem'}}>{[boat.brand, boat.model, boat.color].filter(Boolean).join(' / ')}</div>
-                    <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', fontSize: '1rem', color: '#333'}}>
+                    <div style={{fontSize: '1.25rem', fontWeight: 900, color: '#0c2340', marginBottom: '8px'}}>{boat.name}</div>
+                    <div style={{fontSize: '1rem', color: '#64748b', marginBottom: '1rem', fontWeight: 600}}>{[boat.brand, boat.model, boat.color].filter(Boolean).join(' / ')}</div>
+                    <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', fontSize: '1rem', color: '#475569'}}>
                       <div>Size: {boat.size_ft}ft</div>
                       <div>Capacity: {boat.capacity}</div>
                       {boat.mooring_location && (
@@ -357,7 +357,7 @@ export default function ProfilePage() {
         ) : (
           <form onSubmit={handleSubmit}>
             <div style={styles.section}>
-              <div style={{fontSize: '1.5rem', fontWeight: 'bold', color: '#111', marginBottom: '1.5rem'}}>Profile Information</div>
+              <div style={{fontSize: '1.25rem', fontWeight: 900, color: '#1e293b', marginBottom: '1.5rem', paddingBottom: '12px', borderBottom: '2px solid #e0f2fe'}}>Profile Information</div>
 
               <div>
                 <div style={styles.label}>Full Name</div>
@@ -397,7 +397,7 @@ export default function ProfilePage() {
 
             {profile?.user_type === 'owner' && (
               <div style={styles.section}>
-                <div style={{fontSize: '1.5rem', fontWeight: 'bold', color: '#111', marginBottom: '1.5rem'}}>Boat Information</div>
+                <div style={{fontSize: '1.25rem', fontWeight: 900, color: '#1e293b', marginBottom: '1.5rem', paddingBottom: '12px', borderBottom: '2px solid #e0f2fe'}}>Boat Information</div>
 
                 <div>
                   <div style={styles.label}>Boat Name</div>
@@ -429,10 +429,10 @@ export default function ProfilePage() {
             )}
 
             <div style={{display: 'flex', gap: '1rem', marginTop: '2rem'}}>
-              <button type="submit" disabled={saving} style={{...styles.button, flex: 1, fontSize: '1.1rem', padding: '1rem', opacity: saving ? 0.6 : 1}}>
+              <button type="submit" disabled={saving} style={{...styles.button, flex: 1, fontSize: '1.125rem', padding: '12px', opacity: saving ? 0.6 : 1}}>
                 {saving ? 'Saving...' : 'Save Changes'}
               </button>
-              <button type="button" onClick={() => setEditMode(false)} style={{flex: 1, fontSize: '1.1rem', padding: '1rem', background: '#ddd', color: '#333', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer'}}>
+              <button type="button" onClick={() => setEditMode(false)} style={{flex: 1, fontSize: '1.125rem', padding: '12px', background: '#e5e7eb', color: '#1e293b', border: 'none', borderRadius: '8px', fontWeight: 900, cursor: 'pointer', transition: 'all 0.2s'}}>
                 Cancel
               </button>
             </div>

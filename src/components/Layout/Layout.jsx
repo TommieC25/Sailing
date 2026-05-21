@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { supabase } from '../../utils/supabaseClient';
 
 const NAV_BG = 'linear-gradient(135deg, #0c2340 0%, #0369a1 100%)';
 
@@ -8,6 +9,39 @@ export default function Layout({ children }) {
   const navigate = useNavigate();
   const { user, profile, signOut } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [unreadAnnouncementCount, setUnreadAnnouncementCount] = useState(0);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchUnreadCount = async () => {
+      try {
+        // Get all announcements
+        const { data: announcements } = await supabase
+          .from('announcements')
+          .select('id');
+
+        if (!announcements) {
+          setUnreadAnnouncementCount(0);
+          return;
+        }
+
+        // Get viewed announcements for this user
+        const { data: viewed } = await supabase
+          .from('announcement_views')
+          .select('announcement_id')
+          .eq('user_id', user.id);
+
+        const viewedIds = new Set(viewed?.map((v) => v.announcement_id) || []);
+        const unreadCount = announcements.filter((a) => !viewedIds.has(a.id)).length;
+        setUnreadAnnouncementCount(unreadCount);
+      } catch (err) {
+        console.error('Error fetching unread announcements:', err);
+      }
+    };
+
+    fetchUnreadCount();
+  }, [user]);
 
   const handleSignOut = async () => {
     try {
@@ -61,6 +95,22 @@ export default function Layout({ children }) {
               )}
             </div>
 
+            {/* Announcements bell */}
+            <button
+              onClick={() => navigate('/announcements')}
+              style={{color: '#ffffff', background: 'none', border: 'none', cursor: 'pointer', padding: '4px', position: 'relative', marginRight: '8px'}}
+              title="View announcements"
+            >
+              <svg style={{width: '28px', height: '28px'}} fill="currentColor" viewBox="0 0 24 24">
+                <path d="M10 20h4c0 1.1-.9 2-2 2s-2-.9-2-2zm10-2v-5c0-3.07-1.64-5.64-4.5-6.32V2h-3v4.68C7.64 7.36 6 9.93 6 13v5H4v2h16v-2h-2z"/>
+              </svg>
+              {unreadAnnouncementCount > 0 && (
+                <span style={{position: 'absolute', top: '-4px', right: '-4px', background: '#ef4444', color: '#ffffff', borderRadius: '50%', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 900}}>
+                  {unreadAnnouncementCount}
+                </span>
+              )}
+            </button>
+
             {/* Mobile hamburger */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -79,6 +129,7 @@ export default function Layout({ children }) {
                 <>
                   <Link to="/" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#ffffff', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>⛵ Outings</Link>
                   <Link to="/profile" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#ffffff', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>👤 Profile</Link>
+                  <Link to="/bug-report" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#a7f3d0', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>🐛 Report Bug</Link>
                   <button onClick={handleSignOut} style={{display: 'block', width: '100%', textAlign: 'left', padding: '12px', color: '#fca5a5', fontSize: '1.25rem', fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer', borderRadius: '12px'}}>
                     🚪 Sign Out
                   </button>
@@ -87,6 +138,7 @@ export default function Layout({ children }) {
                 <>
                   <Link to="/login" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#ffffff', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none'}}>Sign In</Link>
                   <Link to="/signup" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#ffffff', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none'}}>Sign Up</Link>
+                  <Link to="/bug-report" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#a7f3d0', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>🐛 Report Bug</Link>
                 </>
               )}
             </div>

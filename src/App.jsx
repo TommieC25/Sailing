@@ -11,6 +11,8 @@ import BugReportPage from './pages/BugReportPage';
 import FeatureRequestPage from './pages/FeatureRequestPage';
 import ContactAdminPage from './pages/ContactAdminPage';
 import AdminInboxPage from './pages/AdminInboxPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import AnnouncementsFeed from './pages/AnnouncementsFeed';
 import SignupForm from './components/Auth/SignupForm';
 import LoginForm from './components/Auth/LoginForm';
@@ -68,6 +70,8 @@ function App() {
       <Routes>
         <Route path="/signup" element={<AuthRoute><SignupForm /></AuthRoute>} />
         <Route path="/login" element={<AuthRoute><LoginForm /></AuthRoute>} />
+        <Route path="/forgot-password" element={<AuthRoute><ForgotPasswordPage /></AuthRoute>} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
         <Route path="/community" element={<ProtectedRoute><CommunityPage /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />

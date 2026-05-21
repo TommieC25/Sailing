@@ -161,6 +161,17 @@ export default function LoginForm() {
               {loading ? 'Setting Sail...' : "Let's Go Sailing!"}
             </button>
           </form>
+
+          <div style={{textAlign: 'center', marginTop: '1.5rem'}}>
+            <Link
+              to="/forgot-password"
+              style={{color: '#e0f2fe', fontSize: '1.125rem', fontWeight: 700, textDecoration: 'none', transition: 'all 0.2s'}}
+              onMouseEnter={(e) => (e.target.style.color = '#a5f3fc')}
+              onMouseLeave={(e) => (e.target.style.color = '#e0f2fe')}
+            >
+              Forgot Password?
+            </Link>
+          </div>
         </div>
 
         {/* Sign Up CTA */}

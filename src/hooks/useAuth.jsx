@@ -65,7 +65,21 @@ export function AuthProvider({ children }) {
       });
 
       if (signUpError) throw signUpError;
-      if (user) setUser(user);
+
+      if (user) {
+        await supabase.from('users').insert([
+          {
+            id: user.id,
+            email: user.email,
+            full_name: userProfile.full_name,
+            gender: userProfile.gender,
+            user_type: userProfile.user_type,
+            sailing_experience: userProfile.sailing_experience,
+            photo_url: userProfile.photo_url,
+          },
+        ]);
+        setUser(user);
+      }
     } catch (err) {
       setError(err.message);
       throw err;

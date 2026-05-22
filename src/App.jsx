@@ -18,6 +18,7 @@ import ResetPasswordPage from './pages/ResetPasswordPage';
 import AnnouncementsFeed from './pages/AnnouncementsFeed';
 import SignupForm from './components/Auth/SignupForm';
 import LoginForm from './components/Auth/LoginForm';
+import SignupSuccessPage from './pages/SignupSuccessPage';
 
 const Spinner = () => (
   <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '48px'}}>
@@ -90,6 +91,7 @@ function App() {
       <Router basename="/Sailing">
         <Routes>
           <Route path="/signup" element={<AuthRoute><SignupForm /></AuthRoute>} />
+          <Route path="/signup-success" element={<SignupSuccessPage />} />
           <Route path="/login" element={<AuthRoute><LoginForm /></AuthRoute>} />
           <Route path="/forgot-password" element={<AuthRoute><ForgotPasswordPage /></AuthRoute>} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />

@@ -42,7 +42,6 @@ export default function SignupForm() {
   const [photoPreview, setPhotoPreview] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [signupComplete, setSignupComplete] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -129,7 +128,7 @@ export default function SignupForm() {
         photoUrl = data.publicUrl;
       }
 
-      const result = await signUp(formData.email, formData.password, {
+      await signUp(formData.email, formData.password, {
         full_name: formData.fullName,
         phone_number: phoneDigits,
         gender: formData.gender,
@@ -138,45 +137,21 @@ export default function SignupForm() {
         photo_url: photoUrl,
       });
 
-      setSignupComplete(true);
+      // Ensure user is not auto-logged-in, so they MUST confirm email first.
+      await supabase.auth.signOut().catch(() => {});
+
+      // Navigate to dedicated success page so the URL itself changes —
+      // the user can't miss it.
+      navigate('/signup-success', {
+        state: { email: formData.email },
+        replace: true,
+      });
     } catch (err) {
       setError(err.message || 'Failed to sign up');
     } finally {
       setLoading(false);
     }
   };
-
-  if (signupComplete) {
-    return (
-      <div style={styles.container}>
-        <div style={styles.innerContainer}>
-          <div style={styles.header}>
-            <img src="/Sailing/Club Logo.jpg" alt="CGSC Logo" style={styles.logo} />
-            <h1 style={styles.title}>Check Your Email</h1>
-          </div>
-          <div style={styles.card}>
-            <h2 style={styles.cardTitle}>One more step!</h2>
-            <p style={{fontSize: '1.25rem', color: '#1e3a8a', fontWeight: 600, lineHeight: 1.5, marginBottom: '1.5rem'}}>
-              We sent a confirmation link to <strong>{formData.email}</strong>.
-            </p>
-            <p style={{fontSize: '1.125rem', color: '#374151', fontWeight: 600, lineHeight: 1.5, marginBottom: '2rem'}}>
-              Click the link in the email to verify your account, then come back and sign in.
-            </p>
-            <p style={{fontSize: '1rem', color: '#6b7280', fontWeight: 500, lineHeight: 1.5, marginBottom: '2rem'}}>
-              Don't see it? Check your spam folder. The email comes from <strong>noreply@mail.app.supabase.io</strong>.
-            </p>
-            <Link
-              to="/login"
-              style={styles.signInLink}
-            >
-              Go to Sign In →
-            </Link>
-          </div>
-          <p style={styles.bottomText}>Coconut Grove Sailing Club • Miami, FL</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div style={styles.container}>

@@ -23,7 +23,24 @@ export function AuthProvider({ children }) {
             .eq('id', user.id)
             .single();
 
-          if (error && error.code !== 'PGRST116') throw error;
+          if (error && error.code === 'PGRST116') {
+            // Profile doesn't exist yet, create it from auth metadata
+            const metadata = user.user_metadata || {};
+            await supabase.from('users').insert([
+              {
+                id: user.id,
+                email: user.email,
+                full_name: metadata.full_name,
+                gender: metadata.gender,
+                user_type: metadata.user_type,
+                sailing_experience: metadata.sailing_experience,
+                photo_url: metadata.photo_url,
+              },
+            ]).select().single();
+          } else if (error) {
+            throw error;
+          }
+
           setProfile(data || null);
         }
       } catch (err) {

@@ -65,23 +65,7 @@ export function AuthProvider({ children }) {
       });
 
       if (signUpError) throw signUpError;
-
-      if (user) {
-        // Create profile immediately after signup
-        await supabase.from('users').insert([
-          {
-            id: user.id,
-            email: user.email,
-            full_name: userProfile.full_name,
-            gender: userProfile.gender,
-            user_type: userProfile.user_type,
-            sailing_experience: userProfile.sailing_experience,
-            photo_url: userProfile.photo_url,
-          },
-        ]);
-
-        setUser(user);
-      }
+      if (user) setUser(user);
     } catch (err) {
       setError(err.message);
       throw err;

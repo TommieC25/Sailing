@@ -124,9 +124,14 @@ export default function SignupForm() {
         photo_url: photoUrl,
       });
 
+      console.log('Signup result:', result);
+      console.log('needsEmailConfirmation:', result?.needsEmailConfirmation);
+
       if (result?.needsEmailConfirmation) {
+        console.log('Setting signupComplete to true');
         setSignupComplete(true);
       } else {
+        console.log('Navigating to home');
         navigate('/');
       }
     } catch (err) {

@@ -67,6 +67,24 @@ export default function HomePage() {
       {/* Main content with padding */}
       <div style={{padding: '0 20px 40px 20px'}}>
 
+        {/* Bio prompt - shown to users who haven't filled in their bio yet */}
+        {profile && !profile.bio?.trim() && (
+          <div style={{background: '#fef3c7', border: '2px solid #f59e0b', borderRadius: '16px', padding: '20px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap'}}>
+            <div style={{flex: 1, minWidth: '200px'}}>
+              <p style={{fontSize: '1.125rem', fontWeight: 900, color: '#78350f', margin: '0 0 4px 0'}}>👋 Welcome aboard, {profile.full_name?.split(' ')[0] || 'sailor'}!</p>
+              <p style={{fontSize: '1rem', color: '#92400e', margin: 0, fontWeight: 600, lineHeight: 1.4}}>
+                Tell other sailors a bit about yourself — your experience, what you love about sailing, anything you'd want a skipper or crewmate to know.
+              </p>
+            </div>
+            <Link
+              to="/profile"
+              style={{background: '#0c2340', color: '#ffffff', padding: '12px 20px', borderRadius: '10px', fontWeight: 900, fontSize: '1rem', textDecoration: 'none', whiteSpace: 'nowrap'}}
+            >
+              Add bio →
+            </Link>
+          </div>
+        )}
+
         {error && (
           <div style={{background: '#fee2e2', border: '2px solid #dc2626', color: '#7f1d1d', padding: '16px', borderRadius: '12px', marginBottom: '24px', fontSize: '1rem', fontWeight: 600}}>
             {error}

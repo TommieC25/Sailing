@@ -23,24 +23,7 @@ export function AuthProvider({ children }) {
             .eq('id', user.id)
             .single();
 
-          if (error && error.code === 'PGRST116') {
-            // Profile doesn't exist yet, create it from auth metadata
-            const metadata = user.user_metadata || {};
-            await supabase.from('users').insert([
-              {
-                id: user.id,
-                email: user.email,
-                full_name: metadata.full_name,
-                gender: metadata.gender,
-                user_type: metadata.user_type,
-                sailing_experience: metadata.sailing_experience,
-                photo_url: metadata.photo_url,
-              },
-            ]).select().single();
-          } else if (error) {
-            throw error;
-          }
-
+          if (error && error.code !== 'PGRST116') throw error;
           setProfile(data || null);
         }
       } catch (err) {
@@ -84,6 +67,19 @@ export function AuthProvider({ children }) {
       if (signUpError) throw signUpError;
 
       if (user) {
+        // Create profile immediately after signup
+        await supabase.from('users').insert([
+          {
+            id: user.id,
+            email: user.email,
+            full_name: userProfile.full_name,
+            gender: userProfile.gender,
+            user_type: userProfile.user_type,
+            sailing_experience: userProfile.sailing_experience,
+            photo_url: userProfile.photo_url,
+          },
+        ]);
+
         setUser(user);
       }
     } catch (err) {

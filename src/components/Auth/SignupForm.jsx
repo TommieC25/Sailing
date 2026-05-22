@@ -33,6 +33,7 @@ export default function SignupForm() {
     password: '',
     confirmPassword: '',
     fullName: '',
+    phone: '',
     gender: '',
     userType: '',
     sailingExperience: '',
@@ -87,6 +88,10 @@ export default function SignupForm() {
       setError('Please select your experience level');
       return;
     }
+    if (!formData.phone) {
+      setError('Phone number is required');
+      return;
+    }
     if (!photoFile) {
       setError('Profile photo is required');
       return;
@@ -112,6 +117,7 @@ export default function SignupForm() {
 
       const result = await signUp(formData.email, formData.password, {
         full_name: formData.fullName,
+        phone_number: formData.phone,
         gender: formData.gender,
         user_type: formData.userType,
         sailing_experience: formData.sailingExperience,
@@ -189,6 +195,19 @@ export default function SignupForm() {
                 onChange={handleChange}
                 required
                 placeholder="Your full name"
+                style={styles.input}
+              />
+            </div>
+
+            <div style={styles.fieldGroup}>
+              <label style={styles.label}>Phone Number</label>
+              <input
+                type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                required
+                placeholder="(555) 123-4567"
                 style={styles.input}
               />
             </div>

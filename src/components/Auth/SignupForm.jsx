@@ -50,6 +50,19 @@ export default function SignupForm() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    if (name === 'phone') {
+      const digits = value.replace(/\D/g, '').slice(0, 10);
+      let formatted = digits;
+      if (digits.length > 6) {
+        formatted = `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+      } else if (digits.length > 3) {
+        formatted = `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+      } else if (digits.length > 0) {
+        formatted = `(${digits}`;
+      }
+      setFormData((prev) => ({ ...prev, phone: formatted }));
+      return;
+    }
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -88,8 +101,9 @@ export default function SignupForm() {
       setError('Please select your experience level');
       return;
     }
-    if (!formData.phone) {
-      setError('Phone number is required');
+    const phoneDigits = formData.phone.replace(/\D/g, '');
+    if (phoneDigits.length !== 10) {
+      setError('Please enter a valid 10-digit phone number');
       return;
     }
     if (!photoFile) {
@@ -117,7 +131,7 @@ export default function SignupForm() {
 
       const result = await signUp(formData.email, formData.password, {
         full_name: formData.fullName,
-        phone_number: formData.phone,
+        phone_number: phoneDigits,
         gender: formData.gender,
         user_type: formData.userType,
         sailing_experience: formData.sailingExperience,

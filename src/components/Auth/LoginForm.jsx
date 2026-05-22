@@ -28,9 +28,11 @@ const styles = {
 
 export default function LoginForm() {
   const navigate = useNavigate();
-  const { signIn } = useAuth();
+  const { signIn, resendConfirmation } = useAuth();
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
+  const [needsConfirmation, setNeedsConfirmation] = useState(false);
+  const [resendStatus, setResendStatus] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
@@ -41,6 +43,8 @@ export default function LoginForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setNeedsConfirmation(false);
+    setResendStatus('');
     const email = e.target.email.value;
     const password = e.target.password.value;
     try {
@@ -48,9 +52,25 @@ export default function LoginForm() {
       await signIn(email, password);
       navigate('/');
     } catch (err) {
-      setError(err.message || 'Failed to sign in');
+      const msg = err.message || 'Failed to sign in';
+      if (/email not confirmed/i.test(msg) || err?.code === 'email_not_confirmed') {
+        setNeedsConfirmation(true);
+        setError('');
+      } else {
+        setError(msg);
+      }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    setResendStatus('');
+    try {
+      await resendConfirmation(formData.email);
+      setResendStatus('Confirmation email re-sent. Check your inbox (and spam folder).');
+    } catch (err) {
+      setResendStatus(err.message || 'Could not resend confirmation email.');
     }
   };
 
@@ -125,6 +145,23 @@ export default function LoginForm() {
         <div style={{marginBottom: '1.5rem'}}>
 
           {error && <div style={styles.error}>{error}</div>}
+
+          {needsConfirmation && (
+            <div style={{background: 'rgba(251, 191, 36, 0.95)', color: '#1f2937', padding: '1.25rem', borderRadius: '0.75rem', marginBottom: '1.5rem', fontWeight: 700, fontSize: '1.05rem', lineHeight: 1.5}}>
+              <div style={{fontSize: '1.25rem', fontWeight: 900, marginBottom: '0.5rem'}}>Please confirm your email first</div>
+              <div style={{marginBottom: '0.75rem'}}>
+                We sent a confirmation link to <strong>{formData.email}</strong>. Click it to verify your account, then sign in. Check your spam folder if you don't see it.
+              </div>
+              <button
+                type="button"
+                onClick={handleResend}
+                style={{background: '#0c2340', color: '#ffffff', border: 'none', padding: '0.75rem 1.25rem', borderRadius: '0.5rem', fontWeight: 900, fontSize: '1rem', cursor: 'pointer'}}
+              >
+                Resend confirmation email
+              </button>
+              {resendStatus && <div style={{marginTop: '0.75rem', fontSize: '0.95rem'}}>{resendStatus}</div>}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} style={{display: 'flex', flexDirection: 'column', gap: '1.5rem'}}>
             <div>

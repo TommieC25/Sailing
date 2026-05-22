@@ -58,32 +58,42 @@ export function AuthProvider({ children }) {
   const signUp = async (email, password, userProfile) => {
     try {
       setLoading(true);
-      const { data: { user }, error: signUpError } = await supabase.auth.signUp({
+      const redirectUrl = `${window.location.origin}/Sailing/login`;
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: userProfile },
+        options: {
+          data: userProfile,
+          emailRedirectTo: redirectUrl,
+        },
       });
 
       if (signUpError) throw signUpError;
 
-      if (user) {
-        const { error: insertError } = await supabase.from('users').insert([
-          {
-            id: user.id,
-            email: user.email,
-            ...userProfile,
-          },
-        ]);
+      // Profile row is created automatically by the on_auth_user_created
+      // trigger using the metadata passed in options.data above.
+      // No frontend INSERT is needed (and would fail RLS pre-confirmation).
 
-        if (insertError) throw insertError;
-        setUser(user);
-      }
+      return {
+        user: data.user,
+        needsEmailConfirmation: !data.session,
+      };
     } catch (err) {
       setError(err.message);
       throw err;
     } finally {
       setLoading(false);
     }
+  };
+
+  const resendConfirmation = async (email) => {
+    const redirectUrl = `${window.location.origin}/Sailing/login`;
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email,
+      options: { emailRedirectTo: redirectUrl },
+    });
+    if (error) throw error;
   };
 
   const signIn = async (email, password) => {
@@ -142,7 +152,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, error, signUp, signIn, signOut, updateProfile }}>
+    <AuthContext.Provider value={{ user, profile, loading, error, signUp, signIn, signOut, updateProfile, resendConfirmation }}>
       {children}
     </AuthContext.Provider>
   );

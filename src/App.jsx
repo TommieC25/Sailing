@@ -67,33 +67,9 @@ function AuthRoute({ children }) {
 }
 
 function AdminRoute({ children }) {
-  const { user, loading } = useAuth();
-  const [isAdmin, setIsAdmin] = useState(null);
+  const { user, profile, loading } = useAuth();
 
-  useEffect(() => {
-    const checkAdmin = async () => {
-      if (!user) {
-        setIsAdmin(false);
-        return;
-      }
-
-      try {
-        const { data, error } = await supabase
-          .from('admins')
-          .select('id')
-          .eq('user_id', user.id)
-          .single();
-
-        setIsAdmin(!error && !!data);
-      } catch {
-        setIsAdmin(false);
-      }
-    };
-
-    checkAdmin();
-  }, [user]);
-
-  if (loading || isAdmin === null) {
+  if (loading) {
     return (
       <Layout>
         <Spinner />
@@ -101,7 +77,7 @@ function AdminRoute({ children }) {
     );
   }
 
-  if (!user || !isAdmin) {
+  if (!user || profile?.role !== 'admin') {
     return <Navigate to="/" replace />;
   }
 

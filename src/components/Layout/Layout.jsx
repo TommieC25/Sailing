@@ -3,8 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../utils/supabaseClient';
 
-const checkIsAdmin = (user) => {
-  return user?.app_metadata?.role === 'admin';
+const checkIsAdmin = (profile) => {
+  return profile?.role === 'admin';
 };
 
 const NAV_BG = 'linear-gradient(135deg, #0c2340 0%, #0369a1 100%)';
@@ -50,10 +50,10 @@ export default function Layout({ children }) {
   }, [user]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!profile) return;
 
-    setIsAdmin(checkIsAdmin(user));
-  }, [user]);
+    setIsAdmin(checkIsAdmin(profile));
+  }, [profile]);
 
   useEffect(() => {
     if (!user || !isAdmin) return;

@@ -7,7 +7,6 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [stats, setStats] = useState(null);
   const [users, setUsers] = useState([]);
-  const [admins, setAdmins] = useState([]);
   const [bugReports, setBugReports] = useState([]);
   const [featureRequests, setFeatureRequests] = useState([]);
   const [contactMessages, setContactMessages] = useState([]);
@@ -53,9 +52,8 @@ const AdminDashboard = () => {
       });
 
       // Load detailed data
-      const [usersData, adminsData, bugsData, featuresData, msgsData, announcementsData] = await Promise.all([
+      const [usersData, bugsData, featuresData, msgsData, announcementsData] = await Promise.all([
         supabase.from('users').select('*').limit(100),
-        supabase.from('admins').select('*'),
         supabase.from('bug_reports').select('*').order('created_at', { ascending: false }).limit(50),
         supabase.from('feature_requests').select('*').order('created_at', { ascending: false }).limit(50),
         supabase.from('contact_messages').select('*').order('created_at', { ascending: false }).limit(50),
@@ -63,7 +61,6 @@ const AdminDashboard = () => {
       ]);
 
       setUsers(usersData.data || []);
-      setAdmins(adminsData.data || []);
       setBugReports(bugsData.data || []);
       setFeatureRequests(featuresData.data || []);
       setContactMessages(msgsData.data || []);

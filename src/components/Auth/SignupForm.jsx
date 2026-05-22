@@ -86,27 +86,27 @@ export default function SignupForm() {
       setError('Please select your experience level');
       return;
     }
-    if (!photoFile) {
-      setError('Profile photo is required');
-      return;
-    }
     try {
       setLoading(true);
 
       let photoUrl = null;
       if (photoFile) {
-        const fileExt = photoFile.name.split('.').pop();
-        const fileName = `${Date.now()}.${fileExt}`;
-        const filePath = `profile-photos/${fileName}`;
+        try {
+          const fileExt = photoFile.name.split('.').pop();
+          const fileName = `${Date.now()}.${fileExt}`;
+          const filePath = `profile-photos/${fileName}`;
 
-        const { error: uploadError } = await supabase.storage
-          .from('profiles')
-          .upload(filePath, photoFile, { upsert: true });
+          const { error: uploadError } = await supabase.storage
+            .from('profiles')
+            .upload(filePath, photoFile, { upsert: true });
 
-        if (uploadError) throw uploadError;
-
-        const { data } = supabase.storage.from('profiles').getPublicUrl(filePath);
-        photoUrl = data.publicUrl;
+          if (!uploadError) {
+            const { data } = supabase.storage.from('profiles').getPublicUrl(filePath);
+            photoUrl = data.publicUrl;
+          }
+        } catch (err) {
+          console.error('Photo upload error:', err);
+        }
       }
 
       await signUp(formData.email, formData.password, {

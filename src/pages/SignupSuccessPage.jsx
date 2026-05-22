@@ -17,7 +17,10 @@ const styles = {
 
 export default function SignupSuccessPage() {
   const location = useLocation();
-  const email = location.state?.email || new URLSearchParams(location.search).get('email');
+  const email =
+    location.state?.email ||
+    new URLSearchParams(location.search).get('email') ||
+    (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('signupEmail'));
 
   if (!email) {
     return <Navigate to="/signup" replace />;

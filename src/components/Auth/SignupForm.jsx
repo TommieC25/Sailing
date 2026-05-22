@@ -140,11 +140,14 @@ export default function SignupForm() {
       // Ensure user is not auto-logged-in, so they MUST confirm email first.
       await supabase.auth.signOut().catch(() => {});
 
-      // Navigate to dedicated success page so the URL itself changes —
-      // the user can't miss it.
-      navigate('/signup-success', {
+      // Stash email in sessionStorage as fallback in case Safari drops
+      // the React Router state on a soft refresh.
+      try { sessionStorage.setItem('signupEmail', formData.email); } catch (_) {}
+
+      // Pass email via URL query so it survives reloads — state alone is
+      // unreliable in Safari after the password-manager prompt fires.
+      navigate(`/signup-success?email=${encodeURIComponent(formData.email)}`, {
         state: { email: formData.email },
-        replace: true,
       });
     } catch (err) {
       setError(err.message || 'Failed to sign up');

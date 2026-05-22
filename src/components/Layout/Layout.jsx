@@ -139,14 +139,14 @@ export default function Layout({ children }) {
               {/* Announcements bell */}
               <button
                 onClick={() => navigate('/announcements')}
-                style={{color: '#ffffff', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px', display: 'flex', alignItems: 'center', overflow: 'visible', position: 'relative'}}
+                style={{color: '#ffffff', background: 'none', border: 'none', cursor: 'pointer', padding: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'visible', position: 'relative', lineHeight: 0}}
                 title="View announcements"
               >
-                <svg style={{width: '28px', height: '28px'}} fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M10 20h4c0 1.1-.9 2-2 2s-2-.9-2-2zm10-2v-5c0-3.07-1.64-5.64-4.5-6.32V2h-3v4.68C7.64 7.36 6 9.93 6 13v5H4v2h16v-2h-2z"/>
+                <svg xmlns="http://www.w3.org/2000/svg" style={{width: '22px', height: '22px', display: 'block'}} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
                 </svg>
                 {unreadAnnouncementCount > 0 && (
-                  <span style={{position: 'absolute', top: '-4px', right: '-4px', background: '#ef4444', color: '#ffffff', borderRadius: '50%', minWidth: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 900, lineHeight: 1, padding: '0 3px'}}>
+                  <span style={{position: 'absolute', top: '4px', right: '4px', background: '#ef4444', color: '#ffffff', borderRadius: '50%', minWidth: '14px', height: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem', fontWeight: 900, lineHeight: 1, padding: '0 2px'}}>
                     {unreadAnnouncementCount}
                   </span>
                 )}

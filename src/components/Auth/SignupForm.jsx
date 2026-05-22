@@ -124,16 +124,7 @@ export default function SignupForm() {
         photo_url: photoUrl,
       });
 
-      console.log('Signup result:', result);
-      console.log('needsEmailConfirmation:', result?.needsEmailConfirmation);
-
-      if (result?.needsEmailConfirmation) {
-        console.log('Setting signupComplete to true');
-        setSignupComplete(true);
-      } else {
-        console.log('Navigating to home');
-        navigate('/');
-      }
+      setSignupComplete(true);
     } catch (err) {
       setError(err.message || 'Failed to sign up');
     } finally {

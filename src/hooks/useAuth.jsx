@@ -70,9 +70,13 @@ export function AuthProvider({ children }) {
 
       if (signUpError) throw signUpError;
 
-      // Profile row is created automatically by the on_auth_user_created
-      // trigger using the metadata passed in options.data above.
-      // No frontend INSERT is needed (and would fail RLS pre-confirmation).
+      // Supabase anti-enumeration: duplicate emails return success with
+      // an empty identities array. Detect and surface to the user.
+      if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+        const err = new Error('An account with this email already exists. Please sign in instead.');
+        err.code = 'email_exists';
+        throw err;
+      }
 
       return {
         user: data.user,

@@ -67,15 +67,6 @@ export function AuthProvider({ children }) {
       if (signUpError) throw signUpError;
 
       if (user) {
-        const { error: insertError } = await supabase.from('users').insert([
-          {
-            id: user.id,
-            email: user.email,
-            ...userProfile,
-          },
-        ]);
-
-        if (insertError) throw insertError;
         setUser(user);
       }
     } catch (err) {

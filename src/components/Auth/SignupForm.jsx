@@ -41,6 +41,7 @@ export default function SignupForm() {
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
   const [error, setError] = useState('');
+  const [statusMessage, setStatusMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -92,47 +93,64 @@ export default function SignupForm() {
 
   const handleSignOut = async () => {
     setError('');
+    setStatusMessage('');
     await signOut();
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setStatusMessage('');
+
+    const fail = (message) => {
+      setError(message);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    if (!formData.email.trim()) {
+      fail('Please enter your email address');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
+      fail('Please enter a valid email address');
+      return;
+    }
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      fail('Passwords do not match');
       return;
     }
     if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters');
+      fail('Password must be at least 6 characters');
       return;
     }
     if (!formData.fullName.trim()) {
-      setError('Please enter your full name');
+      fail('Please enter your full name');
       return;
     }
     if (!formData.gender) {
-      setError('Please select your gender');
+      fail('Please select your gender');
       return;
     }
     if (!formData.userType) {
-      setError('Please select your account type');
+      fail('Please select your account type');
       return;
     }
     if (!formData.sailingExperience) {
-      setError('Please select your experience level');
+      fail('Please select your experience level');
       return;
     }
     const phoneDigits = formData.phone.replace(/\D/g, '');
     if (phoneDigits.length !== 10) {
-      setError('Please enter a valid 10-digit phone number');
+      fail('Please enter a valid 10-digit phone number');
       return;
     }
     if (!photoFile) {
-      setError('Profile photo is required');
+      fail('Profile photo is required');
       return;
     }
     try {
       setLoading(true);
+      setStatusMessage('Uploading profile photo...');
 
       let photoUrl = null;
       if (photoFile) {
@@ -150,7 +168,9 @@ export default function SignupForm() {
         photoUrl = data.publicUrl;
       }
 
-      await signUp(formData.email, formData.password, {
+      setStatusMessage('Creating account and sending confirmation email...');
+
+      await signUp(formData.email.trim(), formData.password, {
         full_name: formData.fullName,
         phone_number: phoneDigits,
         gender: formData.gender,
@@ -165,19 +185,20 @@ export default function SignupForm() {
       // Stash email in sessionStorage as fallback in case Safari drops
       // the React Router state on a soft refresh.
       try {
-        sessionStorage.setItem('signupEmail', formData.email);
+        sessionStorage.setItem('signupEmail', formData.email.trim());
       } catch {
         // Browsers can block sessionStorage in private modes.
       }
 
       // Pass email via URL query so it survives reloads — state alone is
       // unreliable in Safari after the password-manager prompt fires.
-      navigate(`/signup-success?email=${encodeURIComponent(formData.email)}`, {
-        state: { email: formData.email },
+      navigate(`/signup-success?email=${encodeURIComponent(formData.email.trim())}`, {
+        state: { email: formData.email.trim() },
       });
     } catch (err) {
-      setError(err.message || 'Failed to sign up');
+      fail(err.message || 'Failed to sign up. Please try again.');
     } finally {
+      setStatusMessage('');
       setLoading(false);
     }
   };
@@ -212,7 +233,13 @@ export default function SignupForm() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} style={styles.form} autoComplete="on">
+          {statusMessage && (
+            <div style={{background: '#dbeafe', border: '2px solid #2563eb', color: '#1e3a8a', fontSize: '1.125rem', padding: '1rem 1.25rem', borderRadius: '12px', marginBottom: '1.5rem', fontWeight: 800}}>
+              {statusMessage}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} style={styles.form} autoComplete="on" noValidate>
             <div style={styles.fieldGroup}>
               <label htmlFor="signup-full-name" style={styles.label}>Full Name</label>
               <input

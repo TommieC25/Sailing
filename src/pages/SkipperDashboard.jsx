@@ -35,6 +35,7 @@ const styles = {
   requestActions: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' },
   approveBtn: { padding: '12px 16px', borderRadius: '12px', fontWeight: 900, fontSize: '1rem', background: '#16a34a', color: '#ffffff', border: 'none', cursor: 'pointer', transition: 'all 0.2s' },
   declineBtn: { padding: '12px 16px', borderRadius: '12px', fontWeight: 900, fontSize: '1rem', background: '#dc2626', color: '#ffffff', border: 'none', cursor: 'pointer', transition: 'all 0.2s' },
+  profileBtn: { display: 'block', textAlign: 'center', padding: '12px 16px', borderRadius: '12px', fontWeight: 900, fontSize: '1rem', background: '#0369a1', color: '#ffffff', textDecoration: 'none', cursor: 'pointer', transition: 'all 0.2s' },
   approvedRequest: { background: '#f0fdf4', border: '1px solid #dcfce7', borderRadius: '12px', padding: '16px', display: 'flex', alignItems: 'center', gap: '12px' },
   approvedSmallPhoto: { width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover' },
   approvedName: { fontSize: '1.125rem', fontWeight: 900, color: '#1e293b', margin: 0 },
@@ -282,6 +283,17 @@ export default function SkipperDashboard() {
                                   <p style={styles.requestSkill}>{req.crew?.sailing_experience} sailor</p>
                                   {req.crew?.bio && <p style={styles.requestBio}>{req.crew.bio}</p>}
                                 </div>
+                              </div>
+                              <div style={{display: 'grid', gap: '12px'}}>
+                                <button
+                                  type="button"
+                                  onClick={() => navigate(`/profile/${req.crew_id}?returnTo=${encodeURIComponent('/skipper-dashboard')}`)}
+                                  style={styles.profileBtn}
+                                  onMouseEnter={(e) => (e.target.style.background = '#075985')}
+                                  onMouseLeave={(e) => (e.target.style.background = '#0369a1')}
+                                >
+                                  View Profile First
+                                </button>
                               </div>
                               <div style={styles.requestActions}>
                                 <button

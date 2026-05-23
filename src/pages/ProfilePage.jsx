@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
 
@@ -25,6 +25,8 @@ const styles = {
 
 export default function ProfilePage() {
   const { id: profileId } = useParams();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, profile, updateProfile } = useAuth();
   const [viewedProfile, setViewedProfile] = useState(null);
   const [viewedBoats, setViewedBoats] = useState([]);
@@ -281,10 +283,20 @@ export default function ProfilePage() {
 
   const displayProfile = isViewingOther ? viewedProfile : profile;
   const displayBoats = isViewingOther ? viewedBoats : boats;
+  const returnTo = searchParams.get('returnTo');
 
   return (
     <div style={styles.container}>
       <div style={styles.card}>
+        {isViewingOther && returnTo && (
+          <button
+            type="button"
+            onClick={() => navigate(returnTo)}
+            style={{...styles.button, background: '#0c2340', marginBottom: '1.5rem'}}
+          >
+            Back to Request
+          </button>
+        )}
         <h1 style={styles.title}>{isViewingOther ? displayProfile?.full_name : 'My Profile'}</h1>
 
         {message && (

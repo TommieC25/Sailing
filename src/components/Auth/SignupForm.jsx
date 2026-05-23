@@ -181,14 +181,16 @@ export default function SignupForm() {
 
           {error && <div style={styles.errorBox}>{error}</div>}
 
-          <form onSubmit={handleSubmit} style={styles.form}>
+          <form onSubmit={handleSubmit} style={styles.form} autoComplete="on">
             <div style={styles.fieldGroup}>
-              <label style={styles.label}>Full Name</label>
+              <label htmlFor="signup-full-name" style={styles.label}>Full Name</label>
               <input
+                id="signup-full-name"
                 type="text"
                 name="fullName"
                 value={formData.fullName}
                 onChange={handleChange}
+                autoComplete="name"
                 required
                 placeholder="Your full name"
                 style={styles.input}
@@ -196,12 +198,14 @@ export default function SignupForm() {
             </div>
 
             <div style={styles.fieldGroup}>
-              <label style={styles.label}>Phone Number</label>
+              <label htmlFor="signup-phone" style={styles.label}>Phone Number</label>
               <input
+                id="signup-phone"
                 type="tel"
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
+                autoComplete="tel"
                 required
                 placeholder="(555) 123-4567"
                 style={styles.input}
@@ -209,8 +213,9 @@ export default function SignupForm() {
             </div>
 
             <div style={styles.fieldGroup}>
-              <label style={styles.label}>Gender</label>
+              <label htmlFor="signup-gender" style={styles.label}>Gender</label>
               <select
+                id="signup-gender"
                 name="gender"
                 value={formData.gender}
                 onChange={handleChange}
@@ -226,8 +231,9 @@ export default function SignupForm() {
             </div>
 
             <div style={styles.fieldGroup}>
-              <label style={styles.label}>Profile Photo *</label>
+              <label htmlFor="signup-photo" style={styles.label}>Profile Photo *</label>
               <input
+                id="signup-photo"
                 type="file"
                 accept="image/*"
                 onChange={handlePhotoChange}
@@ -246,12 +252,15 @@ export default function SignupForm() {
             </div>
 
             <div style={styles.fieldGroup}>
-              <label style={styles.label}>Email</label>
+              <label htmlFor="signup-email" style={styles.label}>Email</label>
               <input
+                id="signup-email"
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
+                autoComplete="username"
+                inputMode="email"
                 required
                 placeholder="your@email.com"
                 style={styles.input}
@@ -259,12 +268,14 @@ export default function SignupForm() {
             </div>
 
             <div style={styles.fieldGroup}>
-              <label style={styles.label}>Password</label>
+              <label htmlFor="signup-password" style={styles.label}>Password</label>
               <input
+                id="signup-password"
                 type="password"
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
+                autoComplete="new-password"
                 required
                 placeholder="Min 6 characters"
                 style={styles.input}
@@ -272,12 +283,14 @@ export default function SignupForm() {
             </div>
 
             <div style={styles.fieldGroup}>
-              <label style={styles.label}>Confirm Password</label>
+              <label htmlFor="signup-confirm-password" style={styles.label}>Confirm Password</label>
               <input
+                id="signup-confirm-password"
                 type="password"
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleChange}
+                autoComplete="new-password"
                 required
                 placeholder="Type it again"
                 style={styles.input}
@@ -285,8 +298,9 @@ export default function SignupForm() {
             </div>
 
             <div style={styles.fieldGroup}>
-              <label style={styles.label}>I am a... *</label>
+              <label htmlFor="signup-user-type" style={styles.label}>I am a... *</label>
               <select
+                id="signup-user-type"
                 name="userType"
                 value={formData.userType}
                 onChange={handleChange}
@@ -300,8 +314,9 @@ export default function SignupForm() {
             </div>
 
             <div style={styles.fieldGroup}>
-              <label style={styles.label}>Experience Level *</label>
+              <label htmlFor="signup-sailing-experience" style={styles.label}>Experience Level *</label>
               <select
+                id="signup-sailing-experience"
                 name="sailingExperience"
                 value={formData.sailingExperience}
                 onChange={handleChange}

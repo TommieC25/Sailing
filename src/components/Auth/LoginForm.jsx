@@ -186,14 +186,17 @@ export default function LoginForm() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} style={{display: 'flex', flexDirection: 'column', gap: '1.5rem'}}>
+          <form onSubmit={handleSubmit} style={{display: 'flex', flexDirection: 'column', gap: '1.5rem'}} autoComplete="on">
             <div>
-              <label style={styles.label}>Email</label>
+              <label htmlFor="login-email" style={styles.label}>Email</label>
               <input
+                id="login-email"
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
+                autoComplete="username"
+                inputMode="email"
                 required
                 placeholder="your@email.com"
                 style={styles.input}
@@ -201,12 +204,14 @@ export default function LoginForm() {
             </div>
 
             <div>
-              <label style={styles.label}>Password</label>
+              <label htmlFor="login-password" style={styles.label}>Password</label>
               <input
+                id="login-password"
                 type="password"
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
+                autoComplete="current-password"
                 required
                 placeholder="Your password"
                 style={styles.input}

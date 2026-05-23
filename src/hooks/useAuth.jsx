@@ -5,6 +5,15 @@ import { supabase } from '../utils/supabaseClient';
 const AuthContext = createContext(null);
 const supabaseProjectRef = import.meta.env.VITE_SUPABASE_URL?.match(/^https:\/\/([^.]+)\.supabase\.co/)?.[1];
 
+const withTimeout = (promise, ms, message) => {
+  let timeoutId;
+  const timeout = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error(message)), ms);
+  });
+
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
+};
+
 const clearStoredSupabaseSession = () => {
   if (!supabaseProjectRef || typeof window === 'undefined') return;
 
@@ -31,6 +40,21 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const loadProfile = async (userId) => {
+    const { data, error } = await withTimeout(
+      supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .single(),
+      8000,
+      'Profile loading timed out. Please refresh and try again.'
+    );
+
+    if (error && error.code !== 'PGRST116') throw error;
+    return data || null;
+  };
+
   useEffect(() => {
     const initAuth = async () => {
       const timeout = setTimeout(() => setLoading(false), 6000);
@@ -39,14 +63,8 @@ export function AuthProvider({ children }) {
         setUser(user);
 
         if (user) {
-          const { data, error } = await supabase
-            .from('users')
-            .select('*')
-            .eq('id', user.id)
-            .single();
-
-          if (error && error.code !== 'PGRST116') throw error;
-          setProfile(data || null);
+          const profileData = await loadProfile(user.id);
+          setProfile(profileData);
         }
       } catch (err) {
         setError(err.message);
@@ -59,15 +77,18 @@ export function AuthProvider({ children }) {
     initAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         setUser(session?.user ?? null);
         if (session?.user) {
-          const { data } = await supabase
-            .from('users')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-          setProfile(data || null);
+          setTimeout(async () => {
+            try {
+              const profileData = await loadProfile(session.user.id);
+              setProfile(profileData);
+            } catch (err) {
+              setError(err.message);
+              setProfile(null);
+            }
+          }, 0);
         } else {
           setProfile(null);
         }
@@ -125,13 +146,21 @@ export function AuthProvider({ children }) {
   const signIn = async (email, password) => {
     try {
       setLoading(true);
-      const { data: { user }, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const { data: { user }, error } = await withTimeout(
+        supabase.auth.signInWithPassword({
+          email,
+          password,
+        }),
+        12000,
+        'Sign in timed out. Please check your connection and try again.'
+      );
 
       if (error) throw error;
       setUser(user);
+      if (user) {
+        const profileData = await loadProfile(user.id);
+        setProfile(profileData);
+      }
     } catch (err) {
       setError(err.message);
       throw err;

@@ -77,6 +77,19 @@ export default function SignupForm() {
     }
   };
 
+  const generatePassword = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%&*?';
+    const bytes = new Uint8Array(18);
+    window.crypto.getRandomValues(bytes);
+    const password = Array.from(bytes, (byte) => chars[byte % chars.length]).join('');
+
+    setFormData((prev) => ({
+      ...prev,
+      password,
+      confirmPassword: password,
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -269,6 +282,13 @@ export default function SignupForm() {
 
             <div style={styles.fieldGroup}>
               <label htmlFor="signup-password" style={styles.label}>Password</label>
+              <button
+                type="button"
+                onClick={generatePassword}
+                style={{background: '#e0f2fe', color: '#0c2340', border: '2px solid #0369a1', borderRadius: '10px', padding: '10px 14px', fontSize: '1rem', fontWeight: 900, cursor: 'pointer', marginBottom: '8px'}}
+              >
+                Generate Password
+              </button>
               <input
                 id="signup-password"
                 type="password"

@@ -168,6 +168,14 @@ export default function SignupForm() {
       fail('Profile photo is required');
       return;
     }
+    const friendlyError = (err) => {
+      const message = err?.message || '';
+      if (message.toLowerCase().includes('email rate limit')) {
+        return 'Supabase is temporarily blocking more confirmation emails because we sent too many while testing. Please wait a few minutes before trying again, or use a different test email.';
+      }
+      return message || 'Failed to sign up. Please try again.';
+    };
+
     try {
       setLoading(true);
       noteSignupStep('Starting profile photo upload');
@@ -221,7 +229,7 @@ export default function SignupForm() {
       });
     } catch (err) {
       noteSignupStep(`Error: ${err.message || 'Failed to sign up'}`);
-      fail(err.message || 'Failed to sign up. Please try again.');
+      fail(friendlyError(err));
     } finally {
       setStatusMessage('');
       setLoading(false);
@@ -264,11 +272,9 @@ export default function SignupForm() {
             </div>
           )}
 
-          {signupDebug && (
-            <div style={{background: '#f8fafc', border: '2px solid #94a3b8', color: '#334155', fontSize: '0.95rem', padding: '0.85rem 1rem', borderRadius: '12px', marginBottom: '1.5rem', fontWeight: 700, lineHeight: 1.4}}>
-              Signup status: {signupDebug}
-            </div>
-          )}
+          <div style={{background: '#f8fafc', border: '2px solid #94a3b8', color: '#334155', fontSize: '0.95rem', padding: '0.85rem 1rem', borderRadius: '12px', marginBottom: '1.5rem', fontWeight: 700, lineHeight: 1.4}}>
+            Signup status: {signupDebug || 'Ready. Tap Create Account after filling the form.'}
+          </div>
 
           <form onSubmit={handleSubmit} style={styles.form} autoComplete="on" noValidate>
             <div style={styles.fieldGroup}>

@@ -42,6 +42,7 @@ const styles = {
   approvedSkill: { fontSize: '1rem', color: '#64748b', fontWeight: 600, marginTop: '2px', textTransform: 'capitalize' },
   declinedText: { fontSize: '1.125rem', color: '#6b7280', fontWeight: 600 },
   noRequests: { fontSize: '1.125rem', color: '#6b7280', fontWeight: 600 },
+  detailsBtn: { fontSize: '0.95rem', fontWeight: 900, color: '#ffffff', textDecoration: 'none', padding: '8px 12px', background: '#0369a1', borderRadius: '8px', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' },
 };
 
 export default function SkipperDashboard() {
@@ -263,6 +264,16 @@ export default function SkipperDashboard() {
                     <p style={styles.outingDetails}>🚢 {outing.boats?.name}</p>
                   </div>
                   <div style={styles.outingMeta}>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/outing/${outing.id}`);
+                      }}
+                      style={styles.detailsBtn}
+                    >
+                      Details
+                    </button>
                     {pending.length > 0 && (
                       <div style={{position: 'relative', display: 'flex', alignItems: 'center'}}>
                         <svg style={{width: '24px', height: '24px', color: '#fbbf24'}} fill="currentColor" viewBox="0 0 24 24">
@@ -283,13 +294,6 @@ export default function SkipperDashboard() {
                   <div style={styles.expandedSection}>
                     <div>
                       <div style={{display: 'flex', gap: '12px', flexWrap: 'wrap'}}>
-                        <button
-                          type="button"
-                          onClick={() => navigate(`/outing/${outing.id}`)}
-                          style={{fontSize: '1rem', fontWeight: 900, color: '#ffffff', textDecoration: 'none', padding: '8px 12px', background: '#0369a1', borderRadius: '8px', display: 'inline-block', border: 'none', cursor: 'pointer'}}
-                        >
-                          View Details
-                        </button>
                         <a href={generateCalendarLink(outing)} target="_blank" rel="noopener noreferrer" style={{fontSize: '1rem', fontWeight: 900, color: '#0369a1', textDecoration: 'none', padding: '8px 12px', background: '#e0f2fe', borderRadius: '8px', display: 'inline-block'}}>
                         📅 Add to Calendar
                         </a>

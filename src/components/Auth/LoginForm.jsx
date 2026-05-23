@@ -91,7 +91,6 @@ export default function LoginForm() {
 
         {/* Welcome to community */}
         <div style={styles.section}>
-          <p style={{...styles.sectionTitle, marginBottom: '0.75rem', fontSize: '2.25rem'}}>⛵ Welcome to the community of sailors</p>
           <p style={styles.description}>
             Welcome to the community of sailors at Coconut Grove Sailing Club. Whether you own a boat or love crewing, this app connects you with people and outings.
           </p>

@@ -120,19 +120,22 @@ export function AuthProvider({ children }) {
   };
 
   const signOut = async () => {
-    try {
-      setLoading(true);
-      // Manually clear state first to ensure immediate UI update
-      setUser(null);
-      setProfile(null);
-      // Then clear Supabase session
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-    } catch (err) {
-      setError(err.message);
-      throw err;
-    } finally {
-      setLoading(false);
+    setLoading(false);
+    setUser(null);
+    setProfile(null);
+
+    const timeout = new Promise((resolve) => {
+      setTimeout(() => resolve({ error: null, timedOut: true }), 5000);
+    });
+
+    const result = await Promise.race([
+      supabase.auth.signOut({ scope: 'local' }),
+      timeout,
+    ]);
+
+    if (result?.error) {
+      setError(result.error.message);
+      throw result.error;
     }
   };
 

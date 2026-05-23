@@ -55,6 +55,10 @@ export default function SkipperDashboard() {
   const [actionLoading, setActionLoading] = useState({});
   const [hoveredOutingId, setHoveredOutingId] = useState(null);
 
+  const refreshNotificationCounts = () => {
+    window.dispatchEvent(new Event('sailing:crew-requests-updated'));
+  };
+
   useEffect(() => {
     if (authLoading) return;
 
@@ -139,6 +143,7 @@ export default function SkipperDashboard() {
           r.id === requestId ? { ...r, status: 'approved' } : r
         ),
       }));
+      refreshNotificationCounts();
     } catch (err) {
       setError(err.message);
     } finally {
@@ -160,6 +165,7 @@ export default function SkipperDashboard() {
           r.id === requestId ? { ...r, status: 'declined' } : r
         ),
       }));
+      refreshNotificationCounts();
     } catch (err) {
       setError(err.message);
     } finally {
@@ -275,6 +281,12 @@ export default function SkipperDashboard() {
 
                 {isExpanded && (
                   <div style={styles.expandedSection}>
+                    <div>
+                      <a href={generateCalendarLink(outing)} target="_blank" rel="noopener noreferrer" style={{fontSize: '1rem', fontWeight: 900, color: '#0369a1', textDecoration: 'none', padding: '8px 12px', background: '#e0f2fe', borderRadius: '8px', display: 'inline-block'}}>
+                        📅 Add to Calendar
+                      </a>
+                    </div>
+
                     {pending.length > 0 && (
                       <div>
                         <h4 style={styles.sectionTitle}>Pending Requests ({pending.length})</h4>
@@ -332,9 +344,6 @@ export default function SkipperDashboard() {
                       <div>
                         <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px'}}>
                           <h4 style={styles.sectionTitle}>✅ Approved Crew ({approved.length})</h4>
-                          <a href={generateCalendarLink(outing)} target="_blank" rel="noopener noreferrer" style={{fontSize: '1rem', fontWeight: 900, color: '#0369a1', textDecoration: 'none', padding: '8px 12px', background: '#e0f2fe', borderRadius: '8px', display: 'inline-block'}}>
-                            📅 Add to Calendar
-                          </a>
                         </div>
                         <div style={styles.requestsList}>
                           {approved.map((req) => (

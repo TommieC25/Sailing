@@ -112,6 +112,9 @@ export default function Layout({ children }) {
     };
 
     fetchCrewRequestCount();
+    window.addEventListener('sailing:crew-requests-updated', fetchCrewRequestCount);
+
+    return () => window.removeEventListener('sailing:crew-requests-updated', fetchCrewRequestCount);
   }, [user, isSkipper]);
 
   const handleSignOut = async () => {

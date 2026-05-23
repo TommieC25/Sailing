@@ -10,7 +10,7 @@ const styles = {
   title: { fontSize: '3rem', fontWeight: 900, color: '#ffffff', marginBottom: '0.5rem', textShadow: '0 4px 12px rgba(0,0,0,0.3)' },
   subtitle: { fontSize: '1.875rem', fontWeight: 900, color: '#a5f3fc', textShadow: '0 4px 12px rgba(0,0,0,0.3)' },
   sectionTitle: { fontSize: '1.875rem', fontWeight: 900, color: '#ffffff', marginBottom: '1.25rem' },
-  sectionBox: { background: 'rgba(255,255,255,0.1)', borderRadius: '1rem', padding: '1rem 1.5rem', marginBottom: '1rem', border: '1px solid rgba(255,255,255,0.2)' },
+  sectionBox: { background: 'rgba(255,255,255,0.1)', borderRadius: '1rem', padding: '0.75rem 1.5rem', marginBottom: '1rem', border: '1px solid rgba(255,255,255,0.2)' },
   label: { fontSize: '1.5rem', fontWeight: 900, color: '#ffffff', marginBottom: '0.75rem', display: 'block' },
   input: { width: '100%', padding: '1rem', borderRadius: '0.75rem', fontSize: '1.25rem', fontWeight: 600, color: '#ffffff', placeholder: '#e0f2fe', border: '2px solid #93c5fd', background: 'rgba(255,255,255,0.15)', outline: 'none', marginBottom: '1.5rem', fontFamily: 'inherit' },
   button: { width: '100%', padding: '1.25rem', borderRadius: '0.75rem', fontWeight: 900, fontSize: '1.5rem', background: '#06b6d4', color: '#111827', border: 'none', cursor: 'pointer', boxShadow: '0 10px 15px rgba(0,0,0,0.2)', transition: 'all 0.2s' },
@@ -86,19 +86,11 @@ export default function LoginForm() {
         {/* Logo + Title */}
         <div style={styles.header}>
           <img src="/Sailing/Club Logo.jpg" alt="CGSC Logo" style={styles.logo} />
-          <h1 style={styles.title}>Sail Away with CGSC!</h1>
+          <h1 style={styles.title}>Sail Away<br />With CGSC!</h1>
           <p style={styles.subtitle}>Where Sailors Meet Adventures</p>
         </div>
 
-        {/* Ready to sail */}
-        <div style={styles.section}>
-          <p style={{...styles.sectionTitle, marginBottom: '0.75rem', fontSize: '2.25rem'}}>⛵ Ready to set sail?</p>
-          <p style={styles.description}>
-            You're part of a community of sailors at Coconut Grove Sailing Club. Whether you own a boat or love crewing, this app connects you with people and outings.
-          </p>
-        </div>
-
-        {/* How It Works */}
+{/* How It Works */}
         <div style={styles.section}>
           <h2 style={styles.sectionTitle}>Here's How It Works</h2>
 

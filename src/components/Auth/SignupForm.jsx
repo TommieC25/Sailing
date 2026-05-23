@@ -27,7 +27,7 @@ const styles = {
 
 export default function SignupForm() {
   const navigate = useNavigate();
-  const { signUp } = useAuth();
+  const { user, signUp, signOut } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -88,6 +88,11 @@ export default function SignupForm() {
       password,
       confirmPassword: password,
     }));
+  };
+
+  const handleSignOut = async () => {
+    setError('');
+    await signOut();
   };
 
   const handleSubmit = async (e) => {
@@ -193,6 +198,19 @@ export default function SignupForm() {
           <h2 style={styles.cardTitle}>Create Account</h2>
 
           {error && <div style={styles.errorBox}>{error}</div>}
+
+          {user && (
+            <div style={{background: '#fef3c7', border: '2px solid #f59e0b', color: '#78350f', borderRadius: '12px', padding: '16px', marginBottom: '1.5rem', fontSize: '1rem', fontWeight: 800, lineHeight: 1.4}}>
+              You are already signed in. Sign out before creating a different account.
+              <button
+                type="button"
+                onClick={handleSignOut}
+                style={{display: 'block', marginTop: '12px', background: '#0c2340', color: '#ffffff', border: 'none', padding: '10px 14px', borderRadius: '8px', fontWeight: 900, cursor: 'pointer'}}
+              >
+                Sign Out
+              </button>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} style={styles.form} autoComplete="on">
             <div style={styles.fieldGroup}>

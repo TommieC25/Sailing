@@ -88,7 +88,7 @@ function App() {
     <AuthProvider>
       <Router basename="/Sailing">
         <Routes>
-          <Route path="/signup" element={<AuthRoute><SignupForm /></AuthRoute>} />
+          <Route path="/signup" element={<AuthRoute redirectAuthenticated={false}><SignupForm /></AuthRoute>} />
           <Route path="/signup-success" element={<SignupSuccessPage />} />
           <Route path="/login" element={<AuthRoute redirectAuthenticated={false}><LoginForm /></AuthRoute>} />
           <Route path="/forgot-password" element={<AuthRoute><ForgotPasswordPage /></AuthRoute>} />

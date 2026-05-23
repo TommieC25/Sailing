@@ -141,8 +141,8 @@ export default function LoginForm() {
         </div>
 
         <div style={{...styles.section, textAlign: 'center', padding: '1.5rem', background: 'rgba(255,255,255,0.1)', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.2)'}}>
-          <p style={{...styles.description, margin: 0, fontSize: '1.25rem'}}>Ready to set sail?</p>
-          <p style={{...styles.sectionTitle, marginTop: '0.5rem', color: '#a5f3fc'}}>Permission Granted to Come Aboard! ⛵</p>
+          <p style={{...styles.description, margin: 0, fontSize: '1.25rem'}}>⛵ Ready to set sail?</p>
+          <p style={{...styles.sectionTitle, marginTop: '0.5rem', color: '#a5f3fc'}}>Permission Granted to Come Aboard!</p>
         </div>
 
         {/* Sign In Form */}

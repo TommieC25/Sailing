@@ -32,7 +32,7 @@ const styles = {
   requestName: { fontSize: '1.25rem', fontWeight: 900, color: '#1e293b', margin: 0 },
   requestSkill: { fontSize: '1rem', color: '#64748b', fontWeight: 600, marginTop: '4px', textTransform: 'capitalize' },
   requestBio: { fontSize: '1rem', color: '#374151', marginTop: '8px' },
-  requestActions: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' },
+  requestActions: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '12px' },
   approveBtn: { padding: '12px 16px', borderRadius: '12px', fontWeight: 900, fontSize: '1rem', background: '#16a34a', color: '#ffffff', border: 'none', cursor: 'pointer', transition: 'all 0.2s' },
   declineBtn: { padding: '12px 16px', borderRadius: '12px', fontWeight: 900, fontSize: '1rem', background: '#dc2626', color: '#ffffff', border: 'none', cursor: 'pointer', transition: 'all 0.2s' },
   profileBtn: { display: 'block', textAlign: 'center', padding: '12px 16px', borderRadius: '12px', fontWeight: 900, fontSize: '1rem', background: '#0369a1', color: '#ffffff', textDecoration: 'none', cursor: 'pointer', transition: 'all 0.2s' },
@@ -284,17 +284,6 @@ export default function SkipperDashboard() {
                                   {req.crew?.bio && <p style={styles.requestBio}>{req.crew.bio}</p>}
                                 </div>
                               </div>
-                              <div style={{display: 'grid', gap: '12px'}}>
-                                <button
-                                  type="button"
-                                  onClick={() => navigate(`/profile/${req.crew_id}?returnTo=${encodeURIComponent('/skipper-dashboard')}`)}
-                                  style={styles.profileBtn}
-                                  onMouseEnter={(e) => (e.target.style.background = '#075985')}
-                                  onMouseLeave={(e) => (e.target.style.background = '#0369a1')}
-                                >
-                                  View Profile First
-                                </button>
-                              </div>
                               <div style={styles.requestActions}>
                                 <button
                                   onClick={() => handleApprove(req.id, outing.id)}
@@ -304,6 +293,15 @@ export default function SkipperDashboard() {
                                   onMouseLeave={(e) => (e.target.style.background = '#16a34a')}
                                 >
                                   {actionLoading[req.id] ? '...' : '✓ Approve'}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => navigate(`/profile/${req.crew_id}?returnTo=${encodeURIComponent('/skipper-dashboard')}`)}
+                                  style={styles.profileBtn}
+                                  onMouseEnter={(e) => (e.target.style.background = '#075985')}
+                                  onMouseLeave={(e) => (e.target.style.background = '#0369a1')}
+                                >
+                                  View Profile
                                 </button>
                                 <button
                                   onClick={() => handleDecline(req.id, outing.id)}

@@ -28,7 +28,7 @@ const styles = {
 
 export default function LoginForm() {
   const navigate = useNavigate();
-  const { signIn, resendConfirmation } = useAuth();
+  const { user, signIn, signOut, resendConfirmation } = useAuth();
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [needsConfirmation, setNeedsConfirmation] = useState(false);
@@ -77,6 +77,13 @@ export default function LoginForm() {
     } catch (err) {
       setResendStatus(err.message || 'Could not resend confirmation email.');
     }
+  };
+
+  const handleSignOut = async () => {
+    setError('');
+    setNeedsConfirmation(false);
+    setResendStatus('');
+    await signOut();
   };
 
   return (
@@ -148,6 +155,19 @@ export default function LoginForm() {
         <div style={{marginBottom: '1.5rem'}}>
 
           {error && <div style={styles.error}>{error}</div>}
+
+          {user && (
+            <div style={{background: 'rgba(255,255,255,0.92)', color: '#1f2937', padding: '1rem', borderRadius: '0.75rem', marginBottom: '1.5rem', fontWeight: 700}}>
+              You are already signed in. To test or use a different account, sign out first.
+              <button
+                type="button"
+                onClick={handleSignOut}
+                style={{display: 'block', marginTop: '0.75rem', background: '#0c2340', color: '#ffffff', border: 'none', padding: '0.75rem 1rem', borderRadius: '0.5rem', fontWeight: 900, cursor: 'pointer'}}
+              >
+                Sign Out
+              </button>
+            </div>
+          )}
 
           {needsConfirmation && (
             <div style={{background: 'rgba(251, 191, 36, 0.95)', color: '#1f2937', padding: '1.25rem', borderRadius: '0.75rem', marginBottom: '1.5rem', fontWeight: 700, fontSize: '1.05rem', lineHeight: 1.5}}>

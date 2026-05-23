@@ -47,7 +47,7 @@ function ProtectedRoute({ children }) {
   return <Layout>{children}</Layout>;
 }
 
-function AuthRoute({ children }) {
+function AuthRoute({ children, redirectAuthenticated = true }) {
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -58,7 +58,7 @@ function AuthRoute({ children }) {
     );
   }
 
-  if (user) {
+  if (user && redirectAuthenticated) {
     return <Navigate to="/" replace />;
   }
 
@@ -90,7 +90,7 @@ function App() {
         <Routes>
           <Route path="/signup" element={<AuthRoute><SignupForm /></AuthRoute>} />
           <Route path="/signup-success" element={<SignupSuccessPage />} />
-          <Route path="/login" element={<AuthRoute><LoginForm /></AuthRoute>} />
+          <Route path="/login" element={<AuthRoute redirectAuthenticated={false}><LoginForm /></AuthRoute>} />
           <Route path="/forgot-password" element={<AuthRoute><ForgotPasswordPage /></AuthRoute>} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />

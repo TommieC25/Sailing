@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../utils/supabaseClient';
+import { clearStoredSupabaseSession } from '../hooks/useAuth';
 
 const styles = {
   container: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(to bottom right, #0c3880, #0369a1, #06b6d4)', padding: '24px' },
@@ -15,7 +16,18 @@ export default function EmailConfirmedPage() {
 
   useEffect(() => {
     const clearConfirmationSession = async () => {
+      if (window.location.hash) {
+        window.history.replaceState(null, '', `${window.location.origin}/Sailing/email-confirmed`);
+      }
+
+      clearStoredSupabaseSession();
       await supabase.auth.signOut({ scope: 'local' }).catch(() => undefined);
+
+      setTimeout(() => {
+        clearStoredSupabaseSession();
+        supabase.auth.signOut({ scope: 'local' }).catch(() => undefined);
+      }, 500);
+
       setReady(true);
     };
 

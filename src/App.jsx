@@ -84,6 +84,25 @@ function AdminRoute({ children }) {
   return <Layout>{children}</Layout>;
 }
 
+const isSignupConfirmationUrl = () => {
+  if (typeof window === 'undefined') return false;
+
+  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+  return hashParams.get('type') === 'signup';
+};
+
+function HomeRoute() {
+  if (isSignupConfirmationUrl()) {
+    return <EmailConfirmedPage />;
+  }
+
+  return (
+    <ProtectedRoute>
+      <HomePage />
+    </ProtectedRoute>
+  );
+}
+
 function App() {
   return (
     <AuthProvider>
@@ -95,7 +114,7 @@ function App() {
           <Route path="/login" element={<AuthRoute redirectAuthenticated={false}><LoginForm /></AuthRoute>} />
           <Route path="/forgot-password" element={<AuthRoute><ForgotPasswordPage /></AuthRoute>} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
-          <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+          <Route path="/" element={<HomeRoute />} />
           <Route path="/community" element={<Navigate to="/" replace />} />
           <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
           <Route path="/profile/:id" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />

@@ -14,7 +14,7 @@ const withTimeout = (promise, ms, message) => {
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
 };
 
-const clearStoredSupabaseSession = () => {
+export const clearStoredSupabaseSession = () => {
   if (!supabaseProjectRef || typeof window === 'undefined') return;
 
   const storageKeys = [

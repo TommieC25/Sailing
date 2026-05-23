@@ -42,11 +42,29 @@ export default function SignupForm() {
   const [photoPreview, setPhotoPreview] = useState(null);
   const [error, setError] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
+  const [signupDebug, setSignupDebug] = useState(() => {
+    try {
+      return localStorage.getItem('signupDebug') || '';
+    } catch {
+      return '';
+    }
+  });
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  const noteSignupStep = (message) => {
+    const timestamp = new Date().toLocaleTimeString();
+    const debugMessage = `${timestamp}: ${message}`;
+    setSignupDebug(debugMessage);
+    try {
+      localStorage.setItem('signupDebug', debugMessage);
+    } catch {
+      // Some private browsing modes block localStorage.
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -99,10 +117,12 @@ export default function SignupForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    noteSignupStep('Form submit started');
     setError('');
     setStatusMessage('');
 
     const fail = (message) => {
+      noteSignupStep(`Stopped: ${message}`);
       setError(message);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     };
@@ -150,6 +170,7 @@ export default function SignupForm() {
     }
     try {
       setLoading(true);
+      noteSignupStep('Starting profile photo upload');
       setStatusMessage('Uploading profile photo...');
 
       let photoUrl = null;
@@ -163,11 +184,13 @@ export default function SignupForm() {
           .upload(filePath, photoFile, { upsert: true });
 
         if (uploadError) throw uploadError;
+        noteSignupStep('Profile photo uploaded');
 
         const { data } = supabase.storage.from('profiles').getPublicUrl(filePath);
         photoUrl = data.publicUrl;
       }
 
+      noteSignupStep('Calling Supabase signup');
       setStatusMessage('Creating account and sending confirmation email...');
 
       await signUp(formData.email.trim(), formData.password, {
@@ -181,6 +204,7 @@ export default function SignupForm() {
 
       // Ensure user is not auto-logged-in, so they MUST confirm email first.
       await supabase.auth.signOut().catch(() => undefined);
+      noteSignupStep('Signup complete, showing check-email page');
 
       // Stash email in sessionStorage as fallback in case Safari drops
       // the React Router state on a soft refresh.
@@ -196,6 +220,7 @@ export default function SignupForm() {
         state: { email: formData.email.trim() },
       });
     } catch (err) {
+      noteSignupStep(`Error: ${err.message || 'Failed to sign up'}`);
       fail(err.message || 'Failed to sign up. Please try again.');
     } finally {
       setStatusMessage('');
@@ -236,6 +261,12 @@ export default function SignupForm() {
           {statusMessage && (
             <div style={{background: '#dbeafe', border: '2px solid #2563eb', color: '#1e3a8a', fontSize: '1.125rem', padding: '1rem 1.25rem', borderRadius: '12px', marginBottom: '1.5rem', fontWeight: 800}}>
               {statusMessage}
+            </div>
+          )}
+
+          {signupDebug && (
+            <div style={{background: '#f8fafc', border: '2px solid #94a3b8', color: '#334155', fontSize: '0.95rem', padding: '0.85rem 1rem', borderRadius: '12px', marginBottom: '1.5rem', fontWeight: 700, lineHeight: 1.4}}>
+              Signup status: {signupDebug}
             </div>
           )}
 
@@ -398,6 +429,7 @@ export default function SignupForm() {
             <button
               type="submit"
               disabled={loading}
+              onClick={() => noteSignupStep('Create Account button clicked')}
               style={{
                 ...styles.button,
                 background: loading ? '#9ca3af' : 'linear-gradient(135deg, #0c2340 0%, #0369a1 100%)',

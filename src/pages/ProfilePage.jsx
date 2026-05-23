@@ -57,8 +57,8 @@ export default function ProfilePage() {
       const fetchViewedProfile = async () => {
         try {
           const { data, error } = await supabase
-            .from('users')
-            .select('*')
+            .from('public_profiles')
+            .select('id, full_name, photo_url, gender, bio, sailing_experience, user_type')
             .eq('id', profileId)
             .single();
 
@@ -92,12 +92,14 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (profile && !isViewingOther) {
+      // Keep the edit form in sync with the loaded profile.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData({
         full_name: profile.full_name || '',
         gender: profile.gender || '',
         bio: profile.bio || '',
         sailing_experience: profile.sailing_experience || '',
-        phone: profile.phone || '',
+        phone: profile.phone_number || profile.phone || '',
         user_type: profile.user_type || '',
       });
     }
@@ -136,6 +138,20 @@ export default function ProfilePage() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    if (name === 'phone') {
+      const digits = value.replace(/\D/g, '').slice(0, 10);
+      let formatted = digits;
+      if (digits.length > 6) {
+        formatted = `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+      } else if (digits.length > 3) {
+        formatted = `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+      } else if (digits.length > 0) {
+        formatted = `(${digits}`;
+      }
+      setFormData((prev) => ({ ...prev, phone: formatted }));
+      return;
+    }
+
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -194,6 +210,22 @@ export default function ProfilePage() {
       return;
     }
 
+    if (!formData.user_type) {
+      setMessage('Please select your account type');
+      return;
+    }
+
+    const phoneDigits = formData.phone.replace(/\D/g, '');
+    if (phoneDigits.length !== 10) {
+      setMessage('Please enter a valid 10-digit phone number');
+      return;
+    }
+
+    if (!profile?.photo_url) {
+      setMessage('Please upload a profile photo');
+      return;
+    }
+
     try {
       setSaving(true);
 
@@ -203,6 +235,7 @@ export default function ProfilePage() {
         bio: formData.bio,
         sailing_experience: formData.sailing_experience,
         phone: formData.phone,
+        phone_number: phoneDigits,
         user_type: formData.user_type,
       };
 
@@ -291,10 +324,10 @@ export default function ProfilePage() {
                 <div style={styles.label}>Email</div>
                 <div style={styles.value}>{user.email}</div>
               </div>
-              {profile?.phone && (
+              {(profile?.phone_number || profile?.phone) && (
                 <div style={styles.contactCol}>
                   <div style={styles.label}>Phone</div>
-                  <div style={styles.value}>{profile.phone}</div>
+                  <div style={styles.value}>{profile.phone || profile.phone_number}</div>
                 </div>
               )}
             </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
 
@@ -73,11 +73,30 @@ export default function SkipperDashboard() {
 
         const outingsWithRequests = await Promise.all(
           outingsData.map(async (outing) => {
-            const { data: requestsData } = await supabase
+            const { data: requestsData, error: requestsError } = await supabase
               .from('crew_requests')
-              .select(`*, crew:crew_id (id, full_name, photo_url, bio, sailing_experience)`)
+              .select('*')
               .eq('outing_id', outing.id);
-            return { ...outing, crew_requests: requestsData || [] };
+
+            if (requestsError) throw requestsError;
+
+            const crewIds = [...new Set((requestsData || []).map((request) => request.crew_id).filter(Boolean))];
+            const { data: crewProfiles, error: crewError } = crewIds.length
+              ? await supabase
+                  .from('public_profiles')
+                  .select('id, full_name, photo_url, bio, sailing_experience')
+                  .in('id', crewIds)
+              : { data: [], error: null };
+
+            if (crewError) throw crewError;
+
+            const crewById = Object.fromEntries((crewProfiles || []).map((crew) => [crew.id, crew]));
+            const requestsWithProfiles = (requestsData || []).map((request) => ({
+              ...request,
+              crew: crewById[request.crew_id] || null,
+            }));
+
+            return { ...outing, crew_requests: requestsWithProfiles };
           })
         );
 
@@ -90,7 +109,7 @@ export default function SkipperDashboard() {
     };
 
     fetchSkipperOutings();
-  }, [user, profile, navigate]);
+  }, [authLoading, user, profile, navigate]);
 
   const toggleExpanded = (outingId) => {
     setExpandedOutings((prev) => ({ ...prev, [outingId]: !prev[outingId] }));

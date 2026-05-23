@@ -103,8 +103,8 @@ export default function OutingDetailPage() {
         setOuting(outingData);
 
         const { data: skipperData, error: skipperError } = await supabase
-          .from('users')
-          .select('*')
+          .from('public_profiles')
+          .select('id, full_name, photo_url, bio, sailing_experience')
           .eq('id', outingData.skipper_id)
           .single();
 
@@ -131,29 +131,79 @@ export default function OutingDetailPage() {
           setCrewRequest(requestData || null);
 
           if (user.id === outingData.skipper_id) {
-            const { data: allRequests } = await supabase
+            const { data: allRequests, error: requestsError } = await supabase
               .from('crew_requests')
-              .select(`*, crew:crew_id (id, full_name, photo_url, bio, sailing_experience, gender)`)
+              .select('*')
               .eq('outing_id', id)
               .order('requested_at', { ascending: true });
 
-            setCrewRequests(allRequests || []);
+            if (requestsError) throw requestsError;
+
+            const crewIds = [...new Set((allRequests || []).map((request) => request.crew_id).filter(Boolean))];
+            const { data: crewProfiles, error: crewProfilesError } = crewIds.length
+              ? await supabase
+                  .from('public_profiles')
+                  .select('id, full_name, photo_url, bio, sailing_experience, gender')
+                  .in('id', crewIds)
+              : { data: [], error: null };
+
+            if (crewProfilesError) throw crewProfilesError;
+
+            const crewById = Object.fromEntries((crewProfiles || []).map((crew) => [crew.id, crew]));
+            setCrewRequests((allRequests || []).map((request) => ({
+              ...request,
+              crew: crewById[request.crew_id] || null,
+            })));
           }
         }
 
-        const { data: approved } = await supabase
+        const { data: approved, error: approvedError } = await supabase
           .from('crew_requests')
-          .select(`*, crew:crew_id (id, full_name, photo_url, sailing_experience, gender)`)
+          .select('*')
           .eq('outing_id', id)
           .eq('status', 'approved');
-        setApprovedCrew(approved || []);
 
-        const { data: msgs } = await supabase
+        if (approvedError) throw approvedError;
+
+        const approvedCrewIds = [...new Set((approved || []).map((request) => request.crew_id).filter(Boolean))];
+        const { data: approvedProfiles, error: approvedProfilesError } = approvedCrewIds.length
+          ? await supabase
+              .from('public_profiles')
+              .select('id, full_name, photo_url, sailing_experience, gender')
+              .in('id', approvedCrewIds)
+          : { data: [], error: null };
+
+        if (approvedProfilesError) throw approvedProfilesError;
+
+        const approvedById = Object.fromEntries((approvedProfiles || []).map((crew) => [crew.id, crew]));
+        setApprovedCrew((approved || []).map((request) => ({
+          ...request,
+          crew: approvedById[request.crew_id] || null,
+        })));
+
+        const { data: msgs, error: msgsError } = await supabase
           .from('event_chat')
-          .select(`*, user:user_id (id, full_name, photo_url)`)
+          .select('*')
           .eq('outing_id', id)
           .order('created_at', { ascending: true });
-        setMessages(msgs || []);
+
+        if (msgsError) throw msgsError;
+
+        const messageUserIds = [...new Set((msgs || []).map((msg) => msg.user_id).filter(Boolean))];
+        const { data: messageUsers, error: messageUsersError } = messageUserIds.length
+          ? await supabase
+              .from('public_profiles')
+              .select('id, full_name, photo_url')
+              .in('id', messageUserIds)
+          : { data: [], error: null };
+
+        if (messageUsersError) throw messageUsersError;
+
+        const messageUserById = Object.fromEntries((messageUsers || []).map((msgUser) => [msgUser.id, msgUser]));
+        setMessages((msgs || []).map((msg) => ({
+          ...msg,
+          user: messageUserById[msg.user_id] || null,
+        })));
       } catch (err) {
         setError(err.message);
       } finally {
@@ -240,11 +290,11 @@ export default function OutingDetailPage() {
       const { data: newMsg, error } = await supabase
         .from('event_chat')
         .insert([{ outing_id: id, user_id: user.id, message: messageText }])
-        .select(`*, user:user_id (id, full_name, photo_url)`)
+        .select('*')
         .single();
 
       if (error) throw error;
-      setMessages([...messages, newMsg]);
+      setMessages([...messages, { ...newMsg, user: profile }]);
       setMessageText('');
     } catch (err) {
       setError(err.message);
@@ -271,27 +321,6 @@ export default function OutingDetailPage() {
       setError(err.message || 'Failed to delete outing');
       setLoading(false);
     }
-  };
-
-  const generateCalendarLink = (outing) => {
-    const date = new Date(outing.outing_date);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const dateStr = `${year}${month}${day}`;
-
-    const timeParts = outing.outing_time.match(/(\d+):(\d+)/);
-    const hour = timeParts ? String(timeParts[1]).padStart(2, '0') : '09';
-    const minute = timeParts ? String(timeParts[2]).padStart(2, '0') : '00';
-
-    const startTime = `${dateStr}T${hour}${minute}00`;
-    const endHour = String((parseInt(hour) + 2) % 24).padStart(2, '0');
-    const endTime = `${dateStr}T${endHour}${minute}00`;
-
-    const title = encodeURIComponent(outing.title);
-    const details = encodeURIComponent(`${outing.description || ''}\n\nBoat: ${outing.boats?.name || 'TBD'}`);
-
-    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startTime}/${endTime}&details=${details}`;
   };
 
   if (loading) {

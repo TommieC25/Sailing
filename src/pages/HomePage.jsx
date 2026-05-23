@@ -20,15 +20,29 @@ export default function HomePage() {
           .from('outings')
           .select(`
             *,
-            boats (name, size_ft, capacity, owner_id),
-            skipper:skipper_id (full_name)
+            boats (name, size_ft, capacity, owner_id)
           `)
           .gte('outing_date', new Date().toISOString().split('T')[0])
           .order('outing_date', { ascending: true })
           .limit(50);
 
         if (err) throw err;
-        setOutings(data || []);
+
+        const skipperIds = [...new Set((data || []).map((outing) => outing.skipper_id).filter(Boolean))];
+        const { data: skippers, error: skipperError } = skipperIds.length
+          ? await supabase
+              .from('public_profiles')
+              .select('id, full_name')
+              .in('id', skipperIds)
+          : { data: [], error: null };
+
+        if (skipperError) throw skipperError;
+
+        const skipperById = Object.fromEntries((skippers || []).map((skipper) => [skipper.id, skipper]));
+        setOutings((data || []).map((outing) => ({
+          ...outing,
+          skipper: skipperById[outing.skipper_id] || null,
+        })));
       } catch (err) {
         setError(err.message);
       } finally {

@@ -37,28 +37,23 @@ const styles = {
 
 export default function AdminInboxPage() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [activeTab, setActiveTab] = useState('messages');
   const [messages, setMessages] = useState([]);
   const [bugReports, setBugReports] = useState([]);
   const [featureRequests, setFeatureRequests] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [updating, setUpdating] = useState(null);
-
-  useEffect(() => {
-    if (!user) return;
-    setIsAdmin(user?.app_metadata?.role === 'admin');
-  }, [user]);
+  const isAdmin = profile?.role === 'admin';
 
   useEffect(() => {
     if (!user || !isAdmin) {
-      setLoading(false);
       return;
     }
 
     const fetchData = async () => {
       try {
+        setLoading(true);
         const [messagesRes, bugsRes, featuresRes] = await Promise.all([
           supabase.from('contact_messages').select('*').order('created_at', { ascending: false }),
           supabase.from('bug_reports').select('*').order('created_at', { ascending: false }),
@@ -132,10 +127,9 @@ export default function AdminInboxPage() {
     );
   }
 
-  const renderItem = (item, table, icon, type) => {
+  const renderItem = (item, table, icon) => {
     const isMessage = table === 'contact_messages';
     const isBug = table === 'bug_reports';
-    const isFeature = table === 'feature_requests';
 
     return (
       <div

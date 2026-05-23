@@ -7,6 +7,7 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [stats, setStats] = useState(null);
   const [users, setUsers] = useState([]);
+  const admins = users.filter((u) => u.role === 'admin');
   const [bugReports, setBugReports] = useState([]);
   const [featureRequests, setFeatureRequests] = useState([]);
   const [contactMessages, setContactMessages] = useState([]);
@@ -17,13 +18,8 @@ const AdminDashboard = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [newAnnouncementTitle, setNewAnnouncementTitle] = useState('');
   const [newAnnouncementMessage, setNewAnnouncementMessage] = useState('');
-  const [newAdminEmail, setNewAdminEmail] = useState('');
 
-  useEffect(() => {
-    loadDashboardData();
-  }, []);
-
-  const loadDashboardData = async () => {
+  async function loadDashboardData() {
     try {
       setLoading(true);
       setError(null);
@@ -75,9 +71,9 @@ const AdminDashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
-  const loadRecentActivity = async () => {
+  async function loadRecentActivity() {
     try {
       const [outingsData, crewData, chatData] = await Promise.all([
         supabase.from('outings').select('id, title, skipper_id, created_at, users(full_name)').order('created_at', { ascending: false }).limit(5),
@@ -94,7 +90,14 @@ const AdminDashboard = () => {
       console.error('Error loading activity:', err);
       return [];
     }
-  };
+  }
+
+  useEffect(() => {
+    // Load the dashboard once when the admin page opens.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadDashboardData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleCreateAnnouncement = async (e) => {
     e.preventDefault();
@@ -163,20 +166,25 @@ const AdminDashboard = () => {
 
   const handleMakeAdmin = async (userId) => {
     try {
-      const { error } = await supabase.from('admins').insert([
-        { user_id: userId, role: 'co-admin' },
-      ]);
+      const { error } = await supabase
+        .from('users')
+        .update({ role: 'admin' })
+        .eq('id', userId);
 
-      if (error && error.code !== '23505') throw error; // 23505 = unique constraint
+      if (error) throw error;
       await loadDashboardData();
     } catch (err) {
       setError(err.message);
     }
   };
 
-  const handleRemoveAdmin = async (adminId) => {
+  const handleRemoveAdmin = async (userId) => {
     try {
-      const { error } = await supabase.from('admins').delete().eq('id', adminId);
+      const { error } = await supabase
+        .from('users')
+        .update({ role: 'user' })
+        .eq('id', userId);
+
       if (error) throw error;
       await loadDashboardData();
     } catch (err) {
@@ -307,6 +315,11 @@ const AdminDashboard = () => {
         {activeTab === 'community' && (
           <div>
             <h2 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '24px' }}>👥 Community Management</h2>
+            <div style={{ background: '#fef3c7', color: '#92400e', borderLeft: '4px solid #f59e0b', borderRadius: '8px', padding: '16px', marginBottom: '20px', fontWeight: 700, lineHeight: 1.5 }}>
+              User accounts have two parts: the login account in Supabase Authentication and the profile row shown here.
+              Removing only a profile row does not delete the login account or free the email for fresh signup testing.
+              Full user deletion must be done from Supabase Authentication first, then the related profile/data rows.
+            </div>
             <div style={{ background: '#ffffff', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '500px' }}>
                 <thead>
@@ -334,10 +347,15 @@ const AdminDashboard = () => {
                       </td>
                       <td style={{ padding: '12px', fontSize: '0.9rem', color: '#666' }}>{new Date(u.created_at).toLocaleDateString()}</td>
                       <td style={{ padding: '12px', fontSize: '0.9rem' }}>
-                        {!admins.find((a) => a.user_id === u.id) && (
+                        {u.role !== 'admin' && (
                           <button onClick={() => handleMakeAdmin(u.id)} style={{ background: '#fbbf24', color: '#000', padding: '6px 12px', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}>
                             Make Admin
                           </button>
+                        )}
+                        {u.role === 'admin' && (
+                          <span style={{ background: '#fef3c7', color: '#92400e', padding: '4px 8px', borderRadius: '4px', fontWeight: 700 }}>
+                            Admin
+                          </span>
                         )}
                       </td>
                     </tr>
@@ -555,21 +573,21 @@ const AdminDashboard = () => {
                 <tbody>
                   {admins.map((admin) => (
                     <tr key={admin.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
-                      <td style={{ padding: '12px', fontWeight: 700 }}>{admin.users?.full_name || 'Unknown'}</td>
-                      <td style={{ padding: '12px', fontSize: '0.9rem', color: '#666' }}>{admin.users?.email}</td>
+                      <td style={{ padding: '12px', fontWeight: 700 }}>{admin.full_name || 'Unknown'}</td>
+                      <td style={{ padding: '12px', fontSize: '0.9rem', color: '#666' }}>{admin.email}</td>
                       <td style={{ padding: '12px' }}>
                         <span style={{ background: '#fef3c7', color: '#92400e', padding: '4px 8px', borderRadius: '4px', fontWeight: 600, fontSize: '0.9rem' }}>
-                          {admin.role}
+                          admin
                         </span>
                       </td>
                       <td style={{ padding: '12px', fontSize: '0.9rem', color: '#666' }}>{new Date(admin.created_at).toLocaleDateString()}</td>
                       <td style={{ padding: '12px' }}>
-                        {admin.user_id !== user.id && (
+                        {admin.id !== user.id && (
                           <button onClick={() => handleRemoveAdmin(admin.id)} style={{ background: '#fca5a5', color: '#7f1d1d', padding: '6px 12px', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 600, fontSize: '0.9rem' }}>
                             Remove
                           </button>
                         )}
-                        {admin.user_id === user.id && <span style={{ fontSize: '0.9rem', color: '#666' }}>You</span>}
+                        {admin.id === user.id && <span style={{ fontSize: '0.9rem', color: '#666' }}>You</span>}
                       </td>
                     </tr>
                   ))}

@@ -1,14 +1,12 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
 import { useAuth, AuthProvider } from './hooks/useAuth';
-import { supabase } from './utils/supabaseClient';
 import Layout from './components/Layout/Layout';
 import HomePage from './pages/HomePage';
 import ProfilePage from './pages/ProfilePage';
-import CommunityPage from './pages/CommunityPage';
 import OutingDetailPage from './pages/OutingDetailPage';
 import SkipperDashboard from './pages/SkipperDashboard';
 import AdminDashboard from './pages/AdminDashboard';
+import AdminInboxPage from './pages/AdminInboxPage';
 import CreateOutingPage from './pages/CreateOutingPage';
 import BugReportPage from './pages/BugReportPage';
 import FeatureRequestPage from './pages/FeatureRequestPage';
@@ -96,7 +94,7 @@ function App() {
           <Route path="/forgot-password" element={<AuthRoute><ForgotPasswordPage /></AuthRoute>} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
-          <Route path="/community" element={<ProtectedRoute><CommunityPage /></ProtectedRoute>} />
+          <Route path="/community" element={<Navigate to="/" replace />} />
           <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
           <Route path="/profile/:id" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
           <Route path="/outing/:id" element={<ProtectedRoute><OutingDetailPage /></ProtectedRoute>} />
@@ -105,7 +103,8 @@ function App() {
           <Route path="/bug-report" element={<ProtectedRoute><BugReportPage /></ProtectedRoute>} />
           <Route path="/feature-request" element={<ProtectedRoute><FeatureRequestPage /></ProtectedRoute>} />
           <Route path="/contact-admin" element={<ProtectedRoute><ContactAdminPage /></ProtectedRoute>} />
-<Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+          <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+          <Route path="/admin/inbox" element={<AdminRoute><AdminInboxPage /></AdminRoute>} />
           <Route path="/announcements" element={<ProtectedRoute><AnnouncementsFeed /></ProtectedRoute>} />
         </Routes>
       </Router>

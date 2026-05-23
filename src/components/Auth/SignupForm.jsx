@@ -88,6 +88,10 @@ export default function SignupForm() {
       setError('Password must be at least 6 characters');
       return;
     }
+    if (!formData.fullName.trim()) {
+      setError('Please enter your full name');
+      return;
+    }
     if (!formData.gender) {
       setError('Please select your gender');
       return;
@@ -138,11 +142,15 @@ export default function SignupForm() {
       });
 
       // Ensure user is not auto-logged-in, so they MUST confirm email first.
-      await supabase.auth.signOut().catch(() => {});
+      await supabase.auth.signOut().catch(() => undefined);
 
       // Stash email in sessionStorage as fallback in case Safari drops
       // the React Router state on a soft refresh.
-      try { sessionStorage.setItem('signupEmail', formData.email); } catch (_) {}
+      try {
+        sessionStorage.setItem('signupEmail', formData.email);
+      } catch {
+        // Browsers can block sessionStorage in private modes.
+      }
 
       // Pass email via URL query so it survives reloads — state alone is
       // unreliable in Safari after the password-manager prompt fires.

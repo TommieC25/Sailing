@@ -3,10 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../utils/supabaseClient';
 
-const checkIsAdmin = (profile) => {
-  return profile?.role === 'admin';
-};
-
 const NAV_BG = 'linear-gradient(135deg, #0c2340 0%, #0369a1 100%)';
 
 export default function Layout({ children }) {
@@ -14,8 +10,8 @@ export default function Layout({ children }) {
   const { user, profile, signOut } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [unreadAnnouncementCount, setUnreadAnnouncementCount] = useState(0);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [unreadInboxCount, setUnreadInboxCount] = useState(0);
+  const isAdmin = profile?.role === 'admin';
 
   useEffect(() => {
     if (!user) return;
@@ -48,12 +44,6 @@ export default function Layout({ children }) {
 
     fetchUnreadCount();
   }, [user]);
-
-  useEffect(() => {
-    if (!profile) return;
-
-    setIsAdmin(checkIsAdmin(profile));
-  }, [profile]);
 
   useEffect(() => {
     if (!user || !isAdmin) return;
@@ -152,7 +142,7 @@ export default function Layout({ children }) {
                 )}
               </button>
 
-              {/* Admin gear (inbox) */}
+              {/* Admin gear */}
               {isAdmin && (
                 <button
                   onClick={() => navigate('/admin/dashboard')}
@@ -189,12 +179,17 @@ export default function Layout({ children }) {
                 <>
                   <Link to="/" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#ffffff', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>⛵ Outings</Link>
                   <Link to="/profile" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#ffffff', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>👤 Profile</Link>
-                  <Link to="/bug-report" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#a7f3d0', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>🐛 Report Bug</Link>
-                  <Link to="/feature-request" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#a7f3d0', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>⭐ Feature Request</Link>
-                  <Link to="/contact-admin" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#a7f3d0', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>📧 Contact Admin</Link>
                   {isAdmin && (
                     <>
                       <Link to="/admin/dashboard" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#fbbf24', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>⚙️ Admin Dashboard</Link>
+                      <Link to="/admin/inbox" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#fbbf24', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>📬 Admin Inbox</Link>
+                    </>
+                  )}
+                  {!isAdmin && (
+                    <>
+                      <Link to="/bug-report" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#a7f3d0', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>🐛 Report Bug</Link>
+                      <Link to="/feature-request" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#a7f3d0', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>⭐ Feature Request</Link>
+                      <Link to="/contact-admin" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#a7f3d0', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>📧 Contact Admin</Link>
                     </>
                   )}
                   <button onClick={handleSignOut} style={{display: 'block', width: '100%', textAlign: 'left', padding: '12px', color: '#fca5a5', fontSize: '1.25rem', fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer', borderRadius: '12px'}}>

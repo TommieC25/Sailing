@@ -14,6 +14,7 @@ import ContactAdminPage from './pages/ContactAdminPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import AnnouncementsFeed from './pages/AnnouncementsFeed';
+import EmailConfirmedPage from './pages/EmailConfirmedPage';
 import SignupForm from './components/Auth/SignupForm';
 import LoginForm from './components/Auth/LoginForm';
 import SignupSuccessPage from './pages/SignupSuccessPage';
@@ -90,6 +91,7 @@ function App() {
         <Routes>
           <Route path="/signup" element={<AuthRoute redirectAuthenticated={false}><SignupForm /></AuthRoute>} />
           <Route path="/signup-success" element={<SignupSuccessPage />} />
+          <Route path="/email-confirmed" element={<EmailConfirmedPage />} />
           <Route path="/login" element={<AuthRoute redirectAuthenticated={false}><LoginForm /></AuthRoute>} />
           <Route path="/forgot-password" element={<AuthRoute><ForgotPasswordPage /></AuthRoute>} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />

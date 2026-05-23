@@ -4,6 +4,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../utils/supabaseClient';
 
 const NAV_BG = 'linear-gradient(135deg, #0c2340 0%, #0369a1 100%)';
+const APP_MAX_WIDTH = '1100px';
 
 export default function Layout({ children }) {
   const navigate = useNavigate();
@@ -133,7 +134,7 @@ export default function Layout({ children }) {
 
       {/* Nav */}
       <nav style={{background: NAV_BG, position: 'sticky', top: 0, zIndex: 50, boxShadow: '0 4px 12px rgba(0,0,0,0.3)'}}>
-        <div style={{maxWidth: '512px', margin: '0 auto', padding: '0 1rem'}}>
+        <div style={{maxWidth: APP_MAX_WIDTH, margin: '0 auto', padding: '0 1rem'}}>
           <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '64px', gap: '12px'}}>
 
             <Link to="/" style={{display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none', minWidth: 0}}>
@@ -301,7 +302,7 @@ export default function Layout({ children }) {
       </nav>
 
       {/* Content */}
-      <main style={{flex: 1, width: '100%', maxWidth: '512px', margin: '0 auto', padding: '24px 16px'}}>
+      <main style={{flex: 1, width: '100%', maxWidth: APP_MAX_WIDTH, margin: '0 auto', padding: '24px 16px'}}>
         {children}
       </main>
     </div>

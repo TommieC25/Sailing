@@ -282,9 +282,18 @@ export default function SkipperDashboard() {
                 {isExpanded && (
                   <div style={styles.expandedSection}>
                     <div>
-                      <a href={generateCalendarLink(outing)} target="_blank" rel="noopener noreferrer" style={{fontSize: '1rem', fontWeight: 900, color: '#0369a1', textDecoration: 'none', padding: '8px 12px', background: '#e0f2fe', borderRadius: '8px', display: 'inline-block'}}>
+                      <div style={{display: 'flex', gap: '12px', flexWrap: 'wrap'}}>
+                        <button
+                          type="button"
+                          onClick={() => navigate(`/outing/${outing.id}`)}
+                          style={{fontSize: '1rem', fontWeight: 900, color: '#ffffff', textDecoration: 'none', padding: '8px 12px', background: '#0369a1', borderRadius: '8px', display: 'inline-block', border: 'none', cursor: 'pointer'}}
+                        >
+                          View Details
+                        </button>
+                        <a href={generateCalendarLink(outing)} target="_blank" rel="noopener noreferrer" style={{fontSize: '1rem', fontWeight: 900, color: '#0369a1', textDecoration: 'none', padding: '8px 12px', background: '#e0f2fe', borderRadius: '8px', display: 'inline-block'}}>
                         📅 Add to Calendar
-                      </a>
+                        </a>
+                      </div>
                     </div>
 
                     {pending.length > 0 && (

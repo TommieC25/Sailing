@@ -87,10 +87,17 @@ export default function LoginForm() {
         <div style={styles.header}>
           <img src="/Sailing/Club Logo.jpg" alt="CGSC Logo" style={styles.logo} />
           <h1 style={styles.title}>Sail Away<br />With CGSC!</h1>
-          <p style={styles.subtitle}>Where Sailors Meet Adventures</p>
         </div>
 
-{/* How It Works */}
+        {/* Welcome to community */}
+        <div style={styles.section}>
+          <p style={{...styles.sectionTitle, marginBottom: '0.75rem', fontSize: '2.25rem'}}>⛵ Welcome to the community of sailors</p>
+          <p style={styles.description}>
+            Whether you own a boat or love crewing, this app connects you with people and outings at Coconut Grove Sailing Club.
+          </p>
+        </div>
+
+        {/* How It Works */}
         <div style={styles.section}>
           <h2 style={styles.sectionTitle}>Here's How It Works</h2>
 

@@ -9,11 +9,13 @@ export default function Layout({ children }) {
   const navigate = useNavigate();
   const { user, profile, signOut } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [notificationMenuOpen, setNotificationMenuOpen] = useState(false);
   const [unreadAnnouncementCount, setUnreadAnnouncementCount] = useState(0);
   const [unreadInboxCount, setUnreadInboxCount] = useState(0);
   const [pendingCrewRequestCount, setPendingCrewRequestCount] = useState(0);
   const isAdmin = profile?.role === 'admin';
   const isSkipper = profile?.user_type === 'owner';
+  const totalNotificationCount = unreadAnnouncementCount + pendingCrewRequestCount;
 
   useEffect(() => {
     if (!user) return;
@@ -115,6 +117,7 @@ export default function Layout({ children }) {
     try {
       console.log('Starting sign out...');
       setMobileMenuOpen(false);
+      setNotificationMenuOpen(false);
       await signOut();
       navigate('/login', { replace: true });
     } catch (err) {
@@ -167,38 +170,59 @@ export default function Layout({ children }) {
 
             {/* Icons group */}
             <div style={{display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0}}>
-              {/* Announcements bell */}
-              {isSkipper && (
+              {/* Notifications bell */}
+              <div style={{position: 'relative'}}>
                 <button
-                  onClick={() => navigate('/skipper-dashboard')}
+                  onClick={() => {
+                    setNotificationMenuOpen((open) => !open);
+                    setMobileMenuOpen(false);
+                  }}
                   style={{color: '#ffffff', background: 'none', border: 'none', cursor: 'pointer', padding: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'visible', position: 'relative', lineHeight: 0}}
-                  title="Crew requests"
+                  title="Notifications"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" style={{width: '23px', height: '23px', display: 'block'}} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3M5 11h14M7 21h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  <svg xmlns="http://www.w3.org/2000/svg" style={{width: '22px', height: '22px', display: 'block'}} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
                   </svg>
-                  {pendingCrewRequestCount > 0 && (
+                  {totalNotificationCount > 0 && (
                     <span style={{position: 'absolute', top: '4px', right: '4px', background: '#ef4444', color: '#ffffff', borderRadius: '50%', minWidth: '14px', height: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem', fontWeight: 900, lineHeight: 1, padding: '0 2px'}}>
-                      {pendingCrewRequestCount}
+                      {totalNotificationCount}
                     </span>
                   )}
                 </button>
-              )}
-
-              <button
-                onClick={() => navigate('/announcements')}
-                style={{color: '#ffffff', background: 'none', border: 'none', cursor: 'pointer', padding: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'visible', position: 'relative', lineHeight: 0}}
-                title="View announcements"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" style={{width: '22px', height: '22px', display: 'block'}} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
-                </svg>
-                {unreadAnnouncementCount > 0 && (
-                  <span style={{position: 'absolute', top: '4px', right: '4px', background: '#ef4444', color: '#ffffff', borderRadius: '50%', minWidth: '14px', height: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem', fontWeight: 900, lineHeight: 1, padding: '0 2px'}}>
-                    {unreadAnnouncementCount}
-                  </span>
+                {notificationMenuOpen && (
+                  <div style={{position: 'absolute', top: '44px', right: 0, width: '260px', background: '#ffffff', color: '#1e293b', borderRadius: '10px', boxShadow: '0 12px 28px rgba(15,23,42,0.25)', border: '1px solid #dbeafe', overflow: 'hidden', zIndex: 100}}>
+                    <div style={{padding: '12px 14px', fontWeight: 900, borderBottom: '1px solid #e2e8f0'}}>Notifications</div>
+                    {isSkipper && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNotificationMenuOpen(false);
+                          navigate('/skipper-dashboard');
+                        }}
+                        style={{width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', padding: '12px 14px', background: 'none', border: 'none', borderBottom: '1px solid #e2e8f0', cursor: 'pointer', color: '#1e293b', textAlign: 'left', fontSize: '1rem', fontWeight: 700}}
+                      >
+                        <span>Crew requests</span>
+                        <span style={{background: pendingCrewRequestCount > 0 ? '#ef4444' : '#e2e8f0', color: pendingCrewRequestCount > 0 ? '#ffffff' : '#475569', borderRadius: '999px', minWidth: '24px', padding: '2px 8px', textAlign: 'center', fontWeight: 900}}>
+                          {pendingCrewRequestCount}
+                        </span>
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setNotificationMenuOpen(false);
+                        navigate('/announcements');
+                      }}
+                      style={{width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', padding: '12px 14px', background: 'none', border: 'none', cursor: 'pointer', color: '#1e293b', textAlign: 'left', fontSize: '1rem', fontWeight: 700}}
+                    >
+                      <span>Announcements</span>
+                      <span style={{background: unreadAnnouncementCount > 0 ? '#ef4444' : '#e2e8f0', color: unreadAnnouncementCount > 0 ? '#ffffff' : '#475569', borderRadius: '999px', minWidth: '24px', padding: '2px 8px', textAlign: 'center', fontWeight: 900}}>
+                        {unreadAnnouncementCount}
+                      </span>
+                    </button>
+                  </div>
                 )}
-              </button>
+              </div>
 
               {/* Admin gear */}
               {isAdmin && (
@@ -220,7 +244,10 @@ export default function Layout({ children }) {
 
               {/* Mobile hamburger */}
               <button
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                onClick={() => {
+                  setMobileMenuOpen(!mobileMenuOpen);
+                  setNotificationMenuOpen(false);
+                }}
                 style={{color: '#ffffff', background: 'none', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center'}}
               >
                 <svg style={{width: '32px', height: '32px'}} fill="none" stroke="currentColor" viewBox="0 0 24 24">

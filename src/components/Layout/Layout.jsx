@@ -11,7 +11,9 @@ export default function Layout({ children }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [unreadAnnouncementCount, setUnreadAnnouncementCount] = useState(0);
   const [unreadInboxCount, setUnreadInboxCount] = useState(0);
+  const [pendingCrewRequestCount, setPendingCrewRequestCount] = useState(0);
   const isAdmin = profile?.role === 'admin';
+  const isSkipper = profile?.user_type === 'owner';
 
   useEffect(() => {
     if (!user) return;
@@ -70,6 +72,45 @@ export default function Layout({ children }) {
     fetchInboxCount();
   }, [user, isAdmin]);
 
+  useEffect(() => {
+    if (!user || !isSkipper) {
+      // Reset the skipper badge when a non-skipper or signed-out user is active.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setPendingCrewRequestCount(0);
+      return;
+    }
+
+    const fetchCrewRequestCount = async () => {
+      try {
+        const { data: outings, error: outingsError } = await supabase
+          .from('outings')
+          .select('id')
+          .eq('skipper_id', user.id);
+
+        if (outingsError) throw outingsError;
+
+        const outingIds = (outings || []).map((outing) => outing.id);
+        if (outingIds.length === 0) {
+          setPendingCrewRequestCount(0);
+          return;
+        }
+
+        const { count, error: requestsError } = await supabase
+          .from('crew_requests')
+          .select('id', { count: 'exact', head: true })
+          .in('outing_id', outingIds)
+          .eq('status', 'pending');
+
+        if (requestsError) throw requestsError;
+        setPendingCrewRequestCount(count || 0);
+      } catch (err) {
+        console.error('Error fetching crew request count:', err);
+      }
+    };
+
+    fetchCrewRequestCount();
+  }, [user, isSkipper]);
+
   const handleSignOut = async () => {
     try {
       console.log('Starting sign out...');
@@ -127,6 +168,23 @@ export default function Layout({ children }) {
             {/* Icons group */}
             <div style={{display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0}}>
               {/* Announcements bell */}
+              {isSkipper && (
+                <button
+                  onClick={() => navigate('/skipper-dashboard')}
+                  style={{color: '#ffffff', background: 'none', border: 'none', cursor: 'pointer', padding: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'visible', position: 'relative', lineHeight: 0}}
+                  title="Crew requests"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" style={{width: '23px', height: '23px', display: 'block'}} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3M5 11h14M7 21h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  {pendingCrewRequestCount > 0 && (
+                    <span style={{position: 'absolute', top: '4px', right: '4px', background: '#ef4444', color: '#ffffff', borderRadius: '50%', minWidth: '14px', height: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem', fontWeight: 900, lineHeight: 1, padding: '0 2px'}}>
+                      {pendingCrewRequestCount}
+                    </span>
+                  )}
+                </button>
+              )}
+
               <button
                 onClick={() => navigate('/announcements')}
                 style={{color: '#ffffff', background: 'none', border: 'none', cursor: 'pointer', padding: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'visible', position: 'relative', lineHeight: 0}}
@@ -178,6 +236,11 @@ export default function Layout({ children }) {
               {user ? (
                 <>
                   <Link to="/" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#ffffff', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>⛵ Outings</Link>
+                  {isSkipper && (
+                    <Link to="/skipper-dashboard" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#ffffff', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>
+                      📋 My Outings{pendingCrewRequestCount > 0 ? ` (${pendingCrewRequestCount})` : ''}
+                    </Link>
+                  )}
                   <Link to="/profile" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#ffffff', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>👤 Profile</Link>
                   {isAdmin && (
                     <>

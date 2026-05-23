@@ -39,9 +39,32 @@ export default function HomePage() {
         if (skipperError) throw skipperError;
 
         const skipperById = Object.fromEntries((skippers || []).map((skipper) => [skipper.id, skipper]));
+        let pendingByOutingId = {};
+        if (profile?.user_type === 'owner') {
+          const yourOutingIds = (data || [])
+            .filter((outing) => outing.skipper_id === user.id)
+            .map((outing) => outing.id);
+
+          if (yourOutingIds.length > 0) {
+            const { data: pendingRequests, error: pendingError } = await supabase
+              .from('crew_requests')
+              .select('outing_id')
+              .in('outing_id', yourOutingIds)
+              .eq('status', 'pending');
+
+            if (pendingError) throw pendingError;
+
+            pendingByOutingId = (pendingRequests || []).reduce((counts, request) => {
+              counts[request.outing_id] = (counts[request.outing_id] || 0) + 1;
+              return counts;
+            }, {});
+          }
+        }
+
         setOutings((data || []).map((outing) => ({
           ...outing,
           skipper: skipperById[outing.skipper_id] || null,
+          pendingCrewRequestCount: pendingByOutingId[outing.id] || 0,
         })));
       } catch (err) {
         setError(err.message);
@@ -51,7 +74,7 @@ export default function HomePage() {
     };
 
     fetchOutings();
-  }, [user]);
+  }, [user, profile]);
 
   if (authLoading) {
     return (
@@ -130,9 +153,19 @@ export default function HomePage() {
         {!loading && isSkipper && yourOutings.length > 0 && (
           <div style={{marginBottom: '32px'}}>
             <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '16px'}}>
-              <h2 style={{fontSize: '1.5rem', fontWeight: 900, color: '#1e293b', margin: 0}}>📋 Your Outings ({yourOutings.length})</h2>
+              <h2 style={{fontSize: '1.5rem', fontWeight: 900, color: '#1e293b', margin: 0}}>
+                📋 Your Outings ({yourOutings.length})
+              </h2>
               <Link to="/create-outing" style={{fontSize: '1rem', fontWeight: 900, color: '#0369a1', textDecoration: 'none'}}>+ New</Link>
             </div>
+            {yourOutings.some((outing) => outing.pendingCrewRequestCount > 0) && (
+              <Link
+                to="/skipper-dashboard?show=pending"
+                style={{display: 'block', background: '#fef3c7', border: '2px solid #f59e0b', color: '#78350f', borderRadius: '12px', padding: '14px 16px', marginBottom: '16px', fontWeight: 900, textDecoration: 'none'}}
+              >
+                {yourOutings.reduce((total, outing) => total + outing.pendingCrewRequestCount, 0)} crew request pending
+              </Link>
+            )}
             <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '16px'}}>
               {yourOutings.map((outing) => (
                 <OutingCard key={outing.id} outing={outing} isYours={true} />
@@ -192,8 +225,8 @@ function OutingCard({ outing, isYours }) {
             </span>
           )}
           {isYours && (
-            <span style={{background: '#fef3c7', color: '#92400e', padding: '4px 10px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700, flexShrink: 0}}>
-              Your outing
+            <span style={{background: outing.pendingCrewRequestCount > 0 ? '#fee2e2' : '#fef3c7', color: outing.pendingCrewRequestCount > 0 ? '#991b1b' : '#92400e', padding: '4px 10px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700, flexShrink: 0}}>
+              {outing.pendingCrewRequestCount > 0 ? `${outing.pendingCrewRequestCount} request${outing.pendingCrewRequestCount !== 1 ? 's' : ''}` : 'Your outing'}
             </span>
           )}
         </div>
@@ -212,8 +245,8 @@ function OutingCard({ outing, isYours }) {
         )}
 
         {/* Button - touch-friendly (44px minimum height) */}
-        <div style={{background: '#06b6d4', color: '#ffffff', padding: '10px 16px', borderRadius: '8px', textAlign: 'center', fontWeight: 900, fontSize: '1rem', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-          View Details →
+        <div style={{background: outing.pendingCrewRequestCount > 0 ? '#f59e0b' : '#06b6d4', color: outing.pendingCrewRequestCount > 0 ? '#111827' : '#ffffff', padding: '10px 16px', borderRadius: '8px', textAlign: 'center', fontWeight: 900, fontSize: '1rem', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+          {outing.pendingCrewRequestCount > 0 ? 'Review Requests →' : 'View Details →'}
         </div>
       </div>
     </Link>

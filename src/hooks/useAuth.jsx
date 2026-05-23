@@ -3,6 +3,27 @@ import { useState, useEffect, useContext, createContext } from 'react';
 import { supabase } from '../utils/supabaseClient';
 
 const AuthContext = createContext(null);
+const supabaseProjectRef = import.meta.env.VITE_SUPABASE_URL?.match(/^https:\/\/([^.]+)\.supabase\.co/)?.[1];
+
+const clearStoredSupabaseSession = () => {
+  if (!supabaseProjectRef || typeof window === 'undefined') return;
+
+  const storageKeys = [
+    `sb-${supabaseProjectRef}-auth-token`,
+    `sb-${supabaseProjectRef}-auth-token-code-verifier`,
+  ];
+
+  for (const storage of [window.localStorage, window.sessionStorage]) {
+    storageKeys.forEach((key) => storage.removeItem(key));
+
+    for (let i = storage.length - 1; i >= 0; i -= 1) {
+      const key = storage.key(i);
+      if (key?.includes(supabaseProjectRef)) {
+        storage.removeItem(key);
+      }
+    }
+  }
+};
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -123,6 +144,7 @@ export function AuthProvider({ children }) {
     setLoading(false);
     setUser(null);
     setProfile(null);
+    clearStoredSupabaseSession();
 
     const timeout = new Promise((resolve) => {
       setTimeout(() => resolve({ error: null, timedOut: true }), 5000);
@@ -137,6 +159,8 @@ export function AuthProvider({ children }) {
       setError(result.error.message);
       throw result.error;
     }
+
+    clearStoredSupabaseSession();
   };
 
   const updateProfile = async (updates) => {

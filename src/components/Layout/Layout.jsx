@@ -75,7 +75,7 @@ export default function Layout({ children }) {
       console.log('Starting sign out...');
       setMobileMenuOpen(false);
       await signOut();
-      console.log('Sign out complete - ProtectedRoute will redirect');
+      navigate('/login', { replace: true });
     } catch (err) {
       console.error('Sign out error:', err);
       alert('Sign out failed: ' + err.message);

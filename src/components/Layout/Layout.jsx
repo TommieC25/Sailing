@@ -198,7 +198,7 @@ export default function Layout({ children }) {
                         type="button"
                         onClick={() => {
                           setNotificationMenuOpen(false);
-                          navigate('/skipper-dashboard');
+                          navigate('/skipper-dashboard?show=pending');
                         }}
                         style={{width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', padding: '12px 14px', background: 'none', border: 'none', borderBottom: '1px solid #e2e8f0', cursor: 'pointer', color: '#1e293b', textAlign: 'left', fontSize: '1rem', fontWeight: 700}}
                       >

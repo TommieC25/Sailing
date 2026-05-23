@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
 
@@ -46,6 +46,7 @@ const styles = {
 
 export default function SkipperDashboard() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, profile, loading: authLoading } = useAuth();
   const [outings, setOutings] = useState([]);
   const [expandedOutings, setExpandedOutings] = useState({});
@@ -102,6 +103,14 @@ export default function SkipperDashboard() {
         );
 
         setOutings(outingsWithRequests);
+        if (searchParams.get('show') === 'pending') {
+          const pendingExpanded = Object.fromEntries(
+            outingsWithRequests
+              .filter((outing) => outing.crew_requests.some((request) => request.status === 'pending'))
+              .map((outing) => [outing.id, true])
+          );
+          setExpandedOutings(pendingExpanded);
+        }
       } catch (err) {
         setError(err.message);
       } finally {
@@ -110,7 +119,7 @@ export default function SkipperDashboard() {
     };
 
     fetchSkipperOutings();
-  }, [authLoading, user, profile, navigate]);
+  }, [authLoading, user, profile, navigate, searchParams]);
 
   const toggleExpanded = (outingId) => {
     setExpandedOutings((prev) => ({ ...prev, [outingId]: !prev[outingId] }));

@@ -145,7 +145,7 @@ export default function BugReportPage() {
 
         <form onSubmit={handleSubmit} style={styles.form}>
           <div style={styles.guidanceBox}>
-            Please be clear and specific. Describe what you are seeing, what you expected, and why it does not seem right. A screenshot will usually be necessary to fully address a bug. Thank you!
+            Please be clear and specific. Describe what you expected to happen, what you actually saw, and why the result does not seem right. A screenshot will usually be necessary to fully address a bug. Thank you!
           </div>
 
           <div style={styles.fieldGroup}>

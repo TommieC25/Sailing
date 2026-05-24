@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
 
@@ -38,8 +38,11 @@ const styles = {
 
 export default function AdminInboxPage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user, profile } = useAuth();
-  const [activeTab, setActiveTab] = useState('messages');
+  const requestedTab = searchParams.get('tab');
+  const requestedItemId = searchParams.get('id');
+  const activeTab = ['messages', 'bugs', 'features'].includes(requestedTab) ? requestedTab : 'messages';
   const [messages, setMessages] = useState([]);
   const [bugReports, setBugReports] = useState([]);
   const [featureRequests, setFeatureRequests] = useState([]);
@@ -64,6 +67,15 @@ export default function AdminInboxPage() {
       submitter: usersById[item.user_id] || null,
     }));
   };
+
+  useEffect(() => {
+    if (!requestedItemId || loading) return;
+
+    document.getElementById(`inbox-item-${requestedItemId}`)?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center',
+    });
+  }, [requestedItemId, loading, activeTab, messages, bugReports, featureRequests]);
 
   useEffect(() => {
     if (!user || !isAdmin) {
@@ -110,11 +122,11 @@ export default function AdminInboxPage() {
 
       // Update local state
       if (table === 'contact_messages') {
-        setMessages(messages.map((m) => (m.id === id ? { ...m, status } : m)));
+        setMessages((current) => current.map((m) => (m.id === id ? { ...m, status } : m)));
       } else if (table === 'bug_reports') {
-        setBugReports(bugReports.map((b) => (b.id === id ? { ...b, status } : b)));
+        setBugReports((current) => current.map((b) => (b.id === id ? { ...b, status } : b)));
       } else if (table === 'feature_requests') {
-        setFeatureRequests(featureRequests.map((f) => (f.id === id ? { ...f, status } : f)));
+        setFeatureRequests((current) => current.map((f) => (f.id === id ? { ...f, status } : f)));
       }
     } catch (err) {
       console.error('Error updating status:', err);
@@ -155,15 +167,18 @@ export default function AdminInboxPage() {
   const renderItem = (item, table, icon) => {
     const isMessage = table === 'contact_messages';
     const isBug = table === 'bug_reports';
+    const isLinkedItem = requestedItemId === item.id;
     const submitterName = item.submitter?.full_name || 'Unknown member';
     const submitterDetail = [item.submitter?.email, item.submitter?.user_type].filter(Boolean).join(' • ');
 
     return (
       <div
         key={item.id}
+        id={`inbox-item-${item.id}`}
         style={{
           ...styles.item,
           ...(item.status === 'open' ? styles.itemOpen : item.status === 'resolved' ? styles.itemResolved : styles.itemInProgress),
+          ...(isLinkedItem ? { boxShadow: '0 0 0 3px #0284c7, 0 8px 20px rgba(2,132,199,0.18)' } : {}),
         }}
       >
         <div style={styles.itemHeader}>
@@ -199,16 +214,25 @@ export default function AdminInboxPage() {
             From: {submitterName}
             <span style={styles.itemUserSub}>{submitterDetail || `User ID: ${item.user_id}`}</span>
           </p>
-          <select
-            value={item.status}
-            onChange={(e) => updateStatus(table, item.id, e.target.value)}
-            disabled={updating === item.id}
-            style={styles.statusSelect}
-          >
-            <option value="open">Open</option>
-            <option value="in_progress">In Progress</option>
-            <option value="resolved">Resolved</option>
-          </select>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              onClick={() => setSearchParams({ tab: activeTab, id: item.id })}
+              style={{ padding: '8px 12px', border: '1px solid #0369a1', borderRadius: '6px', background: '#e0f2fe', color: '#0369a1', fontSize: '0.875rem', fontWeight: 900, cursor: 'pointer' }}
+            >
+              Link here
+            </button>
+            <select
+              value={item.status}
+              onChange={(e) => updateStatus(table, item.id, e.target.value)}
+              disabled={updating === item.id}
+              style={styles.statusSelect}
+            >
+              <option value="open">Open</option>
+              <option value="in_progress">In Progress</option>
+              <option value="resolved">Resolved</option>
+            </select>
+          </div>
         </div>
       </div>
     );
@@ -250,7 +274,9 @@ export default function AdminInboxPage() {
         {tabs.map((tab) => (
           <button
             key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
+            onClick={() => {
+              setSearchParams({ tab: tab.key });
+            }}
             style={{
               ...styles.tab,
               ...(activeTab === tab.key ? styles.tabActive : {}),

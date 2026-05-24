@@ -10,6 +10,7 @@ const styles = {
   headerTitle: { fontSize: '1.875rem', fontWeight: 900, color: '#ffffff', margin: '0 0 8px 0' },
   headerSubtitle: { color: '#e0f2fe', fontSize: '1.125rem', fontWeight: 600, margin: 0 },
   card: { background: '#ffffff', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid #e5e7eb', padding: '24px', marginBottom: '24px' },
+  guidanceBox: { background: '#f0f9ff', border: '2px solid #bfdbfe', color: '#0c2340', borderRadius: '8px', padding: '16px', fontSize: '1rem', fontWeight: 700, lineHeight: 1.5 },
   form: { display: 'grid', gap: '20px' },
   fieldGroup: { display: 'grid', gap: '8px' },
   label: { fontSize: '1rem', fontWeight: 700, color: '#1e293b', display: 'block' },
@@ -143,6 +144,10 @@ export default function BugReportPage() {
         {success && <div style={styles.successBox}>✓ Bug report submitted! Thank you for helping us improve.</div>}
 
         <form onSubmit={handleSubmit} style={styles.form}>
+          <div style={styles.guidanceBox}>
+            Please be clear and specific. Describe what you are seeing, what you expected, and why it does not seem right. A screenshot will usually be necessary to fully address a bug. Thank you!
+          </div>
+
           <div style={styles.fieldGroup}>
             <label style={styles.label}>Title *</label>
             <input

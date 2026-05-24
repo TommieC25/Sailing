@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
 
 const AdminDashboard = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
+  const [inboxFilter, setInboxFilter] = useState('all');
+  const [selectedFeedback, setSelectedFeedback] = useState(null);
   const [stats, setStats] = useState(null);
   const [users, setUsers] = useState([]);
   const admins = users.filter((u) => u.role === 'admin');
@@ -101,13 +105,13 @@ const AdminDashboard = () => {
     try {
       const [outingsData, crewData, chatData] = await Promise.all([
         supabase.from('outings').select('id, title, skipper_id, created_at, users(full_name)').order('created_at', { ascending: false }).limit(5),
-        supabase.from('crew_requests').select('id, status, created_at, outings(title), users(full_name)').order('created_at', { ascending: false }).limit(5),
+        supabase.from('crew_requests').select('id, status, created_at, outing_id, outings(title), users(full_name)').order('created_at', { ascending: false }).limit(5),
         supabase.from('general_chat').select('message, created_at, users(full_name)').order('created_at', { ascending: false }).limit(10),
       ]);
 
       return [
-        ...(outingsData.data || []).map(o => ({ type: 'outing', title: o.title, user: o.users?.full_name, time: o.created_at })),
-        ...(crewData.data || []).map(c => ({ type: 'crew_request', title: `${c.status} crew request for ${c.outings?.title}`, user: c.users?.full_name, time: c.created_at })),
+        ...(outingsData.data || []).map(o => ({ type: 'outing', id: o.id, title: o.title, user: o.users?.full_name, time: o.created_at })),
+        ...(crewData.data || []).map(c => ({ type: 'crew_request', id: c.outing_id, title: `${c.status} crew request for ${c.outings?.title}`, user: c.users?.full_name, time: c.created_at })),
         ...(chatData.data || []).map(c => ({ type: 'chat', title: c.message?.substring(0, 50), user: c.users?.full_name, time: c.created_at })),
       ].sort((a, b) => new Date(b.time) - new Date(a.time)).slice(0, 20);
     } catch (err) {
@@ -242,6 +246,127 @@ const AdminDashboard = () => {
     return detail ? `${name} (${detail})` : `${name} (${item.user_id})`;
   };
 
+  const goToTab = (tab, options = {}) => {
+    setActiveTab(tab);
+    if (options.inboxFilter) setInboxFilter(options.inboxFilter);
+    setSelectedFeedback(options.selectedFeedback || null);
+  };
+
+  const openFeedback = (type, item) => {
+    setInboxFilter(type);
+    setSelectedFeedback({ type, item });
+  };
+
+  const feedbackConfig = {
+    bugs: {
+      title: 'Bug Reports',
+      icon: '🐛',
+      items: bugReports,
+      accent: '#ef4444',
+      statusHandler: handleUpdateBugReport,
+      tableLabel: 'bug report',
+    },
+    features: {
+      title: 'Feature Requests',
+      icon: '⭐',
+      items: featureRequests,
+      accent: '#3b82f6',
+      statusHandler: handleUpdateFeatureRequest,
+      tableLabel: 'feature request',
+    },
+    messages: {
+      title: 'Contact Messages',
+      icon: '💬',
+      items: contactMessages,
+      accent: '#10b981',
+      statusHandler: handleUpdateMessage,
+      tableLabel: 'contact message',
+    },
+  };
+
+  const feedbackTitle = (type, item) => (type === 'messages' ? item.subject : item.title);
+  const feedbackBody = (type, item) => (type === 'messages' ? item.message : item.description);
+
+  const openActivity = (activity) => {
+    if (activity.type === 'outing' || activity.type === 'crew_request') {
+      navigate(`/outing/${activity.id}`);
+      return;
+    }
+
+    goToTab('activity');
+  };
+
+  const renderFeedbackSection = (type) => {
+    const config = feedbackConfig[type];
+    const openItems = config.items.filter((item) => item.status === 'open').length;
+
+    return (
+      <div style={{ marginBottom: '32px' }}>
+        <h3 style={{ fontSize: '1.25rem', fontWeight: 900, marginBottom: '16px' }}>
+          {config.icon} {config.title} ({openItems} open / {config.items.length} total)
+        </h3>
+        {config.items.length === 0 ? (
+          <div style={{ background: '#ffffff', padding: '18px', borderRadius: '10px', border: '1px solid #e5e7eb', color: '#64748b', fontWeight: 700 }}>
+            No {config.tableLabel}s yet.
+          </div>
+        ) : (
+          config.items.map((item) => {
+            const isSelected = selectedFeedback?.type === type && selectedFeedback?.item?.id === item.id;
+            return (
+              <div key={item.id} style={{ background: '#ffffff', padding: '16px', marginBottom: '12px', borderRadius: '8px', borderLeft: `4px solid ${config.accent}`, boxShadow: isSelected ? '0 0 0 3px #bfdbfe' : '0 1px 3px rgba(0,0,0,0.08)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '12px', flexWrap: 'wrap', marginBottom: '8px' }}>
+                  <button
+                    type="button"
+                    onClick={() => openFeedback(type, item)}
+                    style={{ minWidth: 0, flex: '1 1 240px', textAlign: 'left', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+                  >
+                    <h4 style={{ margin: 0, fontWeight: 900, color: '#0369a1', fontSize: '1.05rem' }}>{feedbackTitle(type, item)}</h4>
+                    <p style={{ margin: '6px 0', fontSize: '0.95rem', color: '#475569', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>
+                      {isSelected ? feedbackBody(type, item) : `${feedbackBody(type, item)?.substring(0, 180) || ''}${feedbackBody(type, item)?.length > 180 ? '...' : ''}`}
+                    </p>
+                    <p style={{ margin: '4px 0', fontSize: '0.9rem', color: '#334155', fontWeight: 700 }}>From: {submitterText(item)}</p>
+                    <p style={{ margin: '4px 0', fontSize: '0.85rem', color: '#64748b' }}>Submitted {new Date(item.created_at).toLocaleString()}</p>
+                  </button>
+                  <div style={{ display: 'grid', gap: '8px', minWidth: '150px' }}>
+                    <select
+                      value={item.status}
+                      onChange={(e) => config.statusHandler(item.id, e.target.value)}
+                      style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontWeight: 700, background: '#ffffff' }}
+                    >
+                      <option value="open">Open</option>
+                      <option value="in_progress">In Progress</option>
+                      {type === 'features' && <option value="planned">Planned</option>}
+                      {type === 'features' && <option value="completed">Completed</option>}
+                      <option value="resolved">Resolved</option>
+                    </select>
+                    <button
+                      type="button"
+                      onClick={() => openFeedback(type, item)}
+                      style={{ padding: '8px 12px', borderRadius: '6px', border: 'none', background: '#0369a1', color: '#ffffff', fontWeight: 900, cursor: 'pointer' }}
+                    >
+                      {isSelected ? 'Open' : 'View'}
+                    </button>
+                  </div>
+                </div>
+                {isSelected && (
+                  <div style={{ marginTop: '12px', padding: '14px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                    <p style={{ margin: '0 0 8px', color: '#0f172a', fontWeight: 900 }}>Full {config.tableLabel}</p>
+                    <p style={{ margin: 0, color: '#334155', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{feedbackBody(type, item)}</p>
+                    {type === 'bugs' && item.screenshot_url && (
+                      <a href={item.screenshot_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', marginTop: '12px', color: '#0369a1', fontWeight: 900 }}>
+                        View screenshot
+                      </a>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })
+        )}
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div style={{ textAlign: 'center', padding: '40px' }}>
@@ -296,20 +421,26 @@ const AdminDashboard = () => {
             <h2 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '24px' }}>System Overview</h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '32px' }}>
               {[
-                { label: 'Total Users', value: stats?.totalUsers, icon: '👥' },
-                { label: 'Total Boats', value: stats?.totalBoats, icon: '⛵' },
-                { label: 'Active Outings', value: stats?.totalOutings, icon: '🌊' },
-                { label: 'Crew Requests', value: stats?.totalCrewRequests, icon: '🤝' },
-                { label: 'Bug Reports', value: stats?.openBugReports, icon: '🐛' },
-                { label: 'Feature Requests', value: stats?.openFeatureRequests, icon: '⭐' },
-                { label: 'Messages', value: stats?.openMessages, icon: '💬' },
-                { label: 'Announcements', value: stats?.totalAnnouncements, icon: '📢' },
+                { label: 'Total Users', value: stats?.totalUsers, icon: '👥', tab: 'community', helper: 'Open user list' },
+                { label: 'Total Boats', value: stats?.totalBoats, icon: '⛵', tab: 'community', helper: 'Open owners/users' },
+                { label: 'Active Outings', value: stats?.totalOutings, icon: '🌊', tab: 'activity', helper: 'Open activity' },
+                { label: 'Crew Requests', value: stats?.totalCrewRequests, icon: '🤝', tab: 'activity', helper: 'Open activity' },
+                { label: 'Bug Reports', value: stats?.openBugReports, icon: '🐛', tab: 'inbox', inboxFilter: 'bugs', helper: 'Open bug reports' },
+                { label: 'Feature Requests', value: stats?.openFeatureRequests, icon: '⭐', tab: 'inbox', inboxFilter: 'features', helper: 'Open feature requests' },
+                { label: 'Messages', value: stats?.openMessages, icon: '💬', tab: 'inbox', inboxFilter: 'messages', helper: 'Open messages' },
+                { label: 'Announcements', value: stats?.totalAnnouncements, icon: '📢', tab: 'announcements', helper: 'Open announcements' },
               ].map((stat) => (
-                <div key={stat.label} style={{ background: '#ffffff', padding: '20px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+                <button
+                  key={stat.label}
+                  type="button"
+                  onClick={() => goToTab(stat.tab, stat.inboxFilter ? { inboxFilter: stat.inboxFilter } : {})}
+                  style={{ background: '#ffffff', padding: '20px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0', cursor: 'pointer', textAlign: 'left' }}
+                >
                   <div style={{ fontSize: '2rem', marginBottom: '8px' }}>{stat.icon}</div>
                   <div style={{ fontSize: '2rem', fontWeight: 900, color: '#0369a1', marginBottom: '4px' }}>{stat.value}</div>
-                  <div style={{ fontSize: '0.9rem', color: '#666' }}>{stat.label}</div>
-                </div>
+                  <div style={{ fontSize: '0.95rem', color: '#0f172a', fontWeight: 800 }}>{stat.label}</div>
+                  <div style={{ fontSize: '0.82rem', color: '#64748b', marginTop: '4px', fontWeight: 700 }}>{stat.helper}</div>
+                </button>
               ))}
             </div>
 
@@ -318,12 +449,12 @@ const AdminDashboard = () => {
               {[
                 { action: 'announcements', label: '📢 Create Announcement' },
                 { action: 'community', label: '👥 View All Users' },
-                { action: 'inbox', label: '📬 Check Inbox' },
+                { action: 'inbox', label: '📬 Check Inbox', options: { inboxFilter: 'all' } },
                 { action: 'admins', label: '🔐 Manage Admins' },
               ].map((item) => (
                 <button
                   key={item.action}
-                  onClick={() => setActiveTab(item.action)}
+                  onClick={() => goToTab(item.action, item.options || {})}
                   style={{
                     padding: '16px',
                     background: '#0369a1',
@@ -422,85 +553,30 @@ const AdminDashboard = () => {
         {activeTab === 'inbox' && (
           <div>
             <h2 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '24px' }}>📬 Admin Inbox</h2>
-
-            {/* Bug Reports */}
-            <div style={{ marginBottom: '32px' }}>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 900, marginBottom: '16px' }}>🐛 Bug Reports ({bugReports.filter((b) => b.status === 'open').length})</h3>
-              {bugReports.slice(0, 10).map((bug) => (
-                <div key={bug.id} style={{ background: '#ffffff', padding: '16px', marginBottom: '12px', borderRadius: '8px', borderLeft: '4px solid #ef4444' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '12px', flexWrap: 'wrap', marginBottom: '8px' }}>
-                    <div style={{ minWidth: 0, flex: '1 1 240px' }}>
-                      <h4 style={{ margin: 0, fontWeight: 900, color: '#000' }}>{bug.title}</h4>
-                      <p style={{ margin: '4px 0', fontSize: '0.9rem', color: '#666' }}>{bug.description?.substring(0, 100)}...</p>
-                      <p style={{ margin: '4px 0', fontSize: '0.9rem', color: '#334155', fontWeight: 700 }}>From: {submitterText(bug)}</p>
-                      <p style={{ margin: '4px 0', fontSize: '0.85rem', color: '#999' }}>Submitted {new Date(bug.created_at).toLocaleDateString()}</p>
-                    </div>
-                    <select
-                      value={bug.status}
-                      onChange={(e) => handleUpdateBugReport(bug.id, e.target.value)}
-                      style={{ padding: '6px 12px', borderRadius: '4px', border: '1px solid #d1d5db', fontWeight: 600 }}
-                    >
-                      <option value="open">Open</option>
-                      <option value="in_progress">In Progress</option>
-                      <option value="resolved">Resolved</option>
-                    </select>
-                  </div>
-                </div>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '20px' }}>
+              {[
+                { key: 'all', label: 'All' },
+                { key: 'bugs', label: `Bugs (${bugReports.length})` },
+                { key: 'features', label: `Features (${featureRequests.length})` },
+                { key: 'messages', label: `Messages (${contactMessages.length})` },
+              ].map((filter) => (
+                <button
+                  key={filter.key}
+                  type="button"
+                  onClick={() => {
+                    setInboxFilter(filter.key);
+                    setSelectedFeedback(null);
+                  }}
+                  style={{ padding: '10px 14px', borderRadius: '999px', border: '1px solid #cbd5e1', background: inboxFilter === filter.key ? '#0369a1' : '#ffffff', color: inboxFilter === filter.key ? '#ffffff' : '#0f172a', fontWeight: 900, cursor: 'pointer' }}
+                >
+                  {filter.label}
+                </button>
               ))}
             </div>
 
-            {/* Feature Requests */}
-            <div style={{ marginBottom: '32px' }}>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 900, marginBottom: '16px' }}>⭐ Feature Requests ({featureRequests.filter((f) => f.status === 'open').length})</h3>
-              {featureRequests.slice(0, 10).map((feature) => (
-                <div key={feature.id} style={{ background: '#ffffff', padding: '16px', marginBottom: '12px', borderRadius: '8px', borderLeft: '4px solid #3b82f6' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '12px', flexWrap: 'wrap', marginBottom: '8px' }}>
-                    <div style={{ minWidth: 0, flex: '1 1 240px' }}>
-                      <h4 style={{ margin: 0, fontWeight: 900, color: '#000' }}>{feature.title}</h4>
-                      <p style={{ margin: '4px 0', fontSize: '0.9rem', color: '#666' }}>{feature.description?.substring(0, 100)}...</p>
-                      <p style={{ margin: '4px 0', fontSize: '0.9rem', color: '#334155', fontWeight: 700 }}>From: {submitterText(feature)}</p>
-                      <p style={{ margin: '4px 0', fontSize: '0.85rem', color: '#999' }}>Submitted {new Date(feature.created_at).toLocaleDateString()}</p>
-                    </div>
-                    <select
-                      value={feature.status}
-                      onChange={(e) => handleUpdateFeatureRequest(feature.id, e.target.value)}
-                      style={{ padding: '6px 12px', borderRadius: '4px', border: '1px solid #d1d5db', fontWeight: 600 }}
-                    >
-                      <option value="open">Open</option>
-                      <option value="in_progress">In Progress</option>
-                      <option value="planned">Planned</option>
-                      <option value="completed">Completed</option>
-                    </select>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Contact Messages */}
-            <div>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 900, marginBottom: '16px' }}>💬 Contact Messages ({contactMessages.filter((m) => m.status === 'open').length})</h3>
-              {contactMessages.slice(0, 10).map((msg) => (
-                <div key={msg.id} style={{ background: '#ffffff', padding: '16px', marginBottom: '12px', borderRadius: '8px', borderLeft: '4px solid #10b981' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '12px', flexWrap: 'wrap', marginBottom: '8px' }}>
-                    <div style={{ minWidth: 0, flex: '1 1 240px' }}>
-                      <h4 style={{ margin: 0, fontWeight: 900, color: '#000' }}>{msg.subject}</h4>
-                      <p style={{ margin: '4px 0', fontSize: '0.9rem', color: '#666' }}>{msg.message?.substring(0, 100)}...</p>
-                      <p style={{ margin: '4px 0', fontSize: '0.9rem', color: '#334155', fontWeight: 700 }}>From: {submitterText(msg)}</p>
-                      <p style={{ margin: '4px 0', fontSize: '0.85rem', color: '#999' }}>Submitted {new Date(msg.created_at).toLocaleDateString()}</p>
-                    </div>
-                    <select
-                      value={msg.status}
-                      onChange={(e) => handleUpdateMessage(msg.id, e.target.value)}
-                      style={{ padding: '6px 12px', borderRadius: '4px', border: '1px solid #d1d5db', fontWeight: 600 }}
-                    >
-                      <option value="open">Open</option>
-                      <option value="in_progress">In Progress</option>
-                      <option value="resolved">Resolved</option>
-                    </select>
-                  </div>
-                </div>
-              ))}
-            </div>
+            {(inboxFilter === 'all' || inboxFilter === 'bugs') && renderFeedbackSection('bugs')}
+            {(inboxFilter === 'all' || inboxFilter === 'features') && renderFeedbackSection('features')}
+            {(inboxFilter === 'all' || inboxFilter === 'messages') && renderFeedbackSection('messages')}
           </div>
         )}
 
@@ -572,7 +648,13 @@ const AdminDashboard = () => {
             <h2 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '24px' }}>📈 Recent Activity</h2>
             <div style={{ background: '#ffffff', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
               {recentActivity.map((activity, idx) => (
-                <div key={idx} style={{ padding: '16px', borderBottom: idx < recentActivity.length - 1 ? '1px solid #e5e7eb' : 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => openActivity(activity)}
+                  disabled={!activity.id}
+                  style={{ width: '100%', padding: '16px', border: 'none', borderBottom: idx < recentActivity.length - 1 ? '1px solid #e5e7eb' : 'none', background: '#ffffff', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: activity.id ? 'pointer' : 'default', textAlign: 'left', gap: '12px' }}
+                >
                   <div>
                     <div style={{ fontWeight: 700, color: '#000' }}>
                       {{
@@ -585,7 +667,7 @@ const AdminDashboard = () => {
                     <p style={{ margin: '4px 0', fontSize: '0.85rem', color: '#999' }}>by {activity.user}</p>
                   </div>
                   <div style={{ fontSize: '0.9rem', color: '#999', whiteSpace: 'nowrap' }}>{new Date(activity.time).toLocaleString()}</div>
-                </div>
+                </button>
               ))}
             </div>
           </div>
@@ -646,18 +728,19 @@ const AdminDashboard = () => {
           <div>
             <h2 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '24px' }}>🚫 Moderation Tools</h2>
             <div style={{ background: '#ffffff', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-              <p style={{ fontSize: '1.1rem', color: '#666', lineHeight: '1.6' }}>
-                Moderation features include:
+              <p style={{ fontSize: '1.05rem', color: '#475569', lineHeight: '1.6', marginTop: 0 }}>
+                Moderation currently happens through the live admin areas below. Future-only features are not listed as fake tools.
               </p>
-              <ul style={{ fontSize: '1rem', color: '#666', lineHeight: '1.8' }}>
-                <li>✅ View all user-generated content</li>
-                <li>✅ Flag inappropriate chat messages (coming soon)</li>
-                <li>✅ Suspend/ban users (coming soon)</li>
-                <li>✅ Delete inappropriate photos (coming soon)</li>
-                <li>✅ Audit logs (coming soon)</li>
-              </ul>
-              <div style={{ marginTop: '24px', padding: '16px', background: '#fef3c7', borderRadius: '8px', borderLeft: '4px solid #fbbf24' }}>
-                <p style={{ margin: 0, fontWeight: 700, color: '#92400e' }}>💡 Tip: Community reports appear in the Inbox tab. Review and resolve them there.</p>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
+                <button type="button" onClick={() => goToTab('community')} style={{ padding: '16px', background: '#0369a1', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: 900, cursor: 'pointer' }}>
+                  View Members
+                </button>
+                <button type="button" onClick={() => goToTab('inbox', { inboxFilter: 'all' })} style={{ padding: '16px', background: '#0369a1', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: 900, cursor: 'pointer' }}>
+                  Review Reports
+                </button>
+                <button type="button" onClick={() => goToTab('activity')} style={{ padding: '16px', background: '#0369a1', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: 900, cursor: 'pointer' }}>
+                  Review Activity
+                </button>
               </div>
             </div>
           </div>
@@ -668,16 +751,20 @@ const AdminDashboard = () => {
           <div>
             <h2 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '24px' }}>📋 Reports & Analytics</h2>
             <div style={{ background: '#ffffff', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 900, marginBottom: '16px' }}>📊 Available Reports</h3>
-              <ul style={{ fontSize: '1rem', color: '#666', lineHeight: '1.8' }}>
-                <li>✅ User Growth Report (coming soon)</li>
-                <li>✅ Outing Activity Report (coming soon)</li>
-                <li>✅ Community Engagement Report (coming soon)</li>
-                <li>✅ Support Tickets Report (coming soon)</li>
-                <li>✅ Export User List as CSV (coming soon)</li>
-              </ul>
-              <div style={{ marginTop: '24px', padding: '16px', background: '#dbeafe', borderRadius: '8px', borderLeft: '4px solid #3b82f6' }}>
-                <p style={{ margin: 0, fontWeight: 700, color: '#0c4a6e' }}>📈 Current system stats available in Overview tab</p>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 900, marginBottom: '16px' }}>Available Reports</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
+                <button type="button" onClick={() => goToTab('overview')} style={{ padding: '16px', background: '#0369a1', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: 900, cursor: 'pointer' }}>
+                  System Overview
+                </button>
+                <button type="button" onClick={() => goToTab('community')} style={{ padding: '16px', background: '#0369a1', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: 900, cursor: 'pointer' }}>
+                  Member List
+                </button>
+                <button type="button" onClick={() => goToTab('inbox', { inboxFilter: 'all' })} style={{ padding: '16px', background: '#0369a1', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: 900, cursor: 'pointer' }}>
+                  Support Inbox
+                </button>
+                <button type="button" onClick={() => goToTab('activity')} style={{ padding: '16px', background: '#0369a1', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: 900, cursor: 'pointer' }}>
+                  Recent Activity
+                </button>
               </div>
             </div>
           </div>

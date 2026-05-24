@@ -135,7 +135,7 @@ export default function AdminInboxPage() {
     }
   };
 
-  const clarityEmailHref = (item, table) => {
+  const replyEmailHref = (item, table) => {
     const email = item.submitter?.email;
     if (!email) return null;
 
@@ -145,27 +145,11 @@ export default function AdminInboxPage() {
         ? 'feature request'
         : 'message';
     const title = table === 'contact_messages' ? item.subject : item.title;
-    const firstName = item.submitter?.full_name?.split(' ')[0] || 'there';
-    const subject = `Question about your SailAway ${label}`;
-    const body = [
-      `Hi ${firstName},`,
-      '',
-      `Thanks for sending this ${label} in. Could you please reply with a little more detail?`,
-      '',
-      'Please describe:',
-      '- What you expected to happen',
-      '- What you actually saw',
-      '- Why the result did not seem right',
-      '',
-      'A screenshot is usually helpful too.',
-      '',
-      title ? `Original title: ${title}` : '',
-      '',
-      'Thank you,',
-      'Tom',
-    ].filter((line, index, lines) => line || lines[index - 1]).join('\n');
+    const subject = title
+      ? `SailAway ${label}: ${title}`
+      : `SailAway ${label}`;
 
-    return `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    return `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subject)}`;
   };
 
   if (loading) {
@@ -203,7 +187,7 @@ export default function AdminInboxPage() {
     const isLinkedItem = requestedItemId === item.id;
     const submitterName = item.submitter?.full_name || 'Unknown member';
     const submitterDetail = [item.submitter?.email, item.submitter?.user_type].filter(Boolean).join(' • ');
-    const askForClarityHref = clarityEmailHref(item, table);
+    const replyHref = replyEmailHref(item, table);
 
     return (
       <div
@@ -249,17 +233,27 @@ export default function AdminInboxPage() {
             <span style={styles.itemUserSub}>{submitterDetail || `User ID: ${item.user_id}`}</span>
           </p>
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-            {askForClarityHref ? (
+            {replyHref ? (
               <a
-                href={askForClarityHref}
+                href={replyHref}
                 style={{ padding: '8px 12px', border: '1px solid #0369a1', borderRadius: '6px', background: '#e0f2fe', color: '#0369a1', fontSize: '0.875rem', fontWeight: 900, cursor: 'pointer', textDecoration: 'none' }}
               >
-                Ask for clarity
+                Reply by email
               </a>
             ) : (
               <span style={{ padding: '8px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#f8fafc', color: '#64748b', fontSize: '0.875rem', fontWeight: 900 }}>
                 No email
               </span>
+            )}
+            {item.status !== 'resolved' && (
+              <button
+                type="button"
+                onClick={() => updateStatus(table, item.id, 'resolved')}
+                disabled={updating === item.id}
+                style={{ padding: '8px 12px', border: '1px solid #16a34a', borderRadius: '6px', background: '#16a34a', color: '#ffffff', fontSize: '0.875rem', fontWeight: 900, cursor: updating === item.id ? 'wait' : 'pointer', opacity: updating === item.id ? 0.6 : 1 }}
+              >
+                Dismiss as resolved
+              </button>
             )}
             <select
               value={item.status}

@@ -444,7 +444,7 @@ const AdminDashboard = () => {
         {activeTab === 'overview' && (
           <div>
             <h2 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '24px' }}>System Overview</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '10px', marginBottom: '32px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '8px', marginBottom: '28px' }}>
               {[
                 { label: 'Total Members', value: stats?.totalUsers, icon: '👥', tab: 'members' },
                 { label: 'Total Boats', value: stats?.totalBoats, icon: '⛵', tab: 'boats' },
@@ -459,11 +459,11 @@ const AdminDashboard = () => {
                   key={stat.label}
                   type="button"
                   onClick={() => goToTab(stat.tab, stat.inboxFilter ? { inboxFilter: stat.inboxFilter } : {})}
-                  style={{ background: '#ffffff', padding: '12px 14px', borderRadius: '10px', boxShadow: '0 1px 4px rgba(0,0,0,0.08)', border: '1px solid #e2e8f0', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '12px', minHeight: '52px' }}
+                  style={{ background: '#ffffff', padding: '10px 12px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', border: '1px solid #e2e8f0', cursor: 'pointer', textAlign: 'left', display: 'grid', gridTemplateColumns: '32px 1fr auto', alignItems: 'center', gap: '10px', minHeight: '48px', width: '100%' }}
                 >
-                  <span style={{ fontSize: '1.35rem', lineHeight: 1, width: '28px', textAlign: 'center', flexShrink: 0 }}>{stat.icon}</span>
-                  <span style={{ fontSize: '1.35rem', fontWeight: 900, color: '#0369a1', minWidth: '36px', textAlign: 'right', flexShrink: 0 }}>{stat.value}</span>
-                  <span style={{ fontSize: '1rem', color: '#0f172a', fontWeight: 900, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{stat.label}</span>
+                  <span style={{ fontSize: '1.25rem', lineHeight: 1, width: '32px', textAlign: 'center' }}>{stat.icon}</span>
+                  <span style={{ fontSize: '0.98rem', color: '#0f172a', fontWeight: 900, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{stat.label}</span>
+                  <span style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0369a1', minWidth: '36px', textAlign: 'right' }}>{stat.value}</span>
                 </button>
               ))}
             </div>

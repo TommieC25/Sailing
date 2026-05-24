@@ -419,27 +419,26 @@ const AdminDashboard = () => {
         {activeTab === 'overview' && (
           <div>
             <h2 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '24px' }}>System Overview</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '32px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '10px', marginBottom: '32px' }}>
               {[
-                { label: 'Total Users', value: stats?.totalUsers, icon: '👥', tab: 'community', helper: 'Open user list' },
-                { label: 'Total Boats', value: stats?.totalBoats, icon: '⛵', tab: 'community', helper: 'Open owners/users' },
-                { label: 'Active Outings', value: stats?.totalOutings, icon: '🌊', tab: 'activity', helper: 'Open activity' },
-                { label: 'Crew Requests', value: stats?.totalCrewRequests, icon: '🤝', tab: 'activity', helper: 'Open activity' },
-                { label: 'Bug Reports', value: stats?.openBugReports, icon: '🐛', tab: 'inbox', inboxFilter: 'bugs', helper: 'Open bug reports' },
-                { label: 'Feature Requests', value: stats?.openFeatureRequests, icon: '⭐', tab: 'inbox', inboxFilter: 'features', helper: 'Open feature requests' },
-                { label: 'Messages', value: stats?.openMessages, icon: '💬', tab: 'inbox', inboxFilter: 'messages', helper: 'Open messages' },
-                { label: 'Announcements', value: stats?.totalAnnouncements, icon: '📢', tab: 'announcements', helper: 'Open announcements' },
+                { label: 'Total Users', value: stats?.totalUsers, icon: '👥', tab: 'community' },
+                { label: 'Total Boats', value: stats?.totalBoats, icon: '⛵', tab: 'community' },
+                { label: 'Active Outings', value: stats?.totalOutings, icon: '🌊', tab: 'activity' },
+                { label: 'Crew Requests', value: stats?.totalCrewRequests, icon: '🤝', tab: 'activity' },
+                { label: 'Bug Reports', value: stats?.openBugReports, icon: '🐛', tab: 'inbox', inboxFilter: 'bugs' },
+                { label: 'Feature Requests', value: stats?.openFeatureRequests, icon: '⭐', tab: 'inbox', inboxFilter: 'features' },
+                { label: 'Messages', value: stats?.openMessages, icon: '💬', tab: 'inbox', inboxFilter: 'messages' },
+                { label: 'Announcements', value: stats?.totalAnnouncements, icon: '📢', tab: 'announcements' },
               ].map((stat) => (
                 <button
                   key={stat.label}
                   type="button"
                   onClick={() => goToTab(stat.tab, stat.inboxFilter ? { inboxFilter: stat.inboxFilter } : {})}
-                  style={{ background: '#ffffff', padding: '20px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0', cursor: 'pointer', textAlign: 'left' }}
+                  style={{ background: '#ffffff', padding: '12px 14px', borderRadius: '10px', boxShadow: '0 1px 4px rgba(0,0,0,0.08)', border: '1px solid #e2e8f0', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '12px', minHeight: '52px' }}
                 >
-                  <div style={{ fontSize: '2rem', marginBottom: '8px' }}>{stat.icon}</div>
-                  <div style={{ fontSize: '2rem', fontWeight: 900, color: '#0369a1', marginBottom: '4px' }}>{stat.value}</div>
-                  <div style={{ fontSize: '0.95rem', color: '#0f172a', fontWeight: 800 }}>{stat.label}</div>
-                  <div style={{ fontSize: '0.82rem', color: '#64748b', marginTop: '4px', fontWeight: 700 }}>{stat.helper}</div>
+                  <span style={{ fontSize: '1.35rem', lineHeight: 1, width: '28px', textAlign: 'center', flexShrink: 0 }}>{stat.icon}</span>
+                  <span style={{ fontSize: '1.35rem', fontWeight: 900, color: '#0369a1', minWidth: '36px', textAlign: 'right', flexShrink: 0 }}>{stat.value}</span>
+                  <span style={{ fontSize: '1rem', color: '#0f172a', fontWeight: 900, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{stat.label}</span>
                 </button>
               ))}
             </div>

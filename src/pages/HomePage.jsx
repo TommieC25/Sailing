@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
+import { formatLocalDate } from '../utils/dateUtils';
 
 const HEADER_BG = 'linear-gradient(135deg, #0c2340 0%, #0369a1 100%)';
 
@@ -233,7 +234,7 @@ function OutingCard({ outing, isYours }) {
 
         {/* Condensed info line */}
         <div style={{fontSize: '0.95rem', color: '#64748b', marginBottom: '10px', fontWeight: 600, lineHeight: '1.4'}}>
-          <div>📅 {new Date(outing.outing_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} at {outing.outing_time}</div>
+          <div>📅 {formatLocalDate(outing.outing_date, { weekday: 'short', month: 'short', day: 'numeric' })} at {outing.outing_time}</div>
           <div>🚢 {outing.boats?.name} ({outing.boats?.size_ft}ft) • 👤 {outing.skipper?.full_name || 'TBD'} • {filledSpots}/{totalSpots} crew</div>
         </div>
 

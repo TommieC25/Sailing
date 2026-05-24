@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
+import { compactLocalDate, formatLocalDate } from '../utils/dateUtils';
 
 const styles = {
   container: { maxWidth: '800px', margin: '0 auto' },
@@ -175,11 +176,7 @@ export default function SkipperDashboard() {
   };
 
   const generateCalendarLink = (outing) => {
-    const date = new Date(outing.outing_date);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const dateStr = `${year}${month}${day}`;
+    const dateStr = compactLocalDate(outing.outing_date);
 
     const timeParts = outing.outing_time.match(/(\d+):(\d+)/);
     const hour = timeParts ? String(timeParts[1]).padStart(2, '0') : '09';
@@ -259,7 +256,7 @@ export default function SkipperDashboard() {
                   <div style={{flex: 1, textAlign: 'left'}}>
                     <h3 style={styles.outingTitle}>{outing.title}</h3>
                     <p style={styles.outingDetails}>
-                      📅 {new Date(outing.outing_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} · {outing.outing_time}
+                      📅 {formatLocalDate(outing.outing_date, { weekday: 'short', month: 'short', day: 'numeric' })} · {outing.outing_time}
                     </p>
                     <p style={styles.outingDetails}>🚢 {outing.boats?.name}</p>
                   </div>

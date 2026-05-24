@@ -27,6 +27,16 @@ const styles = {
   restrictedBox: { background: '#fef3c7', border: '2px solid #fcd34d', color: '#92400e', fontSize: '1rem', padding: '16px', borderRadius: '8px', fontWeight: 600 },
 };
 
+const requiredFieldLabels = {
+  title: 'Title',
+  outingDate: 'Date',
+  outingTime: 'Time',
+  location: 'Location',
+  capacityAvailable: 'Available Crew Spots',
+  boatName: 'Boat Name',
+  boatCapacity: 'Total Capacity',
+};
+
 export default function CreateOutingPage() {
   const navigate = useNavigate();
   const { user, profile, loading: authLoading } = useAuth();
@@ -88,8 +98,35 @@ export default function CreateOutingPage() {
     e.preventDefault();
     setError('');
 
-    if (!formData.title || !formData.outingDate || !formData.outingTime || !formData.location || !formData.capacityAvailable || !formData.boatName) {
-      setError('Please fill in all required fields');
+    const missingFields = Object.entries(requiredFieldLabels)
+      .filter(([field]) => !String(formData[field] || '').trim())
+      .map(([, label]) => label);
+
+    if (missingFields.length > 0) {
+      setError(`Please fill in: ${missingFields.join(', ')}`);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    const crewSpots = Number.parseInt(formData.capacityAvailable, 10);
+    const boatCapacity = Number.parseInt(formData.boatCapacity, 10);
+    const boatSize = formData.boatSize ? Number.parseInt(formData.boatSize, 10) : null;
+
+    if (!Number.isInteger(crewSpots) || crewSpots < 1) {
+      setError('Available Crew Spots must be at least 1');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    if (!Number.isInteger(boatCapacity) || boatCapacity < 1) {
+      setError('Total Capacity must be at least 1');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    if (boatSize !== null && (!Number.isInteger(boatSize) || boatSize < 1)) {
+      setError('Length must be a positive number');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
@@ -117,8 +154,8 @@ export default function CreateOutingPage() {
             brand: parts[0] || null,
             model: parts[1] || null,
             color: parts[2] || null,
-            size_ft: formData.boatSize ? parseInt(formData.boatSize) : null,
-            capacity: parseInt(formData.boatCapacity) || 1,
+            size_ft: boatSize,
+            capacity: boatCapacity,
             mooring_location: formData.mooringLocation || null,
           })
           .eq('id', boatId);
@@ -132,8 +169,8 @@ export default function CreateOutingPage() {
             brand: parts[0] || null,
             model: parts[1] || null,
             color: parts[2] || null,
-            size_ft: formData.boatSize ? parseInt(formData.boatSize) : null,
-            capacity: parseInt(formData.boatCapacity) || 1,
+            size_ft: boatSize,
+            capacity: boatCapacity,
             mooring_location: formData.mooringLocation || null,
           }])
           .select()
@@ -152,7 +189,7 @@ export default function CreateOutingPage() {
           outing_date: formData.outingDate,
           outing_time: formData.outingTime,
           location: formData.location,
-          capacity_available: parseInt(formData.capacityAvailable),
+          capacity_available: crewSpots,
           status: 'open',
         }])
         .select()
@@ -211,6 +248,7 @@ export default function CreateOutingPage() {
               name="title"
               value={formData.title}
               onChange={handleInputChange}
+              required
               style={styles.input}
               placeholder="e.g., Morning Cruise to Key Biscayne"
             />
@@ -235,6 +273,7 @@ export default function CreateOutingPage() {
                 name="outingDate"
                 value={formData.outingDate}
                 onChange={handleInputChange}
+                required
                 style={styles.input}
               />
             </div>
@@ -245,6 +284,7 @@ export default function CreateOutingPage() {
                 name="outingTime"
                 value={formData.outingTime}
                 onChange={handleInputChange}
+                required
                 style={styles.input}
               />
             </div>
@@ -257,6 +297,7 @@ export default function CreateOutingPage() {
               name="location"
               value={formData.location}
               onChange={handleInputChange}
+              required
               style={styles.input}
               placeholder="e.g., Coconut Grove Marina, Slip 42"
             />
@@ -270,6 +311,7 @@ export default function CreateOutingPage() {
               value={formData.capacityAvailable}
               onChange={handleInputChange}
               min="1"
+              required
               style={styles.input}
               placeholder="How many crew members do you need?"
             />
@@ -287,6 +329,7 @@ export default function CreateOutingPage() {
               name="boatName"
               value={formData.boatName}
               onChange={handleInputChange}
+              required
               style={styles.input}
               placeholder="e.g., Blue Horizon"
             />
@@ -312,6 +355,7 @@ export default function CreateOutingPage() {
                 name="boatSize"
                 value={formData.boatSize}
                 onChange={handleInputChange}
+                min="1"
                 style={styles.input}
                 placeholder="38"
               />
@@ -324,6 +368,7 @@ export default function CreateOutingPage() {
                 value={formData.boatCapacity}
                 onChange={handleInputChange}
                 min="1"
+                required
                 style={styles.input}
                 placeholder="Including skipper"
               />

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
+import { formatLocalDate } from '../utils/dateUtils';
 
 const styles = {
   container: { display: 'grid', gap: '24px' },
@@ -385,7 +386,7 @@ export default function OutingDetailPage() {
           <div>
             <p style={styles.detailLabel}>📅 Date & Time</p>
             <p style={styles.detailValue}>
-              {new Date(outing.outing_date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} at {outing.outing_time}
+              {formatLocalDate(outing.outing_date, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} at {outing.outing_time}
             </p>
           </div>
 

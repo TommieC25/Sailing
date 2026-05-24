@@ -504,11 +504,6 @@ const AdminDashboard = () => {
         {activeTab === 'members' && (
           <div>
             <h2 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '24px' }}>👥 Member Management</h2>
-            <div style={{ background: '#fef3c7', color: '#92400e', borderLeft: '4px solid #f59e0b', borderRadius: '8px', padding: '16px', marginBottom: '20px', fontWeight: 700, lineHeight: 1.5 }}>
-              User accounts have two parts: the login account in Supabase Authentication and the profile row shown here.
-              Removing only a profile row does not delete the login account or free the email for fresh signup testing.
-              Full user deletion must be done from Supabase Authentication first, then the related profile/data rows.
-            </div>
             <div style={{ background: '#ffffff', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '500px' }}>
                 <thead>

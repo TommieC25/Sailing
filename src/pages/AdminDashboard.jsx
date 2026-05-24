@@ -12,6 +12,9 @@ const AdminDashboard = () => {
   const [stats, setStats] = useState(null);
   const [users, setUsers] = useState([]);
   const admins = users.filter((u) => u.role === 'admin');
+  const [boats, setBoats] = useState([]);
+  const [outings, setOutings] = useState([]);
+  const [crewRequests, setCrewRequests] = useState([]);
   const [bugReports, setBugReports] = useState([]);
   const [featureRequests, setFeatureRequests] = useState([]);
   const [contactMessages, setContactMessages] = useState([]);
@@ -70,8 +73,11 @@ const AdminDashboard = () => {
       });
 
       // Load detailed data
-      const [usersData, bugsData, featuresData, msgsData, announcementsData] = await Promise.all([
+      const [usersData, boatsData, outingsData, crewRequestsData, bugsData, featuresData, msgsData, announcementsData] = await Promise.all([
         supabase.from('users').select('*').limit(100),
+        supabase.from('boats').select('*, users(full_name, email)').order('created_at', { ascending: false }).limit(100),
+        supabase.from('outings').select('*, boats(name), users(full_name, email)').order('outing_date', { ascending: true }).limit(100),
+        supabase.from('crew_requests').select('*, outings(id, title, outing_date), users(full_name, email, user_type)').order('requested_at', { ascending: false }).limit(100),
         supabase.from('bug_reports').select('*').order('created_at', { ascending: false }).limit(50),
         supabase.from('feature_requests').select('*').order('created_at', { ascending: false }).limit(50),
         supabase.from('contact_messages').select('*').order('created_at', { ascending: false }).limit(50),
@@ -79,6 +85,9 @@ const AdminDashboard = () => {
       ]);
 
       setUsers(usersData.data || []);
+      setBoats(boatsData.data || []);
+      setOutings(outingsData.data || []);
+      setCrewRequests(crewRequestsData.data || []);
       const [bugsWithSubmitters, featuresWithSubmitters, messagesWithSubmitters] = await Promise.all([
         attachSubmitters(bugsData.data || []),
         attachSubmitters(featuresData.data || []),
@@ -296,6 +305,19 @@ const AdminDashboard = () => {
     goToTab('activity');
   };
 
+  const renderDataCard = ({ key, title, meta, details, action }) => (
+    <div key={key} style={{ background: '#ffffff', padding: '16px', marginBottom: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', flexWrap: 'wrap' }}>
+        <div style={{ minWidth: 0, flex: '1 1 240px' }}>
+          <h3 style={{ margin: '0 0 6px', color: '#0f172a', fontSize: '1.05rem', fontWeight: 900 }}>{title}</h3>
+          {meta && <p style={{ margin: '0 0 6px', color: '#334155', fontWeight: 700, fontSize: '0.92rem' }}>{meta}</p>}
+          {details && <p style={{ margin: 0, color: '#64748b', fontWeight: 600, fontSize: '0.9rem', lineHeight: 1.45 }}>{details}</p>}
+        </div>
+        {action}
+      </div>
+    </div>
+  );
+
   const renderFeedbackSection = (type) => {
     const config = feedbackConfig[type];
     const openItems = config.items.filter((item) => item.status === 'open').length;
@@ -392,7 +414,7 @@ const AdminDashboard = () => {
       {/* Tab Navigation */}
       <div style={{ background: '#ffffff', borderBottom: '2px solid #e5e7eb', padding: '12px 16px', overflowX: 'auto' }}>
         <div style={{ display: 'flex', gap: '8px', minWidth: 'max-content' }}>
-        {['overview', 'community', 'inbox', 'announcements', 'activity', 'admins', 'moderation', 'reports'].map((tab) => (
+        {['overview', 'members', 'boats', 'outings', 'crewRequests', 'inbox', 'announcements', 'activity', 'admins', 'moderation', 'reports'].map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -400,7 +422,10 @@ const AdminDashboard = () => {
           >
             {{
               overview: '📊 Overview',
-              community: '👥 Community',
+              members: '👥 Members',
+              boats: '⛵ Boats',
+              outings: '🌊 Outings',
+              crewRequests: '🤝 Crew Requests',
               inbox: '📬 Inbox',
               announcements: '📢 Announcements',
               activity: '📈 Activity',
@@ -421,10 +446,10 @@ const AdminDashboard = () => {
             <h2 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '24px' }}>System Overview</h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '10px', marginBottom: '32px' }}>
               {[
-                { label: 'Total Users', value: stats?.totalUsers, icon: '👥', tab: 'community' },
-                { label: 'Total Boats', value: stats?.totalBoats, icon: '⛵', tab: 'community' },
-                { label: 'Active Outings', value: stats?.totalOutings, icon: '🌊', tab: 'activity' },
-                { label: 'Crew Requests', value: stats?.totalCrewRequests, icon: '🤝', tab: 'activity' },
+                { label: 'Total Members', value: stats?.totalUsers, icon: '👥', tab: 'members' },
+                { label: 'Total Boats', value: stats?.totalBoats, icon: '⛵', tab: 'boats' },
+                { label: 'Active Outings', value: stats?.totalOutings, icon: '🌊', tab: 'outings' },
+                { label: 'Crew Requests', value: stats?.totalCrewRequests, icon: '🤝', tab: 'crewRequests' },
                 { label: 'Bug Reports', value: stats?.openBugReports, icon: '🐛', tab: 'inbox', inboxFilter: 'bugs' },
                 { label: 'Feature Requests', value: stats?.openFeatureRequests, icon: '⭐', tab: 'inbox', inboxFilter: 'features' },
                 { label: 'Messages', value: stats?.openMessages, icon: '💬', tab: 'inbox', inboxFilter: 'messages' },
@@ -447,7 +472,7 @@ const AdminDashboard = () => {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
               {[
                 { action: 'announcements', label: '📢 Create Announcement' },
-                { action: 'community', label: '👥 View All Users' },
+                { action: 'members', label: '👥 View Members' },
                 { action: 'inbox', label: '📬 Check Inbox', options: { inboxFilter: 'all' } },
                 { action: 'admins', label: '🔐 Manage Admins' },
               ].map((item) => (
@@ -475,10 +500,10 @@ const AdminDashboard = () => {
           </div>
         )}
 
-        {/* COMMUNITY TAB */}
-        {activeTab === 'community' && (
+        {/* MEMBERS TAB */}
+        {activeTab === 'members' && (
           <div>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '24px' }}>👥 Community Management</h2>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '24px' }}>👥 Member Management</h2>
             <div style={{ background: '#fef3c7', color: '#92400e', borderLeft: '4px solid #f59e0b', borderRadius: '8px', padding: '16px', marginBottom: '20px', fontWeight: 700, lineHeight: 1.5 }}>
               User accounts have two parts: the login account in Supabase Authentication and the profile row shown here.
               Removing only a profile row does not delete the login account or free the email for fresh signup testing.
@@ -544,6 +569,86 @@ const AdminDashboard = () => {
                   Close
                 </button>
               </div>
+            )}
+          </div>
+        )}
+
+        {/* BOATS TAB */}
+        {activeTab === 'boats' && (
+          <div>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '24px' }}>⛵ Boats</h2>
+            {boats.length === 0 ? (
+              <div style={{ background: '#ffffff', padding: '20px', borderRadius: '10px', border: '1px solid #e2e8f0', color: '#64748b', fontWeight: 700 }}>No boats registered yet.</div>
+            ) : (
+              boats.map((boat) => renderDataCard({
+                key: boat.id,
+                title: boat.name || 'Unnamed boat',
+                meta: `Owner: ${boat.users?.full_name || 'Unknown owner'}${boat.users?.email ? ` • ${boat.users.email}` : ''}`,
+                details: [
+                  boat.size_ft ? `${boat.size_ft} ft` : null,
+                  boat.capacity ? `${boat.capacity} capacity` : null,
+                  boat.mooring_location ? `Mooring: ${boat.mooring_location}` : null,
+                ].filter(Boolean).join(' • ') || 'No boat details entered',
+                action: boat.owner_id ? (
+                  <button type="button" onClick={() => navigate(`/profile/${boat.owner_id}`)} style={{ padding: '8px 12px', borderRadius: '8px', border: 'none', background: '#0369a1', color: '#ffffff', fontWeight: 900, cursor: 'pointer' }}>
+                    Owner Profile
+                  </button>
+                ) : null,
+              }))
+            )}
+          </div>
+        )}
+
+        {/* OUTINGS TAB */}
+        {activeTab === 'outings' && (
+          <div>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '24px' }}>🌊 Outings</h2>
+            {outings.length === 0 ? (
+              <div style={{ background: '#ffffff', padding: '20px', borderRadius: '10px', border: '1px solid #e2e8f0', color: '#64748b', fontWeight: 700 }}>No outings posted yet.</div>
+            ) : (
+              outings.map((outing) => renderDataCard({
+                key: outing.id,
+                title: outing.title || 'Untitled outing',
+                meta: `Skipper: ${outing.users?.full_name || 'Unknown skipper'}${outing.users?.email ? ` • ${outing.users.email}` : ''}`,
+                details: [
+                  outing.outing_date ? `Date: ${outing.outing_date}` : null,
+                  outing.outing_time ? `Time: ${outing.outing_time}` : null,
+                  outing.boats?.name ? `Boat: ${outing.boats.name}` : null,
+                  outing.location ? `Location: ${outing.location}` : null,
+                  `${outing.capacity_available ?? 0} crew spots`,
+                ].filter(Boolean).join(' • '),
+                action: (
+                  <button type="button" onClick={() => navigate(`/outing/${outing.id}`)} style={{ padding: '8px 12px', borderRadius: '8px', border: 'none', background: '#0369a1', color: '#ffffff', fontWeight: 900, cursor: 'pointer' }}>
+                    Details
+                  </button>
+                ),
+              }))
+            )}
+          </div>
+        )}
+
+        {/* CREW REQUESTS TAB */}
+        {activeTab === 'crewRequests' && (
+          <div>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '24px' }}>🤝 Crew Requests</h2>
+            {crewRequests.length === 0 ? (
+              <div style={{ background: '#ffffff', padding: '20px', borderRadius: '10px', border: '1px solid #e2e8f0', color: '#64748b', fontWeight: 700 }}>No crew requests yet.</div>
+            ) : (
+              crewRequests.map((request) => renderDataCard({
+                key: request.id,
+                title: `${request.status || 'unknown'} request for ${request.outings?.title || 'unknown outing'}`,
+                meta: `Crew: ${request.users?.full_name || 'Unknown member'}${request.users?.email ? ` • ${request.users.email}` : ''}`,
+                details: [
+                  request.users?.user_type ? `Type: ${request.users.user_type}` : null,
+                  request.requested_at ? `Requested: ${new Date(request.requested_at).toLocaleString()}` : null,
+                  request.responded_at ? `Responded: ${new Date(request.responded_at).toLocaleString()}` : null,
+                ].filter(Boolean).join(' • '),
+                action: request.outing_id ? (
+                  <button type="button" onClick={() => navigate(`/outing/${request.outing_id}`)} style={{ padding: '8px 12px', borderRadius: '8px', border: 'none', background: '#0369a1', color: '#ffffff', fontWeight: 900, cursor: 'pointer' }}>
+                    Outing
+                  </button>
+                ) : null,
+              }))
             )}
           </div>
         )}
@@ -731,7 +836,7 @@ const AdminDashboard = () => {
                 Moderation currently happens through the live admin areas below. Future-only features are not listed as fake tools.
               </p>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
-                <button type="button" onClick={() => goToTab('community')} style={{ padding: '16px', background: '#0369a1', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: 900, cursor: 'pointer' }}>
+                <button type="button" onClick={() => goToTab('members')} style={{ padding: '16px', background: '#0369a1', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: 900, cursor: 'pointer' }}>
                   View Members
                 </button>
                 <button type="button" onClick={() => goToTab('inbox', { inboxFilter: 'all' })} style={{ padding: '16px', background: '#0369a1', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: 900, cursor: 'pointer' }}>
@@ -755,7 +860,7 @@ const AdminDashboard = () => {
                 <button type="button" onClick={() => goToTab('overview')} style={{ padding: '16px', background: '#0369a1', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: 900, cursor: 'pointer' }}>
                   System Overview
                 </button>
-                <button type="button" onClick={() => goToTab('community')} style={{ padding: '16px', background: '#0369a1', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: 900, cursor: 'pointer' }}>
+                <button type="button" onClick={() => goToTab('members')} style={{ padding: '16px', background: '#0369a1', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: 900, cursor: 'pointer' }}>
                   Member List
                 </button>
                 <button type="button" onClick={() => goToTab('inbox', { inboxFilter: 'all' })} style={{ padding: '16px', background: '#0369a1', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: 900, cursor: 'pointer' }}>

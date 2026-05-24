@@ -50,7 +50,8 @@ export default function AnnouncementsFeed() {
           .eq('user_id', user.id);
 
         if (viewsError) throw viewsError;
-        setViewedAnnouncements(new Set(views?.map((v) => v.announcement_id) || []));
+        const viewedIds = views?.map((v) => v.announcement_id) || [];
+        setViewedAnnouncements(new Set(viewedIds));
 
         // Mark all as viewed for this user
         if (allAnnouncements && allAnnouncements.length > 0) {
@@ -65,9 +66,7 @@ export default function AnnouncementsFeed() {
                 user_id: user.id,
               }))
             );
-            setViewedAnnouncements(
-              new Set([...Array.from(viewedAnnouncements), ...unviewedIds])
-            );
+            setViewedAnnouncements(new Set([...viewedIds, ...unviewedIds]));
           }
         }
       } catch (err) {

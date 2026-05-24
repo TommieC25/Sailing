@@ -19,6 +19,24 @@ const AdminDashboard = () => {
   const [newAnnouncementTitle, setNewAnnouncementTitle] = useState('');
   const [newAnnouncementMessage, setNewAnnouncementMessage] = useState('');
 
+  async function attachSubmitters(items) {
+    const userIds = [...new Set(items.map((item) => item.user_id).filter(Boolean))];
+    if (userIds.length === 0) return items;
+
+    const { data, error } = await supabase
+      .from('users')
+      .select('id, full_name, email, user_type')
+      .in('id', userIds);
+
+    if (error) throw error;
+
+    const usersById = Object.fromEntries((data || []).map((submitter) => [submitter.id, submitter]));
+    return items.map((item) => ({
+      ...item,
+      submitter: usersById[item.user_id] || null,
+    }));
+  }
+
   async function loadDashboardData() {
     try {
       setLoading(true);
@@ -57,9 +75,15 @@ const AdminDashboard = () => {
       ]);
 
       setUsers(usersData.data || []);
-      setBugReports(bugsData.data || []);
-      setFeatureRequests(featuresData.data || []);
-      setContactMessages(msgsData.data || []);
+      const [bugsWithSubmitters, featuresWithSubmitters, messagesWithSubmitters] = await Promise.all([
+        attachSubmitters(bugsData.data || []),
+        attachSubmitters(featuresData.data || []),
+        attachSubmitters(msgsData.data || []),
+      ]);
+
+      setBugReports(bugsWithSubmitters);
+      setFeatureRequests(featuresWithSubmitters);
+      setContactMessages(messagesWithSubmitters);
       setAnnouncements(announcementsData.data || []);
 
       // Load recent activity
@@ -193,21 +217,29 @@ const AdminDashboard = () => {
   };
 
   const tabStyle = {
-    padding: '12px 20px',
-    background: 'none',
-    border: 'none',
-    color: '#ffffff',
+    padding: '12px 16px',
+    background: '#f8fafc',
+    border: '1px solid #cbd5e1',
+    borderRadius: '10px',
+    color: '#0f172a',
     fontSize: '1rem',
     fontWeight: 700,
     cursor: 'pointer',
-    borderBottom: '3px solid transparent',
+    whiteSpace: 'nowrap',
     transition: 'all 0.2s',
   };
 
   const activeTabStyle = {
     ...tabStyle,
-    borderBottomColor: '#06b6d4',
-    color: '#a5f3fc',
+    background: '#0369a1',
+    borderColor: '#0369a1',
+    color: '#ffffff',
+  };
+
+  const submitterText = (item) => {
+    const name = item.submitter?.full_name || 'Unknown member';
+    const detail = [item.submitter?.email, item.submitter?.user_type].filter(Boolean).join(' • ');
+    return detail ? `${name} (${detail})` : `${name} (${item.user_id})`;
   };
 
   if (loading) {
@@ -233,7 +265,8 @@ const AdminDashboard = () => {
       )}
 
       {/* Tab Navigation */}
-      <div style={{ background: '#ffffff', borderBottom: '2px solid #e5e7eb', paddingLeft: '16px', overflowX: 'auto' }}>
+      <div style={{ background: '#ffffff', borderBottom: '2px solid #e5e7eb', padding: '12px 16px', overflowX: 'auto' }}>
+        <div style={{ display: 'flex', gap: '8px', minWidth: 'max-content' }}>
         {['overview', 'community', 'inbox', 'announcements', 'activity', 'admins', 'moderation', 'reports'].map((tab) => (
           <button
             key={tab}
@@ -252,6 +285,7 @@ const AdminDashboard = () => {
             }[tab]}
           </button>
         ))}
+        </div>
       </div>
 
       {/* Content Area */}
@@ -394,10 +428,11 @@ const AdminDashboard = () => {
               <h3 style={{ fontSize: '1.25rem', fontWeight: 900, marginBottom: '16px' }}>🐛 Bug Reports ({bugReports.filter((b) => b.status === 'open').length})</h3>
               {bugReports.slice(0, 10).map((bug) => (
                 <div key={bug.id} style={{ background: '#ffffff', padding: '16px', marginBottom: '12px', borderRadius: '8px', borderLeft: '4px solid #ef4444' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
-                    <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '12px', flexWrap: 'wrap', marginBottom: '8px' }}>
+                    <div style={{ minWidth: 0, flex: '1 1 240px' }}>
                       <h4 style={{ margin: 0, fontWeight: 900, color: '#000' }}>{bug.title}</h4>
                       <p style={{ margin: '4px 0', fontSize: '0.9rem', color: '#666' }}>{bug.description?.substring(0, 100)}...</p>
+                      <p style={{ margin: '4px 0', fontSize: '0.9rem', color: '#334155', fontWeight: 700 }}>From: {submitterText(bug)}</p>
                       <p style={{ margin: '4px 0', fontSize: '0.85rem', color: '#999' }}>Submitted {new Date(bug.created_at).toLocaleDateString()}</p>
                     </div>
                     <select
@@ -419,10 +454,11 @@ const AdminDashboard = () => {
               <h3 style={{ fontSize: '1.25rem', fontWeight: 900, marginBottom: '16px' }}>⭐ Feature Requests ({featureRequests.filter((f) => f.status === 'open').length})</h3>
               {featureRequests.slice(0, 10).map((feature) => (
                 <div key={feature.id} style={{ background: '#ffffff', padding: '16px', marginBottom: '12px', borderRadius: '8px', borderLeft: '4px solid #3b82f6' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
-                    <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '12px', flexWrap: 'wrap', marginBottom: '8px' }}>
+                    <div style={{ minWidth: 0, flex: '1 1 240px' }}>
                       <h4 style={{ margin: 0, fontWeight: 900, color: '#000' }}>{feature.title}</h4>
                       <p style={{ margin: '4px 0', fontSize: '0.9rem', color: '#666' }}>{feature.description?.substring(0, 100)}...</p>
+                      <p style={{ margin: '4px 0', fontSize: '0.9rem', color: '#334155', fontWeight: 700 }}>From: {submitterText(feature)}</p>
                       <p style={{ margin: '4px 0', fontSize: '0.85rem', color: '#999' }}>Submitted {new Date(feature.created_at).toLocaleDateString()}</p>
                     </div>
                     <select
@@ -445,10 +481,11 @@ const AdminDashboard = () => {
               <h3 style={{ fontSize: '1.25rem', fontWeight: 900, marginBottom: '16px' }}>💬 Contact Messages ({contactMessages.filter((m) => m.status === 'open').length})</h3>
               {contactMessages.slice(0, 10).map((msg) => (
                 <div key={msg.id} style={{ background: '#ffffff', padding: '16px', marginBottom: '12px', borderRadius: '8px', borderLeft: '4px solid #10b981' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
-                    <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '12px', flexWrap: 'wrap', marginBottom: '8px' }}>
+                    <div style={{ minWidth: 0, flex: '1 1 240px' }}>
                       <h4 style={{ margin: 0, fontWeight: 900, color: '#000' }}>{msg.subject}</h4>
                       <p style={{ margin: '4px 0', fontSize: '0.9rem', color: '#666' }}>{msg.message?.substring(0, 100)}...</p>
+                      <p style={{ margin: '4px 0', fontSize: '0.9rem', color: '#334155', fontWeight: 700 }}>From: {submitterText(msg)}</p>
                       <p style={{ margin: '4px 0', fontSize: '0.85rem', color: '#999' }}>Submitted {new Date(msg.created_at).toLocaleDateString()}</p>
                     </div>
                     <select

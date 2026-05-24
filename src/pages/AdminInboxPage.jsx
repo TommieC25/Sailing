@@ -25,7 +25,8 @@ const styles = {
   badgeInProgress: { background: '#dbeafe', color: '#1e40af' },
   itemMeta: { fontSize: '0.875rem', color: '#64748b', fontWeight: 600, marginBottom: '12px' },
   itemContent: { fontSize: '1rem', color: '#475569', lineHeight: '1.6', marginBottom: '16px' },
-  itemUser: { fontSize: '0.875rem', color: '#64748b', marginBottom: '12px' },
+  itemUser: { fontSize: '0.95rem', color: '#334155', margin: 0, fontWeight: 700, lineHeight: 1.4 },
+  itemUserSub: { display: 'block', fontSize: '0.85rem', color: '#64748b', fontWeight: 600 },
   statusSelect: { padding: '8px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '0.875rem', fontWeight: 600, background: '#ffffff', cursor: 'pointer' },
   emptyBox: { background: '#ffffff', borderRadius: '12px', border: '1px solid #e5e7eb', padding: '48px 24px', textAlign: 'center' },
   emptyIcon: { fontSize: '3rem', marginBottom: '16px' },
@@ -46,6 +47,24 @@ export default function AdminInboxPage() {
   const [updating, setUpdating] = useState(null);
   const isAdmin = profile?.role === 'admin';
 
+  const attachSubmitters = async (items) => {
+    const userIds = [...new Set(items.map((item) => item.user_id).filter(Boolean))];
+    if (userIds.length === 0) return items;
+
+    const { data, error } = await supabase
+      .from('users')
+      .select('id, full_name, email, user_type')
+      .in('id', userIds);
+
+    if (error) throw error;
+
+    const usersById = Object.fromEntries((data || []).map((submitter) => [submitter.id, submitter]));
+    return items.map((item) => ({
+      ...item,
+      submitter: usersById[item.user_id] || null,
+    }));
+  };
+
   useEffect(() => {
     if (!user || !isAdmin) {
       return;
@@ -60,9 +79,15 @@ export default function AdminInboxPage() {
           supabase.from('feature_requests').select('*').order('created_at', { ascending: false }),
         ]);
 
-        setMessages(messagesRes.data || []);
-        setBugReports(bugsRes.data || []);
-        setFeatureRequests(featuresRes.data || []);
+        const [messagesWithUsers, bugsWithUsers, featuresWithUsers] = await Promise.all([
+          attachSubmitters(messagesRes.data || []),
+          attachSubmitters(bugsRes.data || []),
+          attachSubmitters(featuresRes.data || []),
+        ]);
+
+        setMessages(messagesWithUsers);
+        setBugReports(bugsWithUsers);
+        setFeatureRequests(featuresWithUsers);
       } catch (err) {
         console.error('Error fetching inbox:', err);
       } finally {
@@ -130,6 +155,8 @@ export default function AdminInboxPage() {
   const renderItem = (item, table, icon) => {
     const isMessage = table === 'contact_messages';
     const isBug = table === 'bug_reports';
+    const submitterName = item.submitter?.full_name || 'Unknown member';
+    const submitterDetail = [item.submitter?.email, item.submitter?.user_type].filter(Boolean).join(' • ');
 
     return (
       <div
@@ -167,8 +194,11 @@ export default function AdminInboxPage() {
             </a>
           </p>
         )}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <p style={styles.itemUser}>From: {item.user_id}</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          <p style={styles.itemUser}>
+            From: {submitterName}
+            <span style={styles.itemUserSub}>{submitterDetail || `User ID: ${item.user_id}`}</span>
+          </p>
           <select
             value={item.status}
             onChange={(e) => updateStatus(table, item.id, e.target.value)}

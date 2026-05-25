@@ -368,6 +368,15 @@ const AdminDashboard = () => {
                     >
                       {isSelected ? 'Open' : 'View'}
                     </button>
+                    {type === 'bugs' && (
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/admin/inbox?tab=bugs&id=${item.id}`)}
+                        style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #0369a1', background: '#e0f2fe', color: '#0369a1', fontWeight: 900, cursor: 'pointer' }}
+                      >
+                        Reply in Inbox
+                      </button>
+                    )}
                   </div>
                 </div>
                 {isSelected && (

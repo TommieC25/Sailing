@@ -13,11 +13,12 @@ export default function Layout({ children }) {
   const [notificationMenuOpen, setNotificationMenuOpen] = useState(false);
   const [unreadAnnouncementCount, setUnreadAnnouncementCount] = useState(0);
   const [unreadInboxCounts, setUnreadInboxCounts] = useState({ messages: 0, bugs: 0, features: 0 });
+  const [unreadBugReplyCount, setUnreadBugReplyCount] = useState(0);
   const [pendingCrewRequestCount, setPendingCrewRequestCount] = useState(0);
   const isAdmin = profile?.role === 'admin';
   const isSkipper = profile?.user_type === 'owner';
   const unreadInboxCount = isAdmin ? unreadInboxCounts.messages + unreadInboxCounts.bugs + unreadInboxCounts.features : 0;
-  const totalNotificationCount = unreadAnnouncementCount + pendingCrewRequestCount + unreadInboxCount;
+  const totalNotificationCount = unreadAnnouncementCount + pendingCrewRequestCount + unreadInboxCount + unreadBugReplyCount;
   const adminInboxLink = unreadInboxCounts.messages > 0
     ? '/admin/inbox?tab=messages'
     : unreadInboxCounts.bugs > 0
@@ -56,6 +57,30 @@ export default function Layout({ children }) {
     };
 
     fetchUnreadCount();
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchBugReplyCount = async () => {
+      try {
+        const { count, error } = await supabase
+          .from('bug_report_replies')
+          .select('id', { count: 'exact', head: true })
+          .is('read_at', null)
+          .neq('sender_id', user.id);
+
+        if (error) throw error;
+        setUnreadBugReplyCount(count || 0);
+      } catch (err) {
+        console.error('Error fetching bug reply count:', err);
+      }
+    };
+
+    fetchBugReplyCount();
+    window.addEventListener('sailing:bug-replies-updated', fetchBugReplyCount);
+
+    return () => window.removeEventListener('sailing:bug-replies-updated', fetchBugReplyCount);
   }, [user]);
 
   useEffect(() => {
@@ -260,6 +285,21 @@ export default function Layout({ children }) {
                           </span>
                         </button>
                       </>
+                    )}
+                    {unreadBugReplyCount > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNotificationMenuOpen(false);
+                          navigate(isAdmin ? '/admin/inbox?tab=bugs' : '/bug-report');
+                        }}
+                        style={{width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', padding: '12px 14px', background: 'none', border: 'none', borderBottom: '1px solid #e2e8f0', cursor: 'pointer', color: '#1e293b', textAlign: 'left', fontSize: '1rem', fontWeight: 700}}
+                      >
+                        <span>Bug report replies</span>
+                        <span style={{background: '#ef4444', color: '#ffffff', borderRadius: '999px', minWidth: '24px', padding: '2px 8px', textAlign: 'center', fontWeight: 900}}>
+                          {unreadBugReplyCount}
+                        </span>
+                      </button>
                     )}
                     <button
                       type="button"

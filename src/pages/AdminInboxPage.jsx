@@ -48,6 +48,8 @@ export default function AdminInboxPage() {
   const [featureRequests, setFeatureRequests] = useState([]);
   const [loading, setLoading] = useState(false);
   const [updating, setUpdating] = useState(null);
+  const [replyDrafts, setReplyDrafts] = useState({});
+  const [sendingReply, setSendingReply] = useState(null);
   const isAdmin = profile?.role === 'admin';
 
   const attachSubmitters = async (items) => {
@@ -97,8 +99,59 @@ export default function AdminInboxPage() {
           attachSubmitters(featuresRes.data || []),
         ]);
 
+        const bugIds = bugsWithUsers.map((bug) => bug.id);
+        let bugReplies = [];
+        if (bugIds.length > 0) {
+          const { data, error: repliesError } = await supabase
+            .from('bug_report_replies')
+            .select('*')
+            .in('bug_report_id', bugIds)
+            .order('created_at', { ascending: true });
+
+          if (repliesError) {
+            console.error('Error fetching bug report replies:', repliesError);
+          } else {
+            bugReplies = data || [];
+          }
+        }
+
+        const replySenderIds = [...new Set((bugReplies || []).map((reply) => reply.sender_id).filter(Boolean))];
+        const { data: replySenders, error: replySendersError } = replySenderIds.length
+          ? await supabase
+              .from('users')
+              .select('id, full_name, email, user_type')
+              .in('id', replySenderIds)
+          : { data: [], error: null };
+
+        if (replySendersError) throw replySendersError;
+
+        const sendersById = Object.fromEntries((replySenders || []).map((sender) => [sender.id, sender]));
+        const repliesByBugId = (bugReplies || []).reduce((byBug, reply) => {
+          byBug[reply.bug_report_id] = byBug[reply.bug_report_id] || [];
+          byBug[reply.bug_report_id].push({
+            ...reply,
+            sender: sendersById[reply.sender_id] || null,
+          });
+          return byBug;
+        }, {});
+
+        const unreadReplyIds = (bugReplies || [])
+          .filter((reply) => reply.sender_id !== user.id && !reply.read_at)
+          .map((reply) => reply.id);
+
+        if (unreadReplyIds.length > 0) {
+          await supabase
+            .from('bug_report_replies')
+            .update({ read_at: new Date().toISOString() })
+            .in('id', unreadReplyIds);
+          window.dispatchEvent(new Event('sailing:bug-replies-updated'));
+        }
+
         setMessages(messagesWithUsers);
-        setBugReports(bugsWithUsers);
+        setBugReports(bugsWithUsers.map((bug) => ({
+          ...bug,
+          replies: repliesByBugId[bug.id] || [],
+        })));
         setFeatureRequests(featuresWithUsers);
       } catch (err) {
         console.error('Error fetching inbox:', err);
@@ -135,21 +188,48 @@ export default function AdminInboxPage() {
     }
   };
 
-  const replyEmailHref = (item, table) => {
-    const email = item.submitter?.email;
-    if (!email) return null;
+  const replyDraftFor = (bugId) => replyDrafts[bugId] ?? 'Please tell me more... ';
 
-    const label = table === 'bug_reports'
-      ? 'bug report'
-      : table === 'feature_requests'
-        ? 'feature request'
-        : 'message';
-    const title = table === 'contact_messages' ? item.subject : item.title;
-    const subject = title
-      ? `Please tell me more... ${title}`
-      : `Please tell me more about your SailAway ${label}`;
+  const sendBugReply = async (bug) => {
+    const message = replyDraftFor(bug.id).trim();
+    if (!message) return;
 
-    return `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subject)}`;
+    try {
+      setSendingReply(bug.id);
+      const { data, error } = await supabase
+        .from('bug_report_replies')
+        .insert({
+          bug_report_id: bug.id,
+          sender_id: user.id,
+          message,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setBugReports((current) => current.map((report) => (
+        report.id === bug.id
+          ? {
+              ...report,
+              status: report.status === 'open' ? 'in_progress' : report.status,
+              replies: [
+                ...(report.replies || []),
+                { ...data, sender: { id: user.id, full_name: profile?.full_name || 'Admin' } },
+              ],
+            }
+          : report
+      )));
+      setReplyDrafts((current) => ({ ...current, [bug.id]: 'Please tell me more... ' }));
+
+      if (bug.status === 'open') {
+        await updateStatus('bug_reports', bug.id, 'in_progress');
+      }
+    } catch (err) {
+      console.error('Error sending reply:', err);
+    } finally {
+      setSendingReply(null);
+    }
   };
 
   if (loading) {
@@ -187,7 +267,6 @@ export default function AdminInboxPage() {
     const isLinkedItem = requestedItemId === item.id;
     const submitterName = item.submitter?.full_name || 'Unknown member';
     const submitterDetail = [item.submitter?.email, item.submitter?.user_type].filter(Boolean).join(' • ');
-    const replyHref = replyEmailHref(item, table);
 
     return (
       <div
@@ -227,24 +306,45 @@ export default function AdminInboxPage() {
             </a>
           </p>
         )}
+        {isBug && (
+          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px', marginBottom: '14px', display: 'grid', gap: '10px' }}>
+            <p style={{ margin: 0, color: '#0f172a', fontWeight: 900 }}>In-app replies</p>
+            {(item.replies || []).length === 0 ? (
+              <p style={{ margin: 0, color: '#64748b', fontWeight: 600 }}>No replies yet.</p>
+            ) : (
+              <div style={{ display: 'grid', gap: '8px' }}>
+                {(item.replies || []).map((reply) => (
+                  <div key={reply.id} style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '10px' }}>
+                    <p style={{ margin: '0 0 4px', color: '#334155', fontWeight: 900 }}>
+                      {reply.sender?.full_name || 'Member'} · {new Date(reply.created_at).toLocaleString()}
+                    </p>
+                    <p style={{ margin: 0, color: '#475569', whiteSpace: 'pre-wrap', lineHeight: 1.45 }}>{reply.message}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+            <textarea
+              value={replyDraftFor(item.id)}
+              onChange={(e) => setReplyDrafts((current) => ({ ...current, [item.id]: e.target.value }))}
+              rows={3}
+              style={{ width: '100%', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '10px', fontFamily: 'inherit', fontSize: '0.95rem', resize: 'vertical' }}
+            />
+            <button
+              type="button"
+              onClick={() => sendBugReply(item)}
+              disabled={sendingReply === item.id || !replyDraftFor(item.id).trim()}
+              style={{ padding: '10px 12px', border: 'none', borderRadius: '8px', background: '#0369a1', color: '#ffffff', fontSize: '0.95rem', fontWeight: 900, cursor: sendingReply === item.id ? 'wait' : 'pointer', opacity: sendingReply === item.id || !replyDraftFor(item.id).trim() ? 0.65 : 1 }}
+            >
+              {sendingReply === item.id ? 'Sending...' : 'Send in-app reply'}
+            </button>
+          </div>
+        )}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
           <p style={styles.itemUser}>
             From: {submitterName}
             <span style={styles.itemUserSub}>{submitterDetail || `User ID: ${item.user_id}`}</span>
           </p>
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-            {replyHref ? (
-              <a
-                href={replyHref}
-                style={{ padding: '8px 12px', border: '1px solid #0369a1', borderRadius: '6px', background: '#e0f2fe', color: '#0369a1', fontSize: '0.875rem', fontWeight: 900, cursor: 'pointer', textDecoration: 'none' }}
-              >
-                Reply by email
-              </a>
-            ) : (
-              <span style={{ padding: '8px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#f8fafc', color: '#64748b', fontSize: '0.875rem', fontWeight: 900 }}>
-                No email
-              </span>
-            )}
             {item.status !== 'resolved' && (
               <button
                 type="button"

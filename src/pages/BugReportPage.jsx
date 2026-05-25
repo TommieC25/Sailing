@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
@@ -25,6 +25,9 @@ const styles = {
   screenshotPreview: { display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center', marginTop: '8px' },
   screenshotThumb: { width: '80px', height: '80px', borderRadius: '8px', objectFit: 'cover', border: '2px solid #dbeafe', position: 'relative' },
   removeButton: { position: 'absolute', top: '-8px', right: '-8px', background: '#dc2626', color: '#ffffff', border: 'none', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer', fontWeight: 900, fontSize: '0.75rem' },
+  reportList: { display: 'grid', gap: '12px' },
+  reportCard: { background: '#ffffff', borderRadius: '10px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', padding: '16px' },
+  replyCard: { background: '#f0f9ff', border: '1px solid #bfdbfe', borderRadius: '8px', padding: '12px', marginTop: '10px' },
 };
 
 export default function BugReportPage() {
@@ -37,8 +40,89 @@ export default function BugReportPage() {
   const [screenshot, setScreenshot] = useState(null);
   const [screenshotPreview, setScreenshotPreview] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [reportsLoading, setReportsLoading] = useState(false);
+  const [myReports, setMyReports] = useState([]);
+  const [replyDrafts, setReplyDrafts] = useState({});
+  const [sendingReply, setSendingReply] = useState(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchMyReports = async () => {
+      try {
+        setReportsLoading(true);
+
+        const { data: reports, error: reportsError } = await supabase
+          .from('bug_reports')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (reportsError) throw reportsError;
+
+        const reportIds = (reports || []).map((report) => report.id);
+        let replies = [];
+        if (reportIds.length > 0) {
+          const { data, error: repliesError } = await supabase
+            .from('bug_report_replies')
+            .select('*')
+            .in('bug_report_id', reportIds)
+            .order('created_at', { ascending: true });
+
+          if (repliesError) {
+            console.error('Error fetching bug report replies:', repliesError);
+          } else {
+            replies = data || [];
+          }
+        }
+
+        const replySenderIds = [...new Set((replies || []).map((reply) => reply.sender_id).filter(Boolean))];
+        const { data: senders, error: sendersError } = replySenderIds.length
+          ? await supabase
+              .from('public_profiles')
+              .select('id, full_name')
+              .in('id', replySenderIds)
+          : { data: [], error: null };
+
+        if (sendersError) throw sendersError;
+
+        const sendersById = Object.fromEntries((senders || []).map((sender) => [sender.id, sender]));
+        const repliesByReportId = (replies || []).reduce((byReport, reply) => {
+          byReport[reply.bug_report_id] = byReport[reply.bug_report_id] || [];
+          byReport[reply.bug_report_id].push({
+            ...reply,
+            sender: sendersById[reply.sender_id] || null,
+          });
+          return byReport;
+        }, {});
+
+        setMyReports((reports || []).map((report) => ({
+          ...report,
+          replies: repliesByReportId[report.id] || [],
+        })));
+
+        const unreadReplyIds = (replies || [])
+          .filter((reply) => reply.sender_id !== user.id && !reply.read_at)
+          .map((reply) => reply.id);
+
+        if (unreadReplyIds.length > 0) {
+          await supabase
+            .from('bug_report_replies')
+            .update({ read_at: new Date().toISOString() })
+            .in('id', unreadReplyIds);
+          window.dispatchEvent(new Event('sailing:bug-replies-updated'));
+        }
+      } catch (err) {
+        console.error('Error loading bug report replies:', err);
+      } finally {
+        setReportsLoading(false);
+      }
+    };
+
+    fetchMyReports();
+  }, [user]);
 
   if (!user) {
     return <div style={styles.errorBox}>Please sign in to report bugs.</div>;
@@ -120,6 +204,44 @@ export default function BugReportPage() {
       setError(err.message || 'Failed to submit bug report');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const sendReportReply = async (report) => {
+    const message = (replyDrafts[report.id] || '').trim();
+    if (!message) return;
+
+    try {
+      setSendingReply(report.id);
+      const { data, error: replyError } = await supabase
+        .from('bug_report_replies')
+        .insert({
+          bug_report_id: report.id,
+          sender_id: user.id,
+          message,
+        })
+        .select()
+        .single();
+
+      if (replyError) throw replyError;
+
+      setMyReports((current) => current.map((currentReport) => (
+        currentReport.id === report.id
+          ? {
+              ...currentReport,
+              replies: [
+                ...(currentReport.replies || []),
+                { ...data, sender: { id: user.id, full_name: 'You' } },
+              ],
+            }
+          : currentReport
+      )));
+      setReplyDrafts((current) => ({ ...current, [report.id]: '' }));
+      window.dispatchEvent(new Event('sailing:bug-replies-updated'));
+    } catch (err) {
+      setError(err.message || 'Failed to send reply');
+    } finally {
+      setSendingReply(null);
     }
   };
 
@@ -217,6 +339,57 @@ export default function BugReportPage() {
             </button>
           </div>
         </form>
+      </div>
+
+      <div style={styles.card}>
+        <h2 style={{ fontSize: '1.25rem', fontWeight: 900, color: '#1e293b', margin: '0 0 16px 0' }}>Your Bug Reports</h2>
+        {reportsLoading ? (
+          <p style={{ color: '#64748b', fontWeight: 700, margin: 0 }}>Loading...</p>
+        ) : myReports.length === 0 ? (
+          <p style={{ color: '#64748b', fontWeight: 700, margin: 0 }}>No bug reports submitted yet.</p>
+        ) : (
+          <div style={styles.reportList}>
+            {myReports.map((report) => (
+              <div key={report.id} style={styles.reportCard}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', marginBottom: '8px' }}>
+                  <h3 style={{ fontSize: '1rem', fontWeight: 900, color: '#1e293b', margin: 0 }}>{report.title}</h3>
+                  <span style={{ background: report.status === 'resolved' ? '#dcfce7' : '#fef3c7', color: report.status === 'resolved' ? '#166534' : '#92400e', borderRadius: '999px', padding: '4px 8px', fontSize: '0.75rem', fontWeight: 900, textTransform: 'capitalize' }}>
+                    {report.status}
+                  </span>
+                </div>
+                <p style={{ color: '#64748b', fontSize: '0.9rem', fontWeight: 600, margin: '0 0 8px 0' }}>
+                  Submitted {new Date(report.created_at).toLocaleString()}
+                </p>
+                <p style={{ color: '#475569', margin: 0, lineHeight: 1.45, whiteSpace: 'pre-wrap' }}>{report.description}</p>
+                {(report.replies || []).map((reply) => (
+                  <div key={reply.id} style={styles.replyCard}>
+                    <p style={{ margin: '0 0 4px 0', color: '#0c2340', fontWeight: 900 }}>
+                      {reply.sender?.full_name || 'Admin'} replied {new Date(reply.created_at).toLocaleString()}
+                    </p>
+                    <p style={{ margin: 0, color: '#334155', lineHeight: 1.45, whiteSpace: 'pre-wrap' }}>{reply.message}</p>
+                  </div>
+                ))}
+                <div style={{ display: 'grid', gap: '8px', marginTop: '12px' }}>
+                  <textarea
+                    value={replyDrafts[report.id] || ''}
+                    onChange={(e) => setReplyDrafts((current) => ({ ...current, [report.id]: e.target.value }))}
+                    placeholder="Reply in the app..."
+                    rows={3}
+                    style={{ width: '100%', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '10px', fontFamily: 'inherit', fontSize: '0.95rem', resize: 'vertical' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => sendReportReply(report)}
+                    disabled={sendingReply === report.id || !(replyDrafts[report.id] || '').trim()}
+                    style={{ padding: '10px 12px', border: 'none', borderRadius: '8px', background: '#0369a1', color: '#ffffff', fontSize: '0.95rem', fontWeight: 900, cursor: sendingReply === report.id ? 'wait' : 'pointer', opacity: sendingReply === report.id || !(replyDrafts[report.id] || '').trim() ? 0.65 : 1 }}
+                  >
+                    {sendingReply === report.id ? 'Sending...' : 'Send reply'}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

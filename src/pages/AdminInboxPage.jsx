@@ -146,8 +146,8 @@ export default function AdminInboxPage() {
         : 'message';
     const title = table === 'contact_messages' ? item.subject : item.title;
     const subject = title
-      ? `SailAway ${label}: ${title}`
-      : `SailAway ${label}`;
+      ? `Please tell me more... ${title}`
+      : `Please tell me more about your SailAway ${label}`;
 
     return `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subject)}`;
   };

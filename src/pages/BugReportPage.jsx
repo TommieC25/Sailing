@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
@@ -17,6 +17,7 @@ const styles = {
   input: { width: '100%', padding: '12px 16px', border: '2px solid #dbeafe', borderRadius: '8px', fontSize: '1rem', fontWeight: 500, color: '#1e293b', fontFamily: 'inherit', background: '#ffffff' },
   textarea: { width: '100%', padding: '12px 16px', border: '2px solid #dbeafe', borderRadius: '8px', fontSize: '1rem', fontWeight: 500, color: '#1e293b', fontFamily: 'inherit', minHeight: '120px', resize: 'vertical', background: '#ffffff' },
   fileInput: { padding: '12px 16px', border: '2px dashed #dbeafe', borderRadius: '8px', fontSize: '1rem', color: '#1e293b', cursor: 'pointer', background: '#f0f9ff' },
+  attachedFile: { background: '#f0fdf4', border: '2px solid #bbf7d0', color: '#166534', borderRadius: '8px', padding: '12px', fontSize: '0.95rem', fontWeight: 800, lineHeight: 1.4 },
   buttons: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', paddingBottom: '8px' },
   submitButton: { padding: '16px', borderRadius: '8px', fontWeight: 900, fontSize: '1.125rem', color: '#ffffff', border: 'none', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', transition: 'all 0.2s' },
   cancelButton: { padding: '16px', borderRadius: '8px', fontWeight: 900, fontSize: '1.125rem', background: '#e5e7eb', color: '#1e293b', border: 'none', cursor: 'pointer', transition: 'all 0.2s' },
@@ -33,6 +34,7 @@ const styles = {
 export default function BugReportPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const screenshotInputRef = useRef(null);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -46,6 +48,7 @@ export default function BugReportPage() {
   const [sendingReply, setSendingReply] = useState(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [statusMessage, setStatusMessage] = useState('');
 
   useEffect(() => {
     if (!user) return;
@@ -135,49 +138,90 @@ export default function BugReportPage() {
 
   const handleScreenshotChange = (e) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setScreenshot(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setScreenshotPreview(reader.result);
-      };
-      reader.readAsDataURL(file);
+    setError('');
+    setSuccess(false);
+
+    if (!file) {
+      setScreenshot(null);
+      setScreenshotPreview(null);
+      return;
     }
+
+    const fileName = file.name || '';
+    const looksLikeImage = file.type.startsWith('image/') || /\.(png|jpe?g|gif|webp|heic|heif)$/i.test(fileName);
+    if (!looksLikeImage) {
+      setScreenshot(null);
+      setScreenshotPreview(null);
+      if (screenshotInputRef.current) screenshotInputRef.current.value = '';
+      setError('Please attach an image file for the screenshot');
+      return;
+    }
+
+    const maxSizeMb = 12;
+    if (file.size > maxSizeMb * 1024 * 1024) {
+      setScreenshot(null);
+      setScreenshotPreview(null);
+      if (screenshotInputRef.current) screenshotInputRef.current.value = '';
+      setError(`Screenshot must be ${maxSizeMb} MB or smaller`);
+      return;
+    }
+
+    setScreenshot(file);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setScreenshotPreview(reader.result);
+    };
+    reader.readAsDataURL(file);
   };
 
   const removeScreenshot = () => {
     setScreenshot(null);
     setScreenshotPreview(null);
+    if (screenshotInputRef.current) screenshotInputRef.current.value = '';
+  };
+
+  const formatFileSize = (bytes) => {
+    if (!bytes) return '';
+    if (bytes < 1024 * 1024) return `${Math.ceil(bytes / 1024)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess(false);
+    setStatusMessage('');
 
     if (!formData.title.trim() || !formData.description.trim()) {
       setError('Please fill in both title and description');
       return;
     }
 
+    if (!screenshot) {
+      setError('Please attach a screenshot so we can see the issue');
+      return;
+    }
+
     try {
       setLoading(true);
-      let screenshotUrl = null;
+      setStatusMessage('Uploading screenshot...');
+      const rawExt = screenshot.name.split('.').pop() || 'png';
+      const fileExt = rawExt.toLowerCase().replace(/[^a-z0-9]/g, '') || 'png';
+      const filePath = `bug-reports/${user.id}/${Date.now()}.${fileExt}`;
 
-      if (screenshot) {
-        const fileExt = screenshot.name.split('.').pop();
-        const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-        const filePath = `bug-reports/${fileName}`;
+      const { error: uploadError } = await supabase.storage
+        .from('profiles')
+        .upload(filePath, screenshot, {
+          cacheControl: '3600',
+          contentType: screenshot.type || undefined,
+          upsert: false,
+        });
 
-        const { error: uploadError } = await supabase.storage
-          .from('profiles')
-          .upload(filePath, screenshot, { upsert: true });
+      if (uploadError) throw uploadError;
 
-        if (uploadError) throw uploadError;
-
-        const { data } = supabase.storage.from('profiles').getPublicUrl(filePath);
-        screenshotUrl = data.publicUrl;
-      }
+      const { data } = supabase.storage.from('profiles').getPublicUrl(filePath);
+      const screenshotUrl = data.publicUrl;
+      setStatusMessage('Submitting bug report...');
 
       const { error: insertError } = await supabase
         .from('bug_reports')
@@ -196,12 +240,15 @@ export default function BugReportPage() {
       setFormData({ title: '', description: '' });
       setScreenshot(null);
       setScreenshotPreview(null);
+      setStatusMessage('');
+      if (screenshotInputRef.current) screenshotInputRef.current.value = '';
 
       setTimeout(() => {
         navigate('/');
       }, 2000);
     } catch (err) {
       setError(err.message || 'Failed to submit bug report');
+      setStatusMessage('');
     } finally {
       setLoading(false);
     }
@@ -267,7 +314,7 @@ export default function BugReportPage() {
 
         <form onSubmit={handleSubmit} style={styles.form}>
           <div style={styles.guidanceBox}>
-            Please be clear and specific. Describe what you expected to happen, what you actually saw, and why the result does not seem right. A screenshot will usually be necessary to fully address a bug. Thank you!
+            Please be clear and specific. Describe what you expected to happen, what you actually saw, and why the result does not seem right. Attach a screenshot so we can see the issue. Thank you!
           </div>
 
           <div style={styles.fieldGroup}>
@@ -294,13 +341,20 @@ export default function BugReportPage() {
           </div>
 
           <div style={styles.fieldGroup}>
-            <label style={styles.label}>Screenshot (optional)</label>
+            <label style={styles.label}>Screenshot *</label>
             <input
+              ref={screenshotInputRef}
               type="file"
               accept="image/*"
               onChange={handleScreenshotChange}
+              required
               style={styles.fileInput}
             />
+            {screenshot && (
+              <div style={styles.attachedFile}>
+                Screenshot attached: {screenshot.name || 'image'} {formatFileSize(screenshot.size) && `(${formatFileSize(screenshot.size)})`}
+              </div>
+            )}
             {screenshotPreview && (
               <div style={styles.screenshotPreview}>
                 <div style={{ position: 'relative' }}>
@@ -338,6 +392,7 @@ export default function BugReportPage() {
               Cancel
             </button>
           </div>
+          {statusMessage && <div style={styles.successBox}>{statusMessage}</div>}
         </form>
       </div>
 
@@ -361,6 +416,11 @@ export default function BugReportPage() {
                   Submitted {new Date(report.created_at).toLocaleString()}
                 </p>
                 <p style={{ color: '#475569', margin: 0, lineHeight: 1.45, whiteSpace: 'pre-wrap' }}>{report.description}</p>
+                {report.screenshot_url && (
+                  <a href={report.screenshot_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', marginTop: '10px', color: '#0369a1', fontWeight: 900 }}>
+                    View screenshot
+                  </a>
+                )}
                 {(report.replies || []).map((reply) => (
                   <div key={reply.id} style={styles.replyCard}>
                     <p style={{ margin: '0 0 4px 0', color: '#0c2340', fontWeight: 900 }}>

@@ -9,6 +9,8 @@ const styles = {
   header: { borderRadius: '12px', padding: '24px', marginBottom: '24px', background: 'linear-gradient(135deg, #0c2340 0%, #0369a1 100%)' },
   headerTitle: { fontSize: '1.875rem', fontWeight: 900, color: '#ffffff', margin: '0 0 8px 0' },
   headerStats: { color: '#e0f2fe', fontSize: '1rem', fontWeight: 600, margin: 0 },
+  errorBox: { background: '#fee2e2', border: '2px solid #dc2626', color: '#991b1b', fontSize: '1rem', padding: '16px', borderRadius: '8px', marginBottom: '24px', fontWeight: 700 },
+  successBox: { background: '#f0fdf4', border: '2px solid #16a34a', color: '#166534', fontSize: '1rem', padding: '16px', borderRadius: '8px', marginBottom: '24px', fontWeight: 700 },
   tabs: { display: 'flex', gap: '8px', marginBottom: '24px', borderBottom: '2px solid #e5e7eb', overflowX: 'auto' },
   tab: { padding: '12px 16px', background: 'none', border: 'none', fontSize: '1.125rem', fontWeight: 700, color: '#64748b', cursor: 'pointer', borderBottom: '3px solid transparent', transition: 'all 0.2s' },
   tabActive: { color: '#0369a1', borderBottomColor: '#0369a1' },
@@ -50,6 +52,8 @@ export default function AdminInboxPage() {
   const [updating, setUpdating] = useState(null);
   const [replyDrafts, setReplyDrafts] = useState({});
   const [sendingReply, setSendingReply] = useState(null);
+  const [replyError, setReplyError] = useState('');
+  const [replySuccess, setReplySuccess] = useState('');
   const isAdmin = profile?.role === 'admin';
 
   const attachSubmitters = async (items) => {
@@ -195,6 +199,8 @@ export default function AdminInboxPage() {
     if (!message) return;
 
     try {
+      setReplyError('');
+      setReplySuccess('');
       setSendingReply(bug.id);
       const { data, error } = await supabase
         .from('bug_report_replies')
@@ -225,8 +231,10 @@ export default function AdminInboxPage() {
       if (bug.status === 'open') {
         await updateStatus('bug_reports', bug.id, 'in_progress');
       }
+      setReplySuccess(`Reply sent for "${bug.title}".`);
     } catch (err) {
       console.error('Error sending reply:', err);
+      setReplyError(err.message || 'Failed to send in-app reply');
     } finally {
       setSendingReply(null);
     }
@@ -402,6 +410,9 @@ export default function AdminInboxPage() {
           {messages.length} messages • {bugReports.length} bug reports • {featureRequests.length} feature requests
         </p>
       </div>
+
+      {replyError && <div style={styles.errorBox}>{replyError}</div>}
+      {replySuccess && <div style={styles.successBox}>{replySuccess}</div>}
 
       <div style={styles.tabs}>
         {tabs.map((tab) => (

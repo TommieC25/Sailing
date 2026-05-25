@@ -29,12 +29,30 @@ const styles = {
 
 const requiredFieldLabels = {
   title: 'Title',
+  description: 'Description',
   outingDate: 'Date',
   outingTime: 'Time',
   location: 'Location',
   capacityAvailable: 'Available Crew Spots',
   boatName: 'Boat Name',
+  boatBrandModelColor: 'Brand / Model / Color',
+  boatSize: 'Length',
   boatCapacity: 'Total Capacity',
+  mooringLocation: 'Mooring / Marina',
+};
+
+const requiredFieldMessages = {
+  title: 'Please enter an outing title',
+  description: 'Please enter an outing description',
+  outingDate: 'Please select an outing date',
+  outingTime: 'Please select an outing time',
+  location: 'Please enter the outing location',
+  capacityAvailable: 'Please enter the number of available crew spots',
+  boatName: 'Please enter the boat name',
+  boatBrandModelColor: 'Please enter the boat brand, model, and color',
+  boatSize: 'Please enter the boat length',
+  boatCapacity: 'Please enter the total boat capacity',
+  mooringLocation: 'Please enter the mooring or marina',
 };
 
 export default function CreateOutingPage() {
@@ -98,19 +116,18 @@ export default function CreateOutingPage() {
     e.preventDefault();
     setError('');
 
-    const missingFields = Object.entries(requiredFieldLabels)
-      .filter(([field]) => !String(formData[field] || '').trim())
-      .map(([, label]) => label);
+    const missingField = Object.keys(requiredFieldLabels)
+      .find((field) => !String(formData[field] || '').trim());
 
-    if (missingFields.length > 0) {
-      setError(`Please fill in: ${missingFields.join(', ')}`);
+    if (missingField) {
+      setError(requiredFieldMessages[missingField]);
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
     const crewSpots = Number.parseInt(formData.capacityAvailable, 10);
     const boatCapacity = Number.parseInt(formData.boatCapacity, 10);
-    const boatSize = formData.boatSize ? Number.parseInt(formData.boatSize, 10) : null;
+    const boatSize = Number.parseInt(formData.boatSize, 10);
 
     if (!Number.isInteger(crewSpots) || crewSpots < 1) {
       setError('Available Crew Spots must be at least 1');
@@ -124,7 +141,7 @@ export default function CreateOutingPage() {
       return;
     }
 
-    if (boatSize !== null && (!Number.isInteger(boatSize) || boatSize < 1)) {
+    if (!Number.isInteger(boatSize) || boatSize < 1) {
       setError('Length must be a positive number');
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
@@ -235,7 +252,7 @@ export default function CreateOutingPage() {
 
       {error && <div style={styles.errorBox}>{error}</div>}
 
-      <form onSubmit={handleSubmit} style={styles.form}>
+      <form onSubmit={handleSubmit} style={styles.form} noValidate>
 
         {/* Outing Details */}
         <div style={styles.section}>
@@ -255,11 +272,12 @@ export default function CreateOutingPage() {
           </div>
 
           <div style={styles.fieldGroup}>
-            <label style={styles.label}>Description</label>
+            <label style={styles.label}>Description *</label>
             <textarea
               name="description"
               value={formData.description}
               onChange={handleInputChange}
+              required
               style={styles.textarea}
               placeholder="Tell crew members about this outing..."
             />
@@ -336,12 +354,13 @@ export default function CreateOutingPage() {
           </div>
 
           <div style={styles.fieldGroup}>
-            <label style={styles.label}>Brand / Model / Color</label>
+            <label style={styles.label}>Brand / Model / Color *</label>
             <input
               type="text"
               name="boatBrandModelColor"
               value={formData.boatBrandModelColor}
               onChange={handleInputChange}
+              required
               style={styles.input}
               placeholder="e.g., Beneteau / Oceanis 38 / blue"
             />
@@ -349,19 +368,20 @@ export default function CreateOutingPage() {
 
           <div style={styles.grid}>
             <div style={styles.fieldGroup}>
-              <label style={styles.label}>Length (ft)</label>
+              <label style={styles.label}>Length (ft) *</label>
               <input
                 type="number"
                 name="boatSize"
                 value={formData.boatSize}
                 onChange={handleInputChange}
                 min="1"
+                required
                 style={styles.input}
                 placeholder="38"
               />
             </div>
             <div style={styles.fieldGroup}>
-              <label style={styles.label}>Total Capacity</label>
+              <label style={styles.label}>Total Capacity *</label>
               <input
                 type="number"
                 name="boatCapacity"
@@ -376,12 +396,13 @@ export default function CreateOutingPage() {
           </div>
 
           <div style={styles.fieldGroup}>
-            <label style={styles.label}>Mooring / Marina</label>
+            <label style={styles.label}>Mooring / Marina *</label>
             <input
               type="text"
               name="mooringLocation"
               value={formData.mooringLocation}
               onChange={handleInputChange}
+              required
               style={styles.input}
               placeholder="e.g., Coconut Grove Marina"
             />

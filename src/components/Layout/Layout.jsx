@@ -18,7 +18,7 @@ export default function Layout({ children }) {
   const isAdmin = profile?.role === 'admin';
   const isSkipper = profile?.user_type === 'owner';
   const unreadInboxCount = isAdmin ? unreadInboxCounts.messages + unreadInboxCounts.bugs + unreadInboxCounts.features : 0;
-  const totalNotificationCount = unreadAnnouncementCount + pendingCrewRequestCount + unreadInboxCount + unreadBugReplyCount;
+  const totalNotificationCount = unreadAnnouncementCount + pendingCrewRequestCount + unreadBugReplyCount;
   const adminInboxLink = unreadInboxCounts.messages > 0
     ? '/admin/inbox?tab=messages'
     : unreadInboxCounts.bugs > 0
@@ -105,6 +105,9 @@ export default function Layout({ children }) {
     };
 
     fetchInboxCount();
+    window.addEventListener('sailing:admin-inbox-updated', fetchInboxCount);
+
+    return () => window.removeEventListener('sailing:admin-inbox-updated', fetchInboxCount);
   }, [user, isAdmin]);
 
   useEffect(() => {
@@ -242,49 +245,6 @@ export default function Layout({ children }) {
                           {pendingCrewRequestCount}
                         </span>
                       </button>
-                    )}
-                    {isAdmin && (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setNotificationMenuOpen(false);
-                            navigate('/admin/inbox?tab=messages');
-                          }}
-                          style={{width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', padding: '12px 14px', background: 'none', border: 'none', borderBottom: '1px solid #e2e8f0', cursor: 'pointer', color: '#1e293b', textAlign: 'left', fontSize: '1rem', fontWeight: 700}}
-                        >
-                          <span>Admin messages</span>
-                          <span style={{background: unreadInboxCounts.messages > 0 ? '#ef4444' : '#e2e8f0', color: unreadInboxCounts.messages > 0 ? '#ffffff' : '#475569', borderRadius: '999px', minWidth: '24px', padding: '2px 8px', textAlign: 'center', fontWeight: 900}}>
-                            {unreadInboxCounts.messages}
-                          </span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setNotificationMenuOpen(false);
-                            navigate('/admin/inbox?tab=bugs');
-                          }}
-                          style={{width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', padding: '12px 14px', background: 'none', border: 'none', borderBottom: '1px solid #e2e8f0', cursor: 'pointer', color: '#1e293b', textAlign: 'left', fontSize: '1rem', fontWeight: 700}}
-                        >
-                          <span>Bug reports</span>
-                          <span style={{background: unreadInboxCounts.bugs > 0 ? '#ef4444' : '#e2e8f0', color: unreadInboxCounts.bugs > 0 ? '#ffffff' : '#475569', borderRadius: '999px', minWidth: '24px', padding: '2px 8px', textAlign: 'center', fontWeight: 900}}>
-                            {unreadInboxCounts.bugs}
-                          </span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setNotificationMenuOpen(false);
-                            navigate('/admin/inbox?tab=features');
-                          }}
-                          style={{width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', padding: '12px 14px', background: 'none', border: 'none', borderBottom: '1px solid #e2e8f0', cursor: 'pointer', color: '#1e293b', textAlign: 'left', fontSize: '1rem', fontWeight: 700}}
-                        >
-                          <span>Feature requests</span>
-                          <span style={{background: unreadInboxCounts.features > 0 ? '#ef4444' : '#e2e8f0', color: unreadInboxCounts.features > 0 ? '#ffffff' : '#475569', borderRadius: '999px', minWidth: '24px', padding: '2px 8px', textAlign: 'center', fontWeight: 900}}>
-                            {unreadInboxCounts.features}
-                          </span>
-                        </button>
-                      </>
                     )}
                     {unreadBugReplyCount > 0 && (
                       <button

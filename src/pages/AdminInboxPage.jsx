@@ -185,6 +185,7 @@ export default function AdminInboxPage() {
       } else if (table === 'feature_requests') {
         setFeatureRequests((current) => current.map((f) => (f.id === id ? { ...f, status } : f)));
       }
+      window.dispatchEvent(new Event('sailing:admin-inbox-updated'));
     } catch (err) {
       console.error('Error updating status:', err);
     } finally {

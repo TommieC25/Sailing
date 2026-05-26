@@ -110,6 +110,8 @@ export default function ProfilePage() {
   useEffect(() => {
     const fetchBoats = async () => {
       if (!user || profile?.user_type !== 'owner') {
+        setBoatId(null);
+        setBoats([]);
         return;
       }
       try {
@@ -160,6 +162,70 @@ export default function ProfilePage() {
   const handleBoatChange = (e) => {
     const { name, value } = e.target;
     setBoatData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const saveBoat = async () => {
+    if (formData.user_type !== 'owner') {
+      setBoatId(null);
+      setBoats([]);
+      setBoatData({
+        name: '',
+        brand_model_color: '',
+        size_ft: '',
+        capacity: '',
+        mooring_location: '',
+      });
+      return;
+    }
+
+    if (!boatData.name.trim()) {
+      throw new Error('Please enter your boat name');
+    }
+
+    const capacity = parseInt(boatData.capacity, 10);
+    if (!Number.isInteger(capacity) || capacity < 1) {
+      throw new Error('Please enter your boat capacity');
+    }
+
+    const sizeFt = boatData.size_ft ? parseInt(boatData.size_ft, 10) : null;
+    if (boatData.size_ft && (!Number.isInteger(sizeFt) || sizeFt < 1)) {
+      throw new Error('Please enter a valid boat size');
+    }
+
+    const parts = boatData.brand_model_color.split('/').map(s => s.trim());
+    const boatPayload = {
+      owner_id: user.id,
+      name: boatData.name,
+      brand: parts[0] || null,
+      model: parts[1] || null,
+      color: parts[2] || null,
+      size_ft: sizeFt,
+      capacity,
+      mooring_location: boatData.mooring_location || null,
+    };
+
+    if (boatId) {
+      const { data, error } = await supabase
+        .from('boats')
+        .update(boatPayload)
+        .eq('id', boatId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      setBoats([data]);
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('boats')
+      .insert([boatPayload])
+      .select()
+      .single();
+
+    if (error) throw error;
+    setBoatId(data.id);
+    setBoats([data]);
   };
 
   const handlePhotoUpload = async (e) => {
@@ -243,21 +309,7 @@ export default function ProfilePage() {
 
       await updateProfile(updateData);
 
-      if (profile?.user_type === 'owner' && boatId) {
-        const parts = boatData.brand_model_color.split('/').map(s => s.trim());
-        await supabase
-          .from('boats')
-          .update({
-            name: boatData.name,
-            brand: parts[0] || null,
-            model: parts[1] || null,
-            color: parts[2] || null,
-            size_ft: boatData.size_ft ? parseInt(boatData.size_ft) : null,
-            capacity: parseInt(boatData.capacity) || 1,
-            mooring_location: boatData.mooring_location || null,
-          })
-          .eq('id', boatId);
-      }
+      await saveBoat();
 
       setMessage('Profile updated successfully!');
       setEditMode(false);
@@ -477,7 +529,7 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {profile?.user_type === 'owner' && (
+            {formData.user_type === 'owner' && (
               <div style={styles.section}>
                 <div style={{fontSize: '1.25rem', fontWeight: 900, color: '#1e293b', marginBottom: '1.5rem', paddingBottom: '12px', borderBottom: '2px solid #e0f2fe'}}>Boat Information</div>
 

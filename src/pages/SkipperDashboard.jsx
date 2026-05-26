@@ -310,7 +310,13 @@ export default function SkipperDashboard() {
                                   <div style={styles.photoPlaceholder}>📷</div>
                                 )}
                                 <div>
-                                  <p style={styles.requestName}>{req.crew?.full_name}</p>
+                                  <button
+                                    type="button"
+                                    onClick={() => navigate(`/profile/${req.crew_id}?returnTo=${encodeURIComponent('/skipper-dashboard')}`)}
+                                    style={{...styles.requestName, background: 'none', border: 'none', padding: 0, color: '#0369a1', cursor: 'pointer', textAlign: 'left'}}
+                                  >
+                                    {req.crew?.full_name || 'View profile'}
+                                  </button>
                                   <p style={styles.requestSkill}>{req.crew?.sailing_experience} sailor</p>
                                   {req.crew?.bio && <p style={styles.requestBio}>{req.crew.bio}</p>}
                                 </div>
@@ -364,7 +370,13 @@ export default function SkipperDashboard() {
                                 <div style={{...styles.photoPlaceholder, width: '48px', height: '48px'}}>📷</div>
                               )}
                               <div>
-                                <p style={styles.approvedName}>{req.crew?.full_name}</p>
+                                <button
+                                  type="button"
+                                  onClick={() => navigate(`/profile/${req.crew_id}?returnTo=${encodeURIComponent('/skipper-dashboard')}`)}
+                                  style={{...styles.approvedName, background: 'none', border: 'none', padding: 0, color: '#0369a1', cursor: 'pointer', textAlign: 'left'}}
+                                >
+                                  {req.crew?.full_name || 'View profile'}
+                                </button>
                                 <p style={styles.approvedSkill}>{req.crew?.sailing_experience} sailor</p>
                               </div>
                             </div>
@@ -378,7 +390,14 @@ export default function SkipperDashboard() {
                         <h4 style={styles.sectionTitle}>Declined ({declined.length})</h4>
                         <div>
                           {declined.map((req) => (
-                            <p key={req.id} style={styles.declinedText}>{req.crew?.full_name}</p>
+                            <button
+                              key={req.id}
+                              type="button"
+                              onClick={() => navigate(`/profile/${req.crew_id}?returnTo=${encodeURIComponent('/skipper-dashboard')}`)}
+                              style={{...styles.declinedText, background: 'none', border: 'none', padding: 0, color: '#0369a1', cursor: 'pointer', textAlign: 'left'}}
+                            >
+                              {req.crew?.full_name || 'View profile'}
+                            </button>
                           ))}
                         </div>
                       </div>

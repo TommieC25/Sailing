@@ -305,11 +305,21 @@ const AdminDashboard = () => {
     goToTab('activity');
   };
 
-  const renderDataCard = ({ key, title, meta, details, action }) => (
+  const renderDataCard = ({ key, title, meta, details, action, onTitleClick }) => (
     <div key={key} style={{ background: '#ffffff', padding: '16px', marginBottom: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', flexWrap: 'wrap' }}>
         <div style={{ minWidth: 0, flex: '1 1 240px' }}>
-          <h3 style={{ margin: '0 0 6px', color: '#0f172a', fontSize: '1.05rem', fontWeight: 900 }}>{title}</h3>
+          {onTitleClick ? (
+            <button
+              type="button"
+              onClick={onTitleClick}
+              style={{ margin: '0 0 6px', color: '#0369a1', fontSize: '1.05rem', fontWeight: 900, background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left' }}
+            >
+              {title}
+            </button>
+          ) : (
+            <h3 style={{ margin: '0 0 6px', color: '#0f172a', fontSize: '1.05rem', fontWeight: 900 }}>{title}</h3>
+          )}
           {meta && <p style={{ margin: '0 0 6px', color: '#334155', fontWeight: 700, fontSize: '0.92rem' }}>{meta}</p>}
           {details && <p style={{ margin: 0, color: '#64748b', fontWeight: 600, fontSize: '0.9rem', lineHeight: 1.45 }}>{details}</p>}
         </div>
@@ -528,7 +538,7 @@ const AdminDashboard = () => {
                   {users.map((u) => (
                     <tr key={u.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
                       <td style={{ padding: '12px' }}>
-                        <button onClick={() => setSelectedUser(u)} style={{ background: 'none', border: 'none', color: '#0369a1', cursor: 'pointer', fontWeight: 700 }}>
+                        <button onClick={() => navigate(`/profile/${u.id}?returnTo=${encodeURIComponent('/admin/dashboard')}`)} style={{ background: 'none', border: 'none', color: '#0369a1', cursor: 'pointer', fontWeight: 700 }}>
                           {u.full_name || 'Unknown'}
                         </button>
                       </td>
@@ -540,6 +550,9 @@ const AdminDashboard = () => {
                       </td>
                       <td style={{ padding: '12px', fontSize: '0.9rem', color: '#666' }}>{new Date(u.created_at).toLocaleDateString()}</td>
                       <td style={{ padding: '12px', fontSize: '0.9rem' }}>
+                        <button onClick={() => setSelectedUser(u)} style={{ background: '#e0f2fe', color: '#0369a1', padding: '6px 12px', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 700, marginRight: '8px' }}>
+                          Details
+                        </button>
                         {u.role !== 'admin' && (
                           <button onClick={() => handleMakeAdmin(u.id)} style={{ background: '#fbbf24', color: '#000', padding: '6px 12px', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}>
                             Make Admin
@@ -593,8 +606,9 @@ const AdminDashboard = () => {
                   boat.capacity ? `${boat.capacity} capacity` : null,
                   boat.mooring_location ? `Mooring: ${boat.mooring_location}` : null,
                 ].filter(Boolean).join(' • ') || 'No boat details entered',
+                onTitleClick: boat.owner_id ? () => navigate(`/profile/${boat.owner_id}?returnTo=${encodeURIComponent('/admin/dashboard')}`) : null,
                 action: boat.owner_id ? (
-                  <button type="button" onClick={() => navigate(`/profile/${boat.owner_id}`)} style={{ padding: '8px 12px', borderRadius: '8px', border: 'none', background: '#0369a1', color: '#ffffff', fontWeight: 900, cursor: 'pointer' }}>
+                  <button type="button" onClick={() => navigate(`/profile/${boat.owner_id}?returnTo=${encodeURIComponent('/admin/dashboard')}`)} style={{ padding: '8px 12px', borderRadius: '8px', border: 'none', background: '#0369a1', color: '#ffffff', fontWeight: 900, cursor: 'pointer' }}>
                     Owner Profile
                   </button>
                 ) : null,
@@ -613,6 +627,7 @@ const AdminDashboard = () => {
               outings.map((outing) => renderDataCard({
                 key: outing.id,
                 title: outing.title || 'Untitled outing',
+                onTitleClick: () => navigate(`/outing/${outing.id}`),
                 meta: `Skipper: ${outing.users?.full_name || 'Unknown skipper'}${outing.users?.email ? ` • ${outing.users.email}` : ''}`,
                 details: [
                   outing.outing_date ? `Date: ${outing.outing_date}` : null,
@@ -622,9 +637,16 @@ const AdminDashboard = () => {
                   `${outing.capacity_available ?? 0} crew spots`,
                 ].filter(Boolean).join(' • '),
                 action: (
-                  <button type="button" onClick={() => navigate(`/outing/${outing.id}`)} style={{ padding: '8px 12px', borderRadius: '8px', border: 'none', background: '#0369a1', color: '#ffffff', fontWeight: 900, cursor: 'pointer' }}>
-                    Details
-                  </button>
+                  <div style={{display: 'flex', gap: '8px', flexWrap: 'wrap'}}>
+                    {outing.skipper_id && (
+                      <button type="button" onClick={() => navigate(`/profile/${outing.skipper_id}?returnTo=${encodeURIComponent('/admin/dashboard')}`)} style={{ padding: '8px 12px', borderRadius: '8px', border: 'none', background: '#e0f2fe', color: '#0369a1', fontWeight: 900, cursor: 'pointer' }}>
+                        Skipper
+                      </button>
+                    )}
+                    <button type="button" onClick={() => navigate(`/outing/${outing.id}`)} style={{ padding: '8px 12px', borderRadius: '8px', border: 'none', background: '#0369a1', color: '#ffffff', fontWeight: 900, cursor: 'pointer' }}>
+                      Outing
+                    </button>
+                  </div>
                 ),
               }))
             )}
@@ -641,17 +663,27 @@ const AdminDashboard = () => {
               crewRequests.map((request) => renderDataCard({
                 key: request.id,
                 title: `${request.status || 'unknown'} request for ${request.outings?.title || 'unknown outing'}`,
+                onTitleClick: request.outing_id ? () => navigate(`/outing/${request.outing_id}`) : null,
                 meta: `Crew: ${request.users?.full_name || 'Unknown member'}${request.users?.email ? ` • ${request.users.email}` : ''}`,
                 details: [
                   request.users?.user_type ? `Type: ${request.users.user_type}` : null,
                   request.requested_at ? `Requested: ${new Date(request.requested_at).toLocaleString()}` : null,
                   request.responded_at ? `Responded: ${new Date(request.responded_at).toLocaleString()}` : null,
                 ].filter(Boolean).join(' • '),
-                action: request.outing_id ? (
-                  <button type="button" onClick={() => navigate(`/outing/${request.outing_id}`)} style={{ padding: '8px 12px', borderRadius: '8px', border: 'none', background: '#0369a1', color: '#ffffff', fontWeight: 900, cursor: 'pointer' }}>
-                    Outing
-                  </button>
-                ) : null,
+                action: (
+                  <div style={{display: 'flex', gap: '8px', flexWrap: 'wrap'}}>
+                    {request.crew_id && (
+                      <button type="button" onClick={() => navigate(`/profile/${request.crew_id}?returnTo=${encodeURIComponent('/admin/dashboard')}`)} style={{ padding: '8px 12px', borderRadius: '8px', border: 'none', background: '#e0f2fe', color: '#0369a1', fontWeight: 900, cursor: 'pointer' }}>
+                        Crew
+                      </button>
+                    )}
+                    {request.outing_id && (
+                      <button type="button" onClick={() => navigate(`/outing/${request.outing_id}`)} style={{ padding: '8px 12px', borderRadius: '8px', border: 'none', background: '#0369a1', color: '#ffffff', fontWeight: 900, cursor: 'pointer' }}>
+                        Outing
+                      </button>
+                    )}
+                  </div>
+                ),
               }))
             )}
           </div>

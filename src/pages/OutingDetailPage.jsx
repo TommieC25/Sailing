@@ -59,6 +59,7 @@ const styles = {
   crewPhoto: { width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 },
   crewPhotoPlaceholder: { width: '40px', height: '40px', borderRadius: '50%', background: '#e5e7eb', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem' },
   crewNameLink: { textDecoration: 'none', color: '#0369a1', fontWeight: 600, cursor: 'pointer', fontSize: '1rem' },
+  profileLinkButton: { background: 'none', border: 'none', padding: 0, color: '#0369a1', fontWeight: 900, cursor: 'pointer', fontSize: '1rem', textAlign: 'left' },
   crewGender: { color: '#6b7280', fontSize: '0.875rem', marginLeft: 'auto' },
   chatSection: { borderTop: '1px solid #e5e7eb', paddingTop: '24px', marginTop: '24px' },
   chatMessages: { background: '#f9fafb', borderRadius: '8px', padding: '16px', height: '300px', overflowY: 'auto', marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '12px' },
@@ -432,7 +433,11 @@ export default function OutingDetailPage() {
         </div>
 
         {/* Skipper */}
-        <div style={{background: '#ffffff', border: '2px solid #e5e7eb', borderRadius: '8px', padding: '20px', marginBottom: '24px', display: 'flex', gap: '16px', alignItems: 'center'}}>
+        <button
+          type="button"
+          onClick={() => navigate(`/profile/${outing.skipper_id}?returnTo=${encodeURIComponent(`/outing/${id}`)}`)}
+          style={{background: '#ffffff', border: '2px solid #e5e7eb', borderRadius: '8px', padding: '20px', marginBottom: '24px', display: 'flex', gap: '16px', alignItems: 'center', width: '100%', textAlign: 'left', cursor: 'pointer'}}
+        >
           {skipper?.photo_url ? (
             <img src={skipper.photo_url} alt={skipper.full_name} style={{width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0}} />
           ) : (
@@ -446,7 +451,7 @@ export default function OutingDetailPage() {
             )}
             {skipper?.bio && <p style={{fontSize: '0.875rem', color: '#475569', margin: '6px 0 0 0'}}>{skipper.bio}</p>}
           </div>
-        </div>
+        </button>
 
         {/* Description */}
         {outing.description && (
@@ -556,7 +561,13 @@ export default function OutingDetailPage() {
                       <div style={styles.requestPhotoPlaceholder}>📷</div>
                     )}
                     <div style={styles.requestInfo}>
-                      <p style={styles.requestName}>{req.crew?.full_name}</p>
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/profile/${req.crew_id}?returnTo=${encodeURIComponent(`/outing/${id}`)}`)}
+                        style={styles.profileLinkButton}
+                      >
+                        {req.crew?.full_name || 'View profile'}
+                      </button>
                       <p style={styles.requestSkill}>{req.crew?.sailing_experience} sailor</p>
                       {req.crew?.bio && <p style={styles.requestBio}>{req.crew.bio}</p>}
                       <p style={styles.requestDate}>Requested: {new Date(req.requested_at).toLocaleDateString()}</p>

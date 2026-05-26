@@ -98,37 +98,49 @@ export default function OutingDetailPage() {
           .from('outings')
           .select('*')
           .eq('id', id)
-          .single();
+          .maybeSingle();
 
         if (outingError) throw outingError;
+        if (!outingData) throw new Error('Outing not found');
         setOuting(outingData);
 
         const { data: skipperData, error: skipperError } = await supabase
           .from('public_profiles')
           .select('id, full_name, photo_url, bio, sailing_experience')
           .eq('id', outingData.skipper_id)
-          .single();
+          .maybeSingle();
 
         if (skipperError) throw skipperError;
-        setSkipper(skipperData);
+        setSkipper(skipperData || {
+          id: outingData.skipper_id,
+          full_name: 'Skipper profile unavailable',
+        });
 
         const { data: boatData, error: boatError } = await supabase
           .from('boats')
           .select('*')
           .eq('id', outingData.boat_id)
-          .single();
+          .maybeSingle();
 
         if (boatError) throw boatError;
-        setBoat(boatData);
+        setBoat(boatData || {
+          id: outingData.boat_id,
+          name: 'Boat details unavailable',
+          size_ft: null,
+          capacity: null,
+        });
 
         if (user) {
-          const { data: requestData } = await supabase
+          const { data: requestData, error: requestError } = await supabase
             .from('crew_requests')
             .select('*')
             .eq('outing_id', id)
             .eq('crew_id', user.id)
-            .single();
+            .order('requested_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
 
+          if (requestError) throw requestError;
           setCrewRequest(requestData || null);
 
           if (user.id === outingData.skipper_id) {
@@ -206,7 +218,7 @@ export default function OutingDetailPage() {
           user: messageUserById[msg.user_id] || null,
         })));
       } catch (err) {
-        setError(err.message);
+        setError(err.message || 'Could not load outing details');
       } finally {
         setLoading(false);
       }
@@ -234,7 +246,7 @@ export default function OutingDetailPage() {
       if (error) throw error;
       setCrewRequest(data);
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Failed to submit crew request');
     } finally {
       setSubmitting(false);
     }
@@ -401,15 +413,15 @@ export default function OutingDetailPage() {
           <p style={{fontSize: '1.125rem', fontWeight: 900, color: '#0c2340', margin: '0 0 12px 0', paddingBottom: '12px', borderBottom: '2px solid #e0f2fe'}}>🚢 Boat</p>
           <div>
             <p style={styles.detailLabel}>Name</p>
-            <p style={styles.detailValue}>{boat.name}</p>
+            <p style={styles.detailValue}>{boat.name || 'Boat details unavailable'}</p>
           </div>
           <div>
             <p style={styles.detailLabel}>Size</p>
-            <p style={styles.detailValue}>{boat.size_ft} ft</p>
+            <p style={styles.detailValue}>{boat.size_ft ? `${boat.size_ft} ft` : 'Not listed'}</p>
           </div>
           <div>
             <p style={styles.detailLabel}>Total Capacity</p>
-            <p style={styles.detailValue}>{boat.capacity} people</p>
+            <p style={styles.detailValue}>{boat.capacity ? `${boat.capacity} people` : 'Not listed'}</p>
           </div>
           {boat.mooring_location && (
             <div>
@@ -429,7 +441,9 @@ export default function OutingDetailPage() {
           <div>
             <p style={{fontSize: '1.125rem', fontWeight: 900, color: '#1e293b', margin: '0 0 4px 0'}}>⛵ Skipper</p>
             <p style={{fontSize: '1rem', color: '#1e293b', fontWeight: 600, margin: '0 0 2px 0'}}>{skipper?.full_name}</p>
-            <p style={{fontSize: '0.875rem', color: '#64748b', margin: 0, textTransform: 'capitalize'}}>{skipper?.sailing_experience} sailor</p>
+            {skipper?.sailing_experience && (
+              <p style={{fontSize: '0.875rem', color: '#64748b', margin: 0, textTransform: 'capitalize'}}>{skipper.sailing_experience} sailor</p>
+            )}
             {skipper?.bio && <p style={{fontSize: '0.875rem', color: '#475569', margin: '6px 0 0 0'}}>{skipper.bio}</p>}
           </div>
         </div>

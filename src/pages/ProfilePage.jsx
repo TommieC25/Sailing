@@ -62,7 +62,7 @@ export default function ProfilePage() {
             .from('public_profiles')
             .select('id, full_name, photo_url, gender, bio, sailing_experience, user_type')
             .eq('id', profileId)
-            .single();
+            .maybeSingle();
 
           if (error) throw error;
           setViewedProfile(data);

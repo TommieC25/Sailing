@@ -407,7 +407,13 @@ export default function BugReportPage() {
             {myReports.map((report) => (
               <div key={report.id} style={styles.reportCard}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', marginBottom: '8px' }}>
-                  <h3 style={{ fontSize: '1rem', fontWeight: 900, color: '#1e293b', margin: 0 }}>{report.title}</h3>
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/bug-report/${report.id}?returnTo=${encodeURIComponent('/bug-report')}`)}
+                    style={{ fontSize: '1rem', fontWeight: 900, color: '#0369a1', margin: 0, background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left' }}
+                  >
+                    {report.title}
+                  </button>
                   <span style={{ background: report.status === 'resolved' ? '#dcfce7' : '#fef3c7', color: report.status === 'resolved' ? '#166534' : '#92400e', borderRadius: '999px', padding: '4px 8px', fontSize: '0.75rem', fontWeight: 900, textTransform: 'capitalize' }}>
                     {report.status}
                   </span>
@@ -421,6 +427,13 @@ export default function BugReportPage() {
                     View screenshot
                   </a>
                 )}
+                <button
+                  type="button"
+                  onClick={() => navigate(`/bug-report/${report.id}?returnTo=${encodeURIComponent('/bug-report')}`)}
+                  style={{ display: 'block', marginTop: '10px', background: '#e0f2fe', color: '#0369a1', border: '1px solid #0369a1', borderRadius: '8px', padding: '10px 12px', fontWeight: 900, cursor: 'pointer' }}
+                >
+                  Open conversation
+                </button>
                 {(report.replies || []).map((reply) => (
                   <div key={reply.id} style={styles.replyCard}>
                     <p style={{ margin: '0 0 4px 0', color: '#0c2340', fontWeight: 900 }}>

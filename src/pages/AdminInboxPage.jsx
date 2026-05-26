@@ -50,10 +50,6 @@ export default function AdminInboxPage() {
   const [featureRequests, setFeatureRequests] = useState([]);
   const [loading, setLoading] = useState(false);
   const [updating, setUpdating] = useState(null);
-  const [replyDrafts, setReplyDrafts] = useState({});
-  const [sendingReply, setSendingReply] = useState(null);
-  const [replyError, setReplyError] = useState('');
-  const [replySuccess, setReplySuccess] = useState('');
   const isAdmin = profile?.role === 'admin';
 
   const attachSubmitters = async (items) => {
@@ -193,54 +189,6 @@ export default function AdminInboxPage() {
     }
   };
 
-  const replyDraftFor = (bugId) => replyDrafts[bugId] ?? 'Please tell me more... ';
-
-  const sendBugReply = async (bug) => {
-    const message = replyDraftFor(bug.id).trim();
-    if (!message) return;
-
-    try {
-      setReplyError('');
-      setReplySuccess('');
-      setSendingReply(bug.id);
-      const { data, error } = await supabase
-        .from('bug_report_replies')
-        .insert({
-          bug_report_id: bug.id,
-          sender_id: user.id,
-          message,
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      setBugReports((current) => current.map((report) => (
-        report.id === bug.id
-          ? {
-              ...report,
-              status: report.status === 'open' ? 'in_progress' : report.status,
-              replies: [
-                ...(report.replies || []),
-                { ...data, sender: { id: user.id, full_name: profile?.full_name || 'Admin' } },
-              ],
-            }
-          : report
-      )));
-      setReplyDrafts((current) => ({ ...current, [bug.id]: 'Please tell me more... ' }));
-
-      if (bug.status === 'open') {
-        await updateStatus('bug_reports', bug.id, 'in_progress');
-      }
-      setReplySuccess(`Reply sent for "${bug.title}".`);
-    } catch (err) {
-      console.error('Error sending reply:', err);
-      setReplyError(err.message || 'Failed to send in-app reply');
-    } finally {
-      setSendingReply(null);
-    }
-  };
-
   if (loading) {
     return (
       <div style={styles.container}>
@@ -288,9 +236,19 @@ export default function AdminInboxPage() {
         }}
       >
         <div style={styles.itemHeader}>
-          <h3 style={styles.itemTitle}>
-            {icon} {isMessage ? item.subject : isBug ? item.title : item.title}
-          </h3>
+          {isBug ? (
+            <button
+              type="button"
+              onClick={() => navigate(`/bug-report/${item.id}?returnTo=${encodeURIComponent('/admin/inbox?tab=bugs')}`)}
+              style={{ ...styles.itemTitle, color: '#0369a1', background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left' }}
+            >
+              {icon} {item.title}
+            </button>
+          ) : (
+            <h3 style={styles.itemTitle}>
+              {icon} {isMessage ? item.subject : item.title}
+            </h3>
+          )}
           <span
             style={{
               ...styles.itemBadge,
@@ -316,37 +274,13 @@ export default function AdminInboxPage() {
           </p>
         )}
         {isBug && (
-          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px', marginBottom: '14px', display: 'grid', gap: '10px' }}>
-            <p style={{ margin: 0, color: '#0f172a', fontWeight: 900 }}>In-app replies</p>
-            {(item.replies || []).length === 0 ? (
-              <p style={{ margin: 0, color: '#64748b', fontWeight: 600 }}>No replies yet.</p>
-            ) : (
-              <div style={{ display: 'grid', gap: '8px' }}>
-                {(item.replies || []).map((reply) => (
-                  <div key={reply.id} style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '10px' }}>
-                    <p style={{ margin: '0 0 4px', color: '#334155', fontWeight: 900 }}>
-                      {reply.sender?.full_name || 'Member'} · {new Date(reply.created_at).toLocaleString()}
-                    </p>
-                    <p style={{ margin: 0, color: '#475569', whiteSpace: 'pre-wrap', lineHeight: 1.45 }}>{reply.message}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-            <textarea
-              value={replyDraftFor(item.id)}
-              onChange={(e) => setReplyDrafts((current) => ({ ...current, [item.id]: e.target.value }))}
-              rows={3}
-              style={{ width: '100%', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '10px', fontFamily: 'inherit', fontSize: '0.95rem', resize: 'vertical' }}
-            />
-            <button
-              type="button"
-              onClick={() => sendBugReply(item)}
-              disabled={sendingReply === item.id || !replyDraftFor(item.id).trim()}
-              style={{ padding: '10px 12px', border: 'none', borderRadius: '8px', background: '#0369a1', color: '#ffffff', fontSize: '0.95rem', fontWeight: 900, cursor: sendingReply === item.id ? 'wait' : 'pointer', opacity: sendingReply === item.id || !replyDraftFor(item.id).trim() ? 0.65 : 1 }}
-            >
-              {sendingReply === item.id ? 'Sending...' : 'Send in-app reply'}
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => navigate(`/bug-report/${item.id}?returnTo=${encodeURIComponent('/admin/inbox?tab=bugs')}`)}
+            style={{ width: '100%', padding: '12px 14px', border: 'none', borderRadius: '8px', background: '#0369a1', color: '#ffffff', fontSize: '1rem', fontWeight: 900, cursor: 'pointer', marginBottom: '14px' }}
+          >
+            Open full conversation
+          </button>
         )}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
           <p style={styles.itemUser}>
@@ -411,9 +345,6 @@ export default function AdminInboxPage() {
           {messages.length} messages • {bugReports.length} bug reports • {featureRequests.length} feature requests
         </p>
       </div>
-
-      {replyError && <div style={styles.errorBox}>{replyError}</div>}
-      {replySuccess && <div style={styles.successBox}>{replySuccess}</div>}
 
       <div style={styles.tabs}>
         {tabs.map((tab) => (

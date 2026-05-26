@@ -9,6 +9,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import AdminInboxPage from './pages/AdminInboxPage';
 import CreateOutingPage from './pages/CreateOutingPage';
 import BugReportPage from './pages/BugReportPage';
+import BugReportThreadPage from './pages/BugReportThreadPage';
 import FeatureRequestPage from './pages/FeatureRequestPage';
 import ContactAdminPage from './pages/ContactAdminPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
@@ -122,6 +123,7 @@ function App() {
           <Route path="/skipper-dashboard" element={<ProtectedRoute><SkipperDashboard /></ProtectedRoute>} />
           <Route path="/create-outing" element={<ProtectedRoute><CreateOutingPage /></ProtectedRoute>} />
           <Route path="/bug-report" element={<ProtectedRoute><BugReportPage /></ProtectedRoute>} />
+          <Route path="/bug-report/:id" element={<ProtectedRoute><BugReportThreadPage /></ProtectedRoute>} />
           <Route path="/feature-request" element={<ProtectedRoute><FeatureRequestPage /></ProtectedRoute>} />
           <Route path="/contact-admin" element={<ProtectedRoute><ContactAdminPage /></ProtectedRoute>} />
           <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />

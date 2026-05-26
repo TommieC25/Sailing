@@ -22,7 +22,6 @@ const AdminDashboard = () => {
   const [recentActivity, setRecentActivity] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedUser, setSelectedUser] = useState(null);
   const [newAnnouncementTitle, setNewAnnouncementTitle] = useState('');
   const [newAnnouncementMessage, setNewAnnouncementMessage] = useState('');
 
@@ -349,7 +348,7 @@ const AdminDashboard = () => {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '12px', flexWrap: 'wrap', marginBottom: '8px' }}>
                   <button
                     type="button"
-                    onClick={() => openFeedback(type, item)}
+                    onClick={() => type === 'bugs' ? navigate(`/bug-report/${item.id}?returnTo=${encodeURIComponent('/admin/dashboard')}`) : openFeedback(type, item)}
                     style={{ minWidth: 0, flex: '1 1 240px', textAlign: 'left', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
                   >
                     <h4 style={{ margin: 0, fontWeight: 900, color: '#0369a1', fontSize: '1.05rem' }}>{feedbackTitle(type, item)}</h4>
@@ -373,18 +372,18 @@ const AdminDashboard = () => {
                     </select>
                     <button
                       type="button"
-                      onClick={() => openFeedback(type, item)}
+                      onClick={() => type === 'bugs' ? navigate(`/bug-report/${item.id}?returnTo=${encodeURIComponent('/admin/dashboard')}`) : openFeedback(type, item)}
                       style={{ padding: '8px 12px', borderRadius: '6px', border: 'none', background: '#0369a1', color: '#ffffff', fontWeight: 900, cursor: 'pointer' }}
                     >
-                      {isSelected ? 'Open' : 'View'}
+                      {type === 'bugs' ? 'Open Thread' : isSelected ? 'Open' : 'View'}
                     </button>
                     {type === 'bugs' && (
                       <button
                         type="button"
-                        onClick={() => navigate(`/admin/inbox?tab=bugs&id=${item.id}`)}
+                        onClick={() => navigate(`/bug-report/${item.id}?returnTo=${encodeURIComponent('/admin/dashboard')}`)}
                         style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #0369a1', background: '#e0f2fe', color: '#0369a1', fontWeight: 900, cursor: 'pointer' }}
                       >
-                        Reply in Inbox
+                        Reply
                       </button>
                     )}
                   </div>
@@ -550,7 +549,7 @@ const AdminDashboard = () => {
                       </td>
                       <td style={{ padding: '12px', fontSize: '0.9rem', color: '#666' }}>{new Date(u.created_at).toLocaleDateString()}</td>
                       <td style={{ padding: '12px', fontSize: '0.9rem' }}>
-                        <button onClick={() => setSelectedUser(u)} style={{ background: '#e0f2fe', color: '#0369a1', padding: '6px 12px', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 700, marginRight: '8px' }}>
+                        <button onClick={() => navigate(`/profile/${u.id}?returnTo=${encodeURIComponent('/admin/dashboard')}`)} style={{ background: '#e0f2fe', color: '#0369a1', padding: '6px 12px', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 700, marginRight: '8px' }}>
                           Details
                         </button>
                         {u.role !== 'admin' && (
@@ -569,24 +568,6 @@ const AdminDashboard = () => {
                 </tbody>
               </table>
             </div>
-
-            {selectedUser && (
-              <div style={{ marginTop: '32px', background: '#ffffff', padding: '20px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: 900, marginBottom: '16px' }}>📋 User Details: {selectedUser.full_name}</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
-                  <div><strong>Email:</strong> {selectedUser.email}</div>
-                  <div><strong>Type:</strong> {selectedUser.user_type}</div>
-                  <div><strong>Experience:</strong> {selectedUser.sailing_experience || 'Not specified'}</div>
-                  <div><strong>Gender:</strong> {selectedUser.gender || 'Not specified'}</div>
-                  <div><strong>Phone:</strong> {selectedUser.phone || 'Not provided'}</div>
-                  <div><strong>Joined:</strong> {new Date(selectedUser.created_at).toLocaleDateString()}</div>
-                </div>
-                {selectedUser.bio && <div style={{ marginTop: '16px' }}><strong>Bio:</strong> {selectedUser.bio}</div>}
-                <button onClick={() => setSelectedUser(null)} style={{ marginTop: '16px', padding: '8px 16px', background: '#e5e7eb', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}>
-                  Close
-                </button>
-              </div>
-            )}
           </div>
         )}
 

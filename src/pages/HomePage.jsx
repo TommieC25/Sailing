@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
-import { formatLocalDate } from '../utils/dateUtils';
+import { formatLocalDate, todayLocalDateString } from '../utils/dateUtils';
 
 const HEADER_BG = 'linear-gradient(135deg, #0c2340 0%, #0369a1 100%)';
 
@@ -23,9 +23,9 @@ export default function HomePage() {
             *,
             boats (name, size_ft, capacity, owner_id)
           `)
-          .gte('outing_date', new Date().toISOString().split('T')[0])
+          .gte('outing_date', todayLocalDateString())
           .order('outing_date', { ascending: true })
-          .limit(50);
+          .order('outing_time', { ascending: true });
 
         if (err) throw err;
 
@@ -155,7 +155,7 @@ export default function HomePage() {
           <div style={{marginBottom: '32px'}}>
             <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '16px'}}>
               <h2 style={{fontSize: '1.5rem', fontWeight: 900, color: '#1e293b', margin: 0}}>
-                📋 Your Outings ({yourOutings.length})
+                📋 Your Upcoming Outings ({yourOutings.length})
               </h2>
               <Link to="/create-outing" style={{fontSize: '1rem', fontWeight: 900, color: '#0369a1', textDecoration: 'none'}}>+ New</Link>
             </div>
@@ -179,7 +179,7 @@ export default function HomePage() {
         {!loading && otherOutings.length > 0 && (
           <div>
             <h2 style={{fontSize: '1.5rem', fontWeight: 900, color: '#1e293b', marginBottom: '16px', margin: '0 0 16px 0'}}>
-              {isSkipper ? '⛵ Available Outings' : '⛵ Outings'}
+              {isSkipper ? '⛵ Other Upcoming Outings' : '⛵ Upcoming Outings'}
             </h2>
             <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '16px'}}>
               {otherOutings.map((outing) => (
@@ -192,7 +192,7 @@ export default function HomePage() {
         {!loading && outings.length === 0 && (
           <div style={{background: '#ffffff', border: '2px solid #dbeafe', borderRadius: '16px', padding: '32px', textAlign: 'center'}}>
             <p style={{fontSize: '3rem', margin: '0 0 16px 0'}}>⛵</p>
-            <p style={{fontSize: '1.5rem', fontWeight: 900, color: '#1e293b', margin: '0 0 8px 0'}}>No outings yet</p>
+            <p style={{fontSize: '1.5rem', fontWeight: 900, color: '#1e293b', margin: '0 0 8px 0'}}>No upcoming outings yet</p>
             <p style={{fontSize: '1.125rem', color: '#64748b', margin: 0}}>Check back soon as skippers post their upcoming sails!</p>
           </div>
         )}

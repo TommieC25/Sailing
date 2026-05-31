@@ -93,30 +93,30 @@ export default function HomePage() {
   const isSkipper = profile?.user_type === 'owner';
 
   return (
-    <div style={{marginLeft: '-16px', marginRight: '-16px', marginTop: '-24px'}}>
+    <div style={{marginLeft: '-10px', marginRight: '-10px', marginTop: '-16px'}}>
       {/* Header with greeting */}
-      <div style={{background: HEADER_BG, padding: '32px 20px', color: '#ffffff', marginBottom: '24px'}}>
-        <h1 style={{fontSize: '2rem', fontWeight: 900, margin: '0 0 4px 0'}}>Hello, {profile?.full_name || 'Sailor'}! 👋</h1>
-        <p style={{fontSize: '1.125rem', margin: 0, opacity: 0.95}}>
+      <div style={{background: HEADER_BG, padding: '20px 14px', color: '#ffffff', marginBottom: '16px'}}>
+        <h1 style={{fontSize: '1.55rem', fontWeight: 900, margin: '0 0 2px 0'}}>Hello, {profile?.full_name || 'Sailor'}! 👋</h1>
+        <p style={{fontSize: '1rem', margin: 0, opacity: 0.95}}>
           {isSkipper ? "Your outings are waiting for crew." : "Find your next adventure on the water."}
         </p>
       </div>
 
       {/* Main content with padding */}
-      <div style={{padding: '0 20px 40px 20px'}}>
+      <div style={{padding: '0 12px 24px 12px'}}>
 
         {/* Bio prompt - shown to users who haven't filled in their bio yet */}
         {profile && !profile.bio?.trim() && (
-          <div style={{background: '#fef3c7', border: '2px solid #f59e0b', borderRadius: '16px', padding: '20px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap'}}>
+          <div style={{background: '#fef3c7', border: '2px solid #f59e0b', borderRadius: '10px', padding: '14px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap'}}>
             <div style={{flex: 1, minWidth: '200px'}}>
-              <p style={{fontSize: '1.125rem', fontWeight: 900, color: '#78350f', margin: '0 0 4px 0'}}>👋 Welcome aboard, {profile.full_name?.split(' ')[0] || 'sailor'}!</p>
-              <p style={{fontSize: '1rem', color: '#92400e', margin: 0, fontWeight: 600, lineHeight: 1.4}}>
+              <p style={{fontSize: '1rem', fontWeight: 900, color: '#78350f', margin: '0 0 4px 0'}}>👋 Welcome aboard, {profile.full_name?.split(' ')[0] || 'sailor'}!</p>
+              <p style={{fontSize: '0.92rem', color: '#92400e', margin: 0, fontWeight: 600, lineHeight: 1.35}}>
                 Tell other sailors a bit about yourself — your experience, what you love about sailing, anything you'd want a skipper or crewmate to know.
               </p>
             </div>
             <Link
               to="/profile"
-              style={{background: '#0c2340', color: '#ffffff', padding: '12px 20px', borderRadius: '10px', fontWeight: 900, fontSize: '1rem', textDecoration: 'none', whiteSpace: 'nowrap'}}
+              style={{background: '#0c2340', color: '#ffffff', padding: '9px 14px', borderRadius: '8px', fontWeight: 900, fontSize: '0.95rem', textDecoration: 'none', whiteSpace: 'nowrap'}}
             >
               Add bio →
             </Link>
@@ -124,7 +124,7 @@ export default function HomePage() {
         )}
 
         {error && (
-          <div style={{background: '#fee2e2', border: '2px solid #dc2626', color: '#7f1d1d', padding: '16px', borderRadius: '12px', marginBottom: '24px', fontSize: '1rem', fontWeight: 600}}>
+          <div style={{background: '#fee2e2', border: '2px solid #dc2626', color: '#7f1d1d', padding: '12px', borderRadius: '10px', marginBottom: '16px', fontSize: '0.95rem', fontWeight: 600}}>
             {error}
           </div>
         )}
@@ -137,13 +137,13 @@ export default function HomePage() {
         )}
 
         {!loading && isSkipper && yourOutings.length === 0 && (
-          <div style={{background: '#ffffff', border: '2px solid #dbeafe', borderRadius: '16px', padding: '32px', textAlign: 'center', marginBottom: '32px'}}>
-            <p style={{fontSize: '3rem', margin: '0 0 16px 0'}}>🚢</p>
-            <p style={{fontSize: '1.5rem', fontWeight: 900, color: '#1e293b', margin: '0 0 8px 0'}}>No outings posted yet</p>
-            <p style={{fontSize: '1.125rem', color: '#64748b', margin: '0 0 24px 0'}}>Post your first outing to find crew and get sailing!</p>
+          <div style={{background: '#ffffff', border: '2px solid #dbeafe', borderRadius: '10px', padding: '20px', textAlign: 'center', marginBottom: '20px'}}>
+            <p style={{fontSize: '2rem', margin: '0 0 10px 0'}}>🚢</p>
+            <p style={{fontSize: '1.25rem', fontWeight: 900, color: '#1e293b', margin: '0 0 6px 0'}}>No outings posted yet</p>
+            <p style={{fontSize: '1rem', color: '#64748b', margin: '0 0 16px 0'}}>Post your first outing to find crew and get sailing!</p>
             <Link
               to="/create-outing"
-              style={{display: 'inline-block', background: '#06b6d4', color: '#ffffff', padding: '16px 32px', borderRadius: '12px', fontWeight: 900, fontSize: '1.125rem', textDecoration: 'none'}}
+              style={{display: 'inline-block', background: '#06b6d4', color: '#ffffff', padding: '11px 18px', borderRadius: '8px', fontWeight: 900, fontSize: '1rem', textDecoration: 'none'}}
             >
               + Post Outing
             </Link>
@@ -152,9 +152,9 @@ export default function HomePage() {
 
         {/* Your Outings (for skipper) */}
         {!loading && isSkipper && yourOutings.length > 0 && (
-          <div style={{marginBottom: '32px'}}>
-            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '16px'}}>
-              <h2 style={{fontSize: '1.5rem', fontWeight: 900, color: '#1e293b', margin: 0}}>
+          <div style={{marginBottom: '20px'}}>
+            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '10px', gap: '10px'}}>
+              <h2 style={{fontSize: '1.25rem', fontWeight: 900, color: '#1e293b', margin: 0}}>
                 📋 Your Upcoming Outings ({yourOutings.length})
               </h2>
               <Link to="/create-outing" style={{fontSize: '1rem', fontWeight: 900, color: '#0369a1', textDecoration: 'none'}}>+ New</Link>
@@ -162,12 +162,12 @@ export default function HomePage() {
             {yourOutings.some((outing) => outing.pendingCrewRequestCount > 0) && (
               <Link
                 to="/skipper-dashboard?show=pending"
-                style={{display: 'block', background: '#fef3c7', border: '2px solid #f59e0b', color: '#78350f', borderRadius: '12px', padding: '14px 16px', marginBottom: '16px', fontWeight: 900, textDecoration: 'none'}}
+                style={{display: 'block', background: '#fef3c7', border: '2px solid #f59e0b', color: '#78350f', borderRadius: '10px', padding: '10px 12px', marginBottom: '10px', fontWeight: 900, textDecoration: 'none'}}
               >
                 {yourOutings.reduce((total, outing) => total + outing.pendingCrewRequestCount, 0)} crew request pending
               </Link>
             )}
-            <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '16px'}}>
+            <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '10px'}}>
               {yourOutings.map((outing) => (
                 <OutingCard key={outing.id} outing={outing} isYours={true} />
               ))}
@@ -178,10 +178,10 @@ export default function HomePage() {
         {/* Other Outings */}
         {!loading && otherOutings.length > 0 && (
           <div>
-            <h2 style={{fontSize: '1.5rem', fontWeight: 900, color: '#1e293b', marginBottom: '16px', margin: '0 0 16px 0'}}>
+            <h2 style={{fontSize: '1.25rem', fontWeight: 900, color: '#1e293b', marginBottom: '10px', margin: '0 0 10px 0'}}>
               {isSkipper ? '⛵ Other Upcoming Outings' : '⛵ Upcoming Outings'}
             </h2>
-            <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '16px'}}>
+            <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '10px'}}>
               {otherOutings.map((outing) => (
                 <OutingCard key={outing.id} outing={outing} isYours={false} />
               ))}
@@ -190,10 +190,10 @@ export default function HomePage() {
         )}
 
         {!loading && outings.length === 0 && (
-          <div style={{background: '#ffffff', border: '2px solid #dbeafe', borderRadius: '16px', padding: '32px', textAlign: 'center'}}>
-            <p style={{fontSize: '3rem', margin: '0 0 16px 0'}}>⛵</p>
-            <p style={{fontSize: '1.5rem', fontWeight: 900, color: '#1e293b', margin: '0 0 8px 0'}}>No upcoming outings yet</p>
-            <p style={{fontSize: '1.125rem', color: '#64748b', margin: 0}}>Check back soon as skippers post their upcoming sails!</p>
+          <div style={{background: '#ffffff', border: '2px solid #dbeafe', borderRadius: '10px', padding: '20px', textAlign: 'center'}}>
+            <p style={{fontSize: '2rem', margin: '0 0 10px 0'}}>⛵</p>
+            <p style={{fontSize: '1.25rem', fontWeight: 900, color: '#1e293b', margin: '0 0 6px 0'}}>No upcoming outings yet</p>
+            <p style={{fontSize: '1rem', color: '#64748b', margin: 0}}>Check back soon as skippers post their upcoming sails!</p>
           </div>
         )}
       </div>
@@ -211,10 +211,10 @@ function OutingCard({ outing, isYours }) {
       to={`/outing/${outing.id}`}
       style={{display: 'block', textDecoration: 'none', color: 'inherit'}}
     >
-      <div style={{background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.1)'}}>
+      <div style={{background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '12px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.08)'}}>
         {/* Title and availability badge */}
-        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px', gap: '8px'}}>
-          <h3 style={{fontSize: '1.25rem', fontWeight: 900, color: '#1e293b', margin: 0}}>{outing.title}</h3>
+        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px', gap: '8px'}}>
+          <h3 style={{fontSize: '1.1rem', fontWeight: 900, color: '#1e293b', margin: 0}}>{outing.title}</h3>
           {availableSpots > 0 && !isYours && (
             <span style={{background: '#dcfce7', color: '#166534', padding: '4px 10px', borderRadius: '6px', fontSize: '0.875rem', fontWeight: 700, flexShrink: 0, whiteSpace: 'nowrap'}}>
               {availableSpots} spot{availableSpots !== 1 ? 's' : ''}
@@ -233,20 +233,20 @@ function OutingCard({ outing, isYours }) {
         </div>
 
         {/* Condensed info line */}
-        <div style={{fontSize: '0.95rem', color: '#64748b', marginBottom: '10px', fontWeight: 600, lineHeight: '1.4'}}>
+        <div style={{fontSize: '0.9rem', color: '#64748b', marginBottom: '8px', fontWeight: 600, lineHeight: '1.35'}}>
           <div>📅 {formatLocalDate(outing.outing_date, { weekday: 'short', month: 'short', day: 'numeric' })} at {outing.outing_time}</div>
           <div>🚢 {outing.boats?.name} ({outing.boats?.size_ft}ft) • 👤 {outing.skipper?.full_name || 'TBD'} • {filledSpots}/{totalSpots} crew</div>
         </div>
 
         {/* Description - condensed */}
         {outing.description && (
-          <p style={{color: '#64748b', margin: '0 0 10px 0', fontSize: '0.95rem', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden'}}>
+          <p style={{color: '#64748b', margin: '0 0 8px 0', fontSize: '0.9rem', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden'}}>
             {outing.description}
           </p>
         )}
 
         {/* Button - touch-friendly (44px minimum height) */}
-        <div style={{background: outing.pendingCrewRequestCount > 0 ? '#f59e0b' : '#06b6d4', color: outing.pendingCrewRequestCount > 0 ? '#111827' : '#ffffff', padding: '10px 16px', borderRadius: '8px', textAlign: 'center', fontWeight: 900, fontSize: '1rem', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+        <div style={{background: outing.pendingCrewRequestCount > 0 ? '#f59e0b' : '#06b6d4', color: outing.pendingCrewRequestCount > 0 ? '#111827' : '#ffffff', padding: '8px 12px', borderRadius: '8px', textAlign: 'center', fontWeight: 900, fontSize: '0.95rem', minHeight: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
           {outing.pendingCrewRequestCount > 0 ? 'Review Requests →' : 'View Details →'}
         </div>
       </div>

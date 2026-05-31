@@ -401,7 +401,7 @@ export default function Layout({ children }) {
       </nav>
 
       {/* Content */}
-      <main style={{flex: 1, width: '100%', maxWidth: APP_MAX_WIDTH, margin: '0 auto', padding: '24px 16px'}}>
+      <main style={{flex: 1, width: '100%', maxWidth: APP_MAX_WIDTH, margin: '0 auto', padding: '16px 10px'}}>
         {children}
       </main>
     </div>

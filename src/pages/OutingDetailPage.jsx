@@ -5,27 +5,27 @@ import { supabase } from '../utils/supabaseClient';
 import { formatLocalDate, isPastLocalDate } from '../utils/dateUtils';
 
 const styles = {
-  container: { display: 'grid', gap: '24px' },
-  backButton: { background: '#e0f2fe', border: '2px solid #0369a1', color: '#0369a1', fontSize: '1.125rem', fontWeight: 900, padding: '12px 16px', borderRadius: '8px', marginBottom: '16px', cursor: 'pointer', textDecoration: 'none', transition: 'all 0.2s' },
-  mainCard: { background: '#ffffff', borderRadius: '8px', boxShadow: '0 10px 15px rgba(0,0,0,0.1)', padding: '32px' },
-  header: { display: 'grid', gap: '16px', marginBottom: '24px' },
-  title: { fontSize: '1.875rem', fontWeight: 'bold', color: '#1f2937', margin: 0 },
-  statusBadge: { display: 'inline-block', padding: '8px 12px', borderRadius: '999px', fontSize: '0.875rem', fontWeight: 600, textTransform: 'capitalize', width: 'fit-content' },
+  container: { display: 'grid', gap: '12px' },
+  backButton: { background: '#e0f2fe', border: '2px solid #0369a1', color: '#0369a1', fontSize: '1rem', fontWeight: 900, padding: '9px 12px', borderRadius: '8px', marginBottom: '6px', cursor: 'pointer', textDecoration: 'none', transition: 'all 0.2s' },
+  mainCard: { background: '#ffffff', borderRadius: '8px', boxShadow: '0 6px 12px rgba(0,0,0,0.08)', padding: '16px' },
+  header: { display: 'grid', gap: '8px', marginBottom: '12px' },
+  title: { fontSize: '1.5rem', fontWeight: 'bold', color: '#1f2937', margin: 0 },
+  statusBadge: { display: 'inline-block', padding: '5px 9px', borderRadius: '999px', fontSize: '0.8rem', fontWeight: 600, textTransform: 'capitalize', width: 'fit-content' },
   grid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px', marginBottom: '32px' },
   section: { display: 'grid', gap: '12px' },
   sectionTitle: { fontSize: '1.25rem', fontWeight: 600, color: '#1f2937', margin: 0 },
   detailLabel: { fontSize: '0.875rem', color: '#6b7280' },
-  detailValue: { fontSize: '1.125rem', fontWeight: 500, color: '#1f2937' },
+  detailValue: { fontSize: '1rem', fontWeight: 500, color: '#1f2937' },
   skipperCard: { border: '1px solid #e5e7eb', borderRadius: '8px', padding: '16px' },
   skipperPhoto: { width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', marginBottom: '12px' },
   skipperPhotoPlaceholder: { width: '64px', height: '64px', borderRadius: '50%', background: '#e5e7eb', marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' },
   skipperName: { fontWeight: 600, color: '#1f2937', margin: '0 0 4px 0' },
   skipperSkill: { fontSize: '0.875rem', color: '#6b7280', marginBottom: '8px', textTransform: 'capitalize' },
   skipperBio: { fontSize: '0.875rem', color: '#374151', marginTop: '8px' },
-  crewRequestsSection: { borderTop: '1px solid #e5e7eb', paddingTop: '24px', marginTop: '24px' },
-  crewRequestsTitle: { fontSize: '1.5rem', fontWeight: 'bold', color: '#1f2937', marginBottom: '16px', margin: '0 0 16px 0' },
-  requestsList: { display: 'grid', gap: '16px' },
-  requestCard: { borderRadius: '8px', padding: '16px', display: 'flex', gap: '16px', alignItems: 'flex-start' },
+  crewRequestsSection: { borderTop: '1px solid #e5e7eb', paddingTop: '14px', marginTop: '14px' },
+  crewRequestsTitle: { fontSize: '1.25rem', fontWeight: 'bold', color: '#1f2937', marginBottom: '12px', margin: '0 0 12px 0' },
+  requestsList: { display: 'grid', gap: '10px' },
+  requestCard: { borderRadius: '8px', padding: '12px', display: 'flex', gap: '12px', alignItems: 'flex-start' },
   requestCardPending: { borderLeft: '4px solid #fbbf24', background: '#fffbeb' },
   requestCardApproved: { borderLeft: '4px solid #34d399', background: '#f0fdf4' },
   requestCardDeclined: { borderLeft: '4px solid #f87171', background: '#fef2f2' },
@@ -42,9 +42,9 @@ const styles = {
   statusText: { padding: '8px 12px', borderRadius: '8px', fontSize: '0.875rem', fontWeight: 'bold', textAlign: 'center' },
   statusApproved: { background: '#16a34a', color: '#ffffff' },
   statusDeclined: { background: '#dc2626', color: '#ffffff' },
-  joinSection: { borderTop: '1px solid #e5e7eb', paddingTop: '24px', marginTop: '24px' },
-  joinTitle: { fontSize: '1.25rem', fontWeight: 600, color: '#1f2937', marginBottom: '16px', margin: '0 0 16px 0' },
-  infoBox: { borderRadius: '8px', padding: '16px', border: '1px solid #e5e7eb' },
+  joinSection: { borderTop: '1px solid #e5e7eb', paddingTop: '14px', marginTop: '14px' },
+  joinTitle: { fontSize: '1.15rem', fontWeight: 600, color: '#1f2937', marginBottom: '12px', margin: '0 0 12px 0' },
+  infoBox: { borderRadius: '8px', padding: '12px', border: '1px solid #e5e7eb' },
   infoPending: { background: '#fef3c7', border: '1px solid #fcd34d' },
   infoApproved: { background: '#d1fae5', border: '1px solid #a7f3d0' },
   infoDeclined: { background: '#fee2e2', border: '1px solid #fecaca' },
@@ -54,23 +54,25 @@ const styles = {
   spinner: { width: '32px', height: '32px', borderRadius: '50%', border: '4px solid #e5e7eb', borderTopColor: '#0369a1', animation: 'spin 0.8s linear infinite' },
   errorBox: { background: '#fef2f2', border: '1px solid #fecaca', color: '#991b1b', padding: '16px', borderRadius: '8px' },
   noRequestsText: { color: '#6b7280' },
-  approvedCrewSection: { borderTop: '1px solid #e5e7eb', paddingTop: '24px', marginTop: '24px' },
-  crewMemberLine: { display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 0', borderBottom: '1px solid #f3f4f6' },
+  approvedCrewSection: { borderTop: '1px solid #e5e7eb', paddingTop: '14px', marginTop: '14px' },
+  crewMemberLine: { display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 0', borderBottom: '1px solid #f3f4f6' },
   crewPhoto: { width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 },
   crewPhotoPlaceholder: { width: '40px', height: '40px', borderRadius: '50%', background: '#e5e7eb', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem' },
   crewNameLink: { textDecoration: 'none', color: '#0369a1', fontWeight: 600, cursor: 'pointer', fontSize: '1rem' },
   profileLinkButton: { background: 'none', border: 'none', padding: 0, color: '#0369a1', fontWeight: 900, cursor: 'pointer', fontSize: '1rem', textAlign: 'left' },
-  crewGender: { color: '#6b7280', fontSize: '0.875rem', marginLeft: 'auto' },
-  chatSection: { borderTop: '1px solid #e5e7eb', paddingTop: '24px', marginTop: '24px' },
-  chatMessages: { background: '#f9fafb', borderRadius: '8px', padding: '16px', height: '300px', overflowY: 'auto', marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '12px' },
-  chatMessage: { padding: '12px 16px', borderRadius: '8px', maxWidth: '80%' },
+  crewMemberInfo: { flex: 1, minWidth: 0, display: 'grid', gap: '2px' },
+  crewMeta: { color: '#64748b', fontSize: '0.82rem', lineHeight: 1.3 },
+  messageBtn: { background: '#0c2340', color: '#ffffff', border: 'none', borderRadius: '8px', padding: '8px 10px', fontWeight: 900, cursor: 'pointer', fontSize: '0.85rem', flexShrink: 0 },
+  chatSection: { borderTop: '1px solid #e5e7eb', paddingTop: '14px', marginTop: '14px' },
+  chatMessages: { background: '#f9fafb', borderRadius: '8px', padding: '10px', height: '220px', overflowY: 'auto', marginBottom: '10px', display: 'flex', flexDirection: 'column', gap: '8px' },
+  chatMessage: { padding: '9px 12px', borderRadius: '8px', maxWidth: '80%' },
   chatMessageOwn: { background: '#06b6d4', color: '#ffffff', alignSelf: 'flex-end' },
   chatMessageOther: { background: '#e5e7eb', color: '#1f2937' },
   chatMessageAuthor: { fontSize: '0.75rem', fontWeight: 600, marginBottom: '4px', opacity: 0.8 },
   chatMessageText: { fontSize: '0.95rem', lineHeight: '1.4' },
   chatInput: { display: 'flex', gap: '8px' },
-  chatTextarea: { flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '0.95rem', fontFamily: 'inherit', resize: 'vertical', minHeight: '60px' },
-  chatSendBtn: { padding: '12px 16px', background: '#06b6d4', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', fontSize: '0.9rem', alignSelf: 'flex-end' },
+  chatTextarea: { flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '0.95rem', fontFamily: 'inherit', resize: 'vertical', minHeight: '48px' },
+  chatSendBtn: { padding: '10px 14px', background: '#06b6d4', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', fontSize: '0.9rem', alignSelf: 'flex-end' },
   calendarLink: { display: 'inline-block', fontSize: '0.9rem', fontWeight: 600, color: '#06b6d4', textDecoration: 'none', padding: '8px 12px', background: '#e0f2fe', borderRadius: '6px', marginTop: '12px' },
 };
 
@@ -381,10 +383,10 @@ export default function OutingDetailPage() {
         </div>
 
         {isSkipper && (
-          <div style={{marginBottom: '24px'}}>
+          <div style={{marginBottom: '12px'}}>
             <button
               onClick={handleDeleteOuting}
-              style={{background: '#dc2626', color: '#ffffff', padding: '12px 16px', borderRadius: '8px', fontSize: '1rem', fontWeight: 900, border: 'none', cursor: 'pointer', transition: 'all 0.2s'}}
+              style={{background: '#dc2626', color: '#ffffff', padding: '9px 12px', borderRadius: '8px', fontSize: '0.95rem', fontWeight: 900, border: 'none', cursor: 'pointer', transition: 'all 0.2s'}}
               onMouseEnter={(e) => e.target.style.background = '#b91c1c'}
               onMouseLeave={(e) => e.target.style.background = '#dc2626'}
             >
@@ -394,10 +396,10 @@ export default function OutingDetailPage() {
         )}
 
         {/* Key Info */}
-        <div style={{display: 'grid', gap: '24px', marginBottom: '32px'}}>
+        <div style={{display: 'grid', gap: '12px', marginBottom: '16px'}}>
           <div>
             <p style={styles.detailLabel}>📍 Location</p>
-            <p style={{...styles.detailValue, fontSize: '1.25rem', color: '#0c2340'}}>{outing.location}</p>
+            <p style={{...styles.detailValue, fontSize: '1.1rem', color: '#0c2340'}}>{outing.location}</p>
           </div>
 
           <div>
@@ -414,8 +416,8 @@ export default function OutingDetailPage() {
         </div>
 
         {/* Boat Information */}
-        <div style={{background: '#f0f9ff', border: '2px solid #bfdbfe', borderRadius: '8px', padding: '24px', marginBottom: '24px', display: 'grid', gap: '12px'}}>
-          <p style={{fontSize: '1.125rem', fontWeight: 900, color: '#0c2340', margin: '0 0 12px 0', paddingBottom: '12px', borderBottom: '2px solid #e0f2fe'}}>🚢 Boat</p>
+        <div style={{background: '#f0f9ff', border: '2px solid #bfdbfe', borderRadius: '8px', padding: '14px', marginBottom: '14px', display: 'grid', gap: '8px'}}>
+          <p style={{fontSize: '1.05rem', fontWeight: 900, color: '#0c2340', margin: '0 0 6px 0', paddingBottom: '8px', borderBottom: '2px solid #e0f2fe'}}>🚢 Boat</p>
           <div>
             <p style={styles.detailLabel}>Name</p>
             <p style={styles.detailValue}>{boat.name || 'Boat details unavailable'}</p>
@@ -440,12 +442,12 @@ export default function OutingDetailPage() {
         <button
           type="button"
           onClick={() => navigate(`/profile/${outing.skipper_id}?returnTo=${encodeURIComponent(`/outing/${id}`)}`)}
-          style={{background: '#ffffff', border: '2px solid #e5e7eb', borderRadius: '8px', padding: '20px', marginBottom: '24px', display: 'flex', gap: '16px', alignItems: 'center', width: '100%', textAlign: 'left', cursor: 'pointer'}}
+          style={{background: '#ffffff', border: '2px solid #e5e7eb', borderRadius: '8px', padding: '14px', marginBottom: '14px', display: 'flex', gap: '12px', alignItems: 'center', width: '100%', textAlign: 'left', cursor: 'pointer'}}
         >
           {skipper?.photo_url ? (
-            <img src={skipper.photo_url} alt={skipper.full_name} style={{width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0}} />
+            <img src={skipper.photo_url} alt={skipper.full_name} style={{width: '52px', height: '52px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0}} />
           ) : (
-            <div style={{width: '64px', height: '64px', borderRadius: '50%', background: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', flexShrink: 0}}>👤</div>
+            <div style={{width: '52px', height: '52px', borderRadius: '50%', background: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', flexShrink: 0}}>👤</div>
           )}
           <div>
             <p style={{fontSize: '1.125rem', fontWeight: 900, color: '#1e293b', margin: '0 0 4px 0'}}>⛵ Skipper</p>
@@ -459,9 +461,9 @@ export default function OutingDetailPage() {
 
         {/* Description */}
         {outing.description && (
-          <div style={{background: '#ffffff', border: '2px solid #e5e7eb', borderRadius: '8px', padding: '20px', marginBottom: '24px'}}>
-            <p style={{fontSize: '1rem', fontWeight: 900, color: '#1e293b', margin: '0 0 12px 0', paddingBottom: '12px', borderBottom: '2px solid #e0f2fe'}}>ℹ️ About This Outing</p>
-            <p style={{fontSize: '1rem', color: '#475569', lineHeight: '1.6', margin: 0}}>{outing.description}</p>
+          <div style={{background: '#ffffff', border: '2px solid #e5e7eb', borderRadius: '8px', padding: '14px', marginBottom: '14px'}}>
+            <p style={{fontSize: '1rem', fontWeight: 900, color: '#1e293b', margin: '0 0 8px 0', paddingBottom: '8px', borderBottom: '2px solid #e0f2fe'}}>ℹ️ About This Outing</p>
+            <p style={{fontSize: '0.95rem', color: '#475569', lineHeight: '1.45', margin: 0}}>{outing.description}</p>
           </div>
         )}
 
@@ -482,14 +484,31 @@ export default function OutingDetailPage() {
                       ) : (
                         <div style={styles.crewPhotoPlaceholder}>👤</div>
                       )}
-                      <a
-                        href={`/profile/${req.crew_id}`}
-                        style={styles.crewNameLink}
-                        onClick={(e) => { e.preventDefault(); navigate(`/profile/${req.crew_id}`); }}
-                      >
-                        {req.crew?.full_name}
-                      </a>
-                      <span style={styles.crewGender}>({req.crew?.gender})</span>
+                      <div style={styles.crewMemberInfo}>
+                        <button
+                          type="button"
+                          style={styles.profileLinkButton}
+                          onClick={() => navigate(`/profile/${req.crew_id}?returnTo=${encodeURIComponent(`/outing/${id}`)}`)}
+                        >
+                          {req.crew?.full_name || 'View profile'}
+                        </button>
+                        <span style={styles.crewMeta}>
+                          Approved {new Date(req.responded_at || req.requested_at).toLocaleString()}
+                        </span>
+                        <span style={styles.crewMeta}>
+                          {req.crew?.sailing_experience ? `${req.crew.sailing_experience} sailor` : 'Sailing experience not listed'}
+                          {req.crew?.gender ? ` • ${req.crew.gender}` : ''}
+                        </span>
+                      </div>
+                      {user?.id !== req.crew_id && (
+                        <button
+                          type="button"
+                          style={styles.messageBtn}
+                          onClick={() => navigate(`/messages/${req.crew_id}`)}
+                        >
+                          Message
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>

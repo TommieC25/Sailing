@@ -255,8 +255,8 @@ export default function BugReportPage() {
   };
 
   const sendReportReply = async (report) => {
-    const message = (replyDrafts[report.id] || '').trim();
-    if (!message) return;
+    const message = replyDrafts[report.id] || '';
+    if (!message.trim()) return;
 
     try {
       setSendingReply(report.id);

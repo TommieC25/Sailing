@@ -122,8 +122,8 @@ export default function BugReportThreadPage() {
 
   const sendReply = async (e) => {
     e.preventDefault();
-    const message = draft.trim();
-    if (!message || !report) return;
+    const message = draft;
+    if (!message.trim() || !report) return;
 
     try {
       setSending(true);

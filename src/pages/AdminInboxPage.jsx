@@ -26,7 +26,7 @@ const styles = {
   badgeResolved: { background: '#dcfce7', color: '#166534' },
   badgeInProgress: { background: '#dbeafe', color: '#1e40af' },
   itemMeta: { fontSize: '0.875rem', color: '#64748b', fontWeight: 600, marginBottom: '12px' },
-  itemContent: { fontSize: '1rem', color: '#475569', lineHeight: '1.6', marginBottom: '16px' },
+  itemContent: { fontSize: '1rem', color: '#475569', lineHeight: '1.6', marginBottom: '16px', whiteSpace: 'pre-wrap' },
   itemUser: { fontSize: '0.95rem', color: '#334155', margin: 0, fontWeight: 700, lineHeight: 1.4 },
   itemUserSub: { display: 'block', fontSize: '0.85rem', color: '#64748b', fontWeight: 600 },
   statusSelect: { padding: '8px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '0.875rem', fontWeight: 600, background: '#ffffff', cursor: 'pointer' },

@@ -85,8 +85,8 @@ export default function DirectMessageThreadPage() {
 
   const sendMessage = async (e) => {
     e.preventDefault();
-    const body = draft.trim();
-    if (!body || !user || !member) return;
+    const body = draft;
+    if (!body.trim() || !user || !member) return;
 
     try {
       setSending(true);

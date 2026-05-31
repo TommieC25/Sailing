@@ -69,7 +69,7 @@ const styles = {
   chatMessageOwn: { background: '#06b6d4', color: '#ffffff', alignSelf: 'flex-end' },
   chatMessageOther: { background: '#e5e7eb', color: '#1f2937' },
   chatMessageAuthor: { fontSize: '0.75rem', fontWeight: 600, marginBottom: '4px', opacity: 0.8 },
-  chatMessageText: { fontSize: '0.95rem', lineHeight: '1.4' },
+  chatMessageText: { fontSize: '0.95rem', lineHeight: '1.4', whiteSpace: 'pre-wrap' },
   chatInput: { display: 'flex', gap: '8px' },
   chatTextarea: { flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '0.95rem', fontFamily: 'inherit', resize: 'vertical', minHeight: '48px' },
   chatSendBtn: { padding: '10px 14px', background: '#06b6d4', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', fontSize: '0.9rem', alignSelf: 'flex-end' },

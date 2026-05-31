@@ -26,6 +26,24 @@ const AdminDashboard = () => {
   const [newAnnouncementTitle, setNewAnnouncementTitle] = useState('');
   const [newAnnouncementMessage, setNewAnnouncementMessage] = useState('');
 
+  const outingsBySkipperId = outings.reduce((grouped, outing) => {
+    if (!outing.skipper_id) return grouped;
+    if (!grouped[outing.skipper_id]) grouped[outing.skipper_id] = [];
+    grouped[outing.skipper_id].push(outing);
+    return grouped;
+  }, {});
+
+  const sortMemberOutings = (memberOutings) => [...memberOutings].sort((a, b) => {
+    const aPast = isPastLocalDate(a.outing_date);
+    const bPast = isPastLocalDate(b.outing_date);
+    if (aPast !== bPast) return aPast ? 1 : -1;
+    const dateCompare = aPast
+      ? b.outing_date.localeCompare(a.outing_date)
+      : a.outing_date.localeCompare(b.outing_date);
+    if (dateCompare !== 0) return dateCompare;
+    return (a.outing_time || '').localeCompare(b.outing_time || '');
+  });
+
   async function attachSubmitters(items) {
     const userIds = [...new Set(items.map((item) => item.user_id).filter(Boolean))];
     if (userIds.length === 0) return items;
@@ -527,48 +545,75 @@ const AdminDashboard = () => {
           <div>
             <h2 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '24px' }}>👥 Member Management</h2>
             <div style={{ background: '#ffffff', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '500px' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '720px' }}>
                 <thead>
                   <tr style={{ background: '#f3f4f6', borderBottom: '2px solid #e5e7eb' }}>
                     <th style={{ padding: '12px', textAlign: 'left', fontWeight: 700 }}>User</th>
                     <th style={{ padding: '12px', textAlign: 'left', fontWeight: 700 }}>Email</th>
                     <th style={{ padding: '12px', textAlign: 'left', fontWeight: 700 }}>Type</th>
+                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: 700 }}>Outings</th>
                     <th style={{ padding: '12px', textAlign: 'left', fontWeight: 700 }}>Joined</th>
                     <th style={{ padding: '12px', textAlign: 'left', fontWeight: 700 }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {users.map((u) => (
-                    <tr key={u.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
-                      <td style={{ padding: '12px' }}>
-                        <button onClick={() => navigate(`/profile/${u.id}?returnTo=${encodeURIComponent('/admin/dashboard')}`)} style={{ background: 'none', border: 'none', color: '#0369a1', cursor: 'pointer', fontWeight: 700 }}>
-                          {u.full_name || 'Unknown'}
-                        </button>
-                      </td>
-                      <td style={{ padding: '12px', fontSize: '0.9rem', color: '#666' }}>{u.email}</td>
-                      <td style={{ padding: '12px', fontSize: '0.9rem' }}>
-                        <span style={{ background: u.user_type === 'owner' ? '#dcfce7' : '#e0f2fe', color: u.user_type === 'owner' ? '#166534' : '#0c4a6e', padding: '4px 8px', borderRadius: '4px', fontWeight: 600 }}>
-                          {u.user_type}
-                        </span>
-                      </td>
-                      <td style={{ padding: '12px', fontSize: '0.9rem', color: '#666' }}>{new Date(u.created_at).toLocaleDateString()}</td>
-                      <td style={{ padding: '12px', fontSize: '0.9rem' }}>
-                        <button onClick={() => navigate(`/profile/${u.id}?returnTo=${encodeURIComponent('/admin/dashboard')}`)} style={{ background: '#e0f2fe', color: '#0369a1', padding: '6px 12px', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 700, marginRight: '8px' }}>
-                          Details
-                        </button>
-                        {u.role !== 'admin' && (
-                          <button onClick={() => handleMakeAdmin(u.id)} style={{ background: '#fbbf24', color: '#000', padding: '6px 12px', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}>
-                            Make Admin
+                  {users.map((u) => {
+                    const memberOutings = sortMemberOutings(outingsBySkipperId[u.id] || []);
+                    return (
+                      <tr key={u.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                        <td style={{ padding: '12px' }}>
+                          <button onClick={() => navigate(`/profile/${u.id}?returnTo=${encodeURIComponent('/admin/dashboard')}`)} style={{ background: 'none', border: 'none', color: '#0369a1', cursor: 'pointer', fontWeight: 700 }}>
+                            {u.full_name || 'Unknown'}
                           </button>
-                        )}
-                        {u.role === 'admin' && (
-                          <span style={{ background: '#fef3c7', color: '#92400e', padding: '4px 8px', borderRadius: '4px', fontWeight: 700 }}>
-                            Admin
+                        </td>
+                        <td style={{ padding: '12px', fontSize: '0.9rem', color: '#666' }}>{u.email}</td>
+                        <td style={{ padding: '12px', fontSize: '0.9rem' }}>
+                          <span style={{ background: u.user_type === 'owner' ? '#dcfce7' : '#e0f2fe', color: u.user_type === 'owner' ? '#166534' : '#0c4a6e', padding: '4px 8px', borderRadius: '4px', fontWeight: 600 }}>
+                            {u.user_type}
                           </span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
+                        </td>
+                        <td style={{ padding: '12px', fontSize: '0.9rem', minWidth: '180px' }}>
+                          {u.user_type === 'owner' ? (
+                            memberOutings.length > 0 ? (
+                              <div style={{ display: 'grid', gap: '6px' }}>
+                                {memberOutings.map((outing) => (
+                                  <button
+                                    key={outing.id}
+                                    type="button"
+                                    onClick={() => navigate(`/outing/${outing.id}`)}
+                                    style={{ background: 'none', border: 'none', padding: 0, color: '#0369a1', cursor: 'pointer', fontWeight: 700, textAlign: 'left' }}
+                                  >
+                                    {outing.title}
+                                    {isPastLocalDate(outing.outing_date) ? ' · Past' : ''}
+                                  </button>
+                                ))}
+                              </div>
+                            ) : (
+                              <span style={{ color: '#64748b', fontWeight: 700 }}>No outings</span>
+                            )
+                          ) : (
+                            <span style={{ color: '#94a3b8' }}>—</span>
+                          )}
+                        </td>
+                        <td style={{ padding: '12px', fontSize: '0.9rem', color: '#666' }}>{new Date(u.created_at).toLocaleDateString()}</td>
+                        <td style={{ padding: '12px', fontSize: '0.9rem' }}>
+                          <button onClick={() => navigate(`/profile/${u.id}?returnTo=${encodeURIComponent('/admin/dashboard')}`)} style={{ background: '#e0f2fe', color: '#0369a1', padding: '6px 12px', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 700, marginRight: '8px' }}>
+                            Details
+                          </button>
+                          {u.role !== 'admin' && (
+                            <button onClick={() => handleMakeAdmin(u.id)} style={{ background: '#fbbf24', color: '#000', padding: '6px 12px', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}>
+                              Make Admin
+                            </button>
+                          )}
+                          {u.role === 'admin' && (
+                            <span style={{ background: '#fef3c7', color: '#92400e', padding: '4px 8px', borderRadius: '4px', fontWeight: 700 }}>
+                              Admin
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

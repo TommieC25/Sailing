@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
+import { isPastLocalDate, todayLocalDateString } from '../utils/dateUtils';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -49,10 +50,11 @@ const AdminDashboard = () => {
       setError(null);
 
       // Load stats
-      const [usersRes, boatsRes, outingsRes, crewReqRes, bugsRes, featuresRes, msgsRes, announcementRes] = await Promise.all([
+      const [usersRes, boatsRes, activeOutingsRes, archivedOutingsRes, crewReqRes, bugsRes, featuresRes, msgsRes, announcementRes] = await Promise.all([
         supabase.from('users').select('id', { count: 'exact', head: true }),
         supabase.from('boats').select('id', { count: 'exact', head: true }),
-        supabase.from('outings').select('id', { count: 'exact', head: true }),
+        supabase.from('outings').select('id', { count: 'exact', head: true }).gte('outing_date', todayLocalDateString()),
+        supabase.from('outings').select('id', { count: 'exact', head: true }).lt('outing_date', todayLocalDateString()),
         supabase.from('crew_requests').select('id', { count: 'exact', head: true }),
         supabase.from('bug_reports').select('id', { count: 'exact', head: true }),
         supabase.from('feature_requests').select('id', { count: 'exact', head: true }),
@@ -63,7 +65,8 @@ const AdminDashboard = () => {
       setStats({
         totalUsers: usersRes.count || 0,
         totalBoats: boatsRes.count || 0,
-        totalOutings: outingsRes.count || 0,
+        activeOutings: activeOutingsRes.count || 0,
+        archivedOutings: archivedOutingsRes.count || 0,
         totalCrewRequests: crewReqRes.count || 0,
         openBugReports: bugsRes.count || 0,
         openFeatureRequests: featuresRes.count || 0,
@@ -466,7 +469,8 @@ const AdminDashboard = () => {
               {[
                 { label: 'Total Members', value: stats?.totalUsers, icon: '👥', tab: 'members' },
                 { label: 'Total Boats', value: stats?.totalBoats, icon: '⛵', tab: 'boats' },
-                { label: 'Active Outings', value: stats?.totalOutings, icon: '🌊', tab: 'outings' },
+                { label: 'Active Outings', value: stats?.activeOutings, icon: '🌊', tab: 'outings' },
+                { label: 'Archived Outings', value: stats?.archivedOutings, icon: '🗄️', tab: 'outings' },
                 { label: 'Crew Requests', value: stats?.totalCrewRequests, icon: '🤝', tab: 'crewRequests' },
                 { label: 'Bug Reports', value: stats?.openBugReports, icon: '🐛', tab: 'inbox', inboxFilter: 'bugs' },
                 { label: 'Feature Requests', value: stats?.openFeatureRequests, icon: '⭐', tab: 'inbox', inboxFilter: 'features' },
@@ -611,6 +615,7 @@ const AdminDashboard = () => {
                 onTitleClick: () => navigate(`/outing/${outing.id}`),
                 meta: `Skipper: ${outing.users?.full_name || 'Unknown skipper'}${outing.users?.email ? ` • ${outing.users.email}` : ''}`,
                 details: [
+                  isPastLocalDate(outing.outing_date) ? 'Archived' : 'Active',
                   outing.outing_date ? `Date: ${outing.outing_date}` : null,
                   outing.outing_time ? `Time: ${outing.outing_time}` : null,
                   outing.boats?.name ? `Boat: ${outing.boats.name}` : null,

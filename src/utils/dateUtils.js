@@ -27,3 +27,8 @@ export const todayLocalDateString = () => {
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 };
+
+export const isPastLocalDate = (dateString) => {
+  if (!dateString) return false;
+  return dateString < todayLocalDateString();
+};

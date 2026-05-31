@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
-import { formatLocalDate } from '../utils/dateUtils';
+import { formatLocalDate, isPastLocalDate } from '../utils/dateUtils';
 
 const styles = {
   container: { display: 'grid', gap: '24px' },
@@ -351,11 +351,15 @@ export default function OutingDetailPage() {
   }
 
   const isSkipper = user && user.id === outing.skipper_id;
+  const isArchived = isPastLocalDate(outing.outing_date);
   const statusColors = {
+    open: { bg: '#dbeafe', text: '#1e40af' },
+    archived: { bg: '#e2e8f0', text: '#475569' },
     approved: { bg: '#d1fae5', text: '#065f46' },
     pending: { bg: '#fef3c7', text: '#92400e' },
     declined: { bg: '#fee2e2', text: '#991b1b' },
   };
+  const displayStatus = isArchived ? 'archived' : outing.status;
 
   return (
     <div style={styles.container}>
@@ -371,8 +375,8 @@ export default function OutingDetailPage() {
       <div style={styles.mainCard}>
         <div style={styles.header}>
           <h1 style={styles.title}>{outing.title}</h1>
-          <span style={{ ...styles.statusBadge, background: statusColors[outing.status]?.bg, color: statusColors[outing.status]?.text }}>
-            {outing.status}
+          <span style={{ ...styles.statusBadge, background: statusColors[displayStatus]?.bg, color: statusColors[displayStatus]?.text }}>
+            {displayStatus}
           </span>
         </div>
 
@@ -612,7 +616,11 @@ export default function OutingDetailPage() {
           <div style={styles.joinSection}>
             <h2 style={styles.joinTitle}>Join This Outing</h2>
 
-            {!user ? (
+            {isArchived ? (
+              <div style={{ ...styles.infoBox, background: '#f1f5f9', border: '1px solid #cbd5e1', color: '#475569' }}>
+                <p>This outing is archived because its date has passed.</p>
+              </div>
+            ) : !user ? (
               <div style={{ ...styles.infoBox, ...styles.infoSignIn }}>
                 <p>Sign in to request to join this outing</p>
               </div>

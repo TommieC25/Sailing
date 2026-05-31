@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
-import { compactLocalDate, formatLocalDate } from '../utils/dateUtils';
+import { compactLocalDate, formatLocalDate, isPastLocalDate } from '../utils/dateUtils';
 
 const styles = {
   container: { maxWidth: '800px', margin: '0 auto' },
@@ -44,6 +44,10 @@ const styles = {
   declinedText: { fontSize: '1.125rem', color: '#6b7280', fontWeight: 600 },
   noRequests: { fontSize: '1.125rem', color: '#6b7280', fontWeight: 600 },
   detailsBtn: { fontSize: '0.95rem', fontWeight: 900, color: '#ffffff', textDecoration: 'none', padding: '8px 12px', background: '#0369a1', borderRadius: '8px', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' },
+  tabs: { display: 'flex', gap: '8px', marginBottom: '16px' },
+  tab: { flex: 1, padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontSize: '1rem', fontWeight: 900, cursor: 'pointer' },
+  tabActive: { background: '#0369a1', color: '#ffffff', borderColor: '#0369a1' },
+  archiveBadge: { background: '#e2e8f0', color: '#475569', fontSize: '0.8rem', fontWeight: 900, padding: '4px 8px', borderRadius: '999px' },
 };
 
 export default function SkipperDashboard() {
@@ -56,6 +60,7 @@ export default function SkipperDashboard() {
   const [error, setError] = useState('');
   const [actionLoading, setActionLoading] = useState({});
   const [hoveredOutingId, setHoveredOutingId] = useState(null);
+  const [activeView, setActiveView] = useState('active');
 
   const refreshNotificationCounts = () => {
     window.dispatchEvent(new Event('sailing:crew-requests-updated'));
@@ -201,6 +206,17 @@ export default function SkipperDashboard() {
     );
   }
 
+  const activeOutings = outings.filter((outing) => !isPastLocalDate(outing.outing_date));
+  const archivedOutings = outings.filter((outing) => isPastLocalDate(outing.outing_date));
+  const visibleOutings = [...(activeView === 'archive' ? archivedOutings : activeOutings)]
+    .sort((a, b) => {
+      const dateCompare = activeView === 'archive'
+        ? b.outing_date.localeCompare(a.outing_date)
+        : a.outing_date.localeCompare(b.outing_date);
+      if (dateCompare !== 0) return dateCompare;
+      return (a.outing_time || '').localeCompare(b.outing_time || '');
+    });
+
   return (
     <div style={styles.container}>
       <div style={styles.header}>
@@ -235,12 +251,36 @@ export default function SkipperDashboard() {
               <p style={styles.emptyText}>Post your first outing above and crew will start requesting to join.</p>
             </div>
           ) : (
-            <div style={styles.outingsList}>
-          {outings.map((outing) => {
+            <>
+              <div style={styles.tabs}>
+                {[
+                  { key: 'active', label: `Active (${activeOutings.length})` },
+                  { key: 'archive', label: `Archive (${archivedOutings.length})` },
+                ].map((tab) => (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    onClick={() => setActiveView(tab.key)}
+                    style={{ ...styles.tab, ...(activeView === tab.key ? styles.tabActive : {}) }}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+              {visibleOutings.length === 0 ? (
+                <div style={styles.emptyBox}>
+                  <div style={styles.emptyIcon}>{activeView === 'archive' ? '🗄️' : '⛵'}</div>
+                  <p style={styles.emptyTitle}>{activeView === 'archive' ? 'No archived outings' : 'No active outings'}</p>
+                  <p style={styles.emptyText}>{activeView === 'archive' ? 'Past outings will appear here automatically.' : 'Post a new outing when you are ready to find crew.'}</p>
+                </div>
+              ) : (
+                <div style={styles.outingsList}>
+          {visibleOutings.map((outing) => {
             const isExpanded = expandedOutings[outing.id];
             const pending = outing.crew_requests.filter((r) => r.status === 'pending');
             const approved = outing.crew_requests.filter((r) => r.status === 'approved');
             const declined = outing.crew_requests.filter((r) => r.status === 'declined');
+            const isArchived = isPastLocalDate(outing.outing_date);
 
             return (
               <div key={outing.id} style={styles.outingCard}>
@@ -261,6 +301,7 @@ export default function SkipperDashboard() {
                     <p style={styles.outingDetails}>🚢 {outing.boats?.name}</p>
                   </div>
                   <div style={styles.outingMeta}>
+                    {isArchived && <span style={styles.archiveBadge}>Archived</span>}
                     <button
                       type="button"
                       onClick={(e) => {
@@ -271,7 +312,7 @@ export default function SkipperDashboard() {
                     >
                       Details
                     </button>
-                    {pending.length > 0 && (
+                    {!isArchived && pending.length > 0 && (
                       <div style={{position: 'relative', display: 'flex', alignItems: 'center'}}>
                         <svg style={{width: '24px', height: '24px', color: '#fbbf24'}} fill="currentColor" viewBox="0 0 24 24">
                           <path d="M10 20h4c0 1.1-.9 2-2 2s-2-.9-2-2zm10-2v-5c0-3.07-1.64-5.64-4.5-6.32V2h-3v4.68C7.64 7.36 6 9.93 6 13v5H4v2h16v-2h-2z"/>
@@ -297,7 +338,7 @@ export default function SkipperDashboard() {
                       </div>
                     </div>
 
-                    {pending.length > 0 && (
+                    {!isArchived && pending.length > 0 && (
                       <div>
                         <h4 style={styles.sectionTitle}>Pending Requests ({pending.length})</h4>
                         <div style={styles.requestsList}>
@@ -411,7 +452,9 @@ export default function SkipperDashboard() {
               </div>
             );
           })}
-            </div>
+                </div>
+              )}
+            </>
           )}
         </>
       )}

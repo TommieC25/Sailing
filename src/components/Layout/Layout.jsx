@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../utils/supabaseClient';
+import { todayLocalDateString } from '../../utils/dateUtils';
 
 const NAV_BG = 'linear-gradient(135deg, #0c2340 0%, #0369a1 100%)';
 const APP_MAX_WIDTH = '1100px';
@@ -148,7 +149,8 @@ export default function Layout({ children }) {
         const { data: outings, error: outingsError } = await supabase
           .from('outings')
           .select('id')
-          .eq('skipper_id', user.id);
+          .eq('skipper_id', user.id)
+          .gte('outing_date', todayLocalDateString());
 
         if (outingsError) throw outingsError;
 

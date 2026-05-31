@@ -34,6 +34,14 @@ export default function LoginForm() {
   const [needsConfirmation, setNeedsConfirmation] = useState(false);
   const [resendStatus, setResendStatus] = useState('');
   const [loading, setLoading] = useState(false);
+  const readAuthDebug = () => {
+    try {
+      return window.sessionStorage.getItem('sailingAuthDebug') || '';
+    } catch {
+      return 'Auth diagnostic unavailable: sessionStorage blocked.';
+    }
+  };
+  const [authDebug, setAuthDebug] = useState(readAuthDebug);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -52,6 +60,11 @@ export default function LoginForm() {
       await signIn(email, password);
       navigate('/');
     } catch (err) {
+      try {
+        setAuthDebug(window.sessionStorage.getItem('sailingAuthDebug') || '');
+      } catch {
+        setAuthDebug('Auth diagnostic unavailable: sessionStorage blocked.');
+      }
       const msg = err.message || 'Failed to sign in';
       const code = err?.code || '';
 
@@ -155,6 +168,11 @@ export default function LoginForm() {
         <div style={{marginBottom: '1.5rem'}}>
 
           {error && <div style={styles.error}>{error}</div>}
+          {authDebug && (
+            <div style={{background: 'rgba(255,255,255,0.92)', color: '#1f2937', padding: '0.85rem', borderRadius: '0.75rem', marginBottom: '1rem', fontWeight: 700, fontSize: '0.95rem'}}>
+              Auth diagnostic: {authDebug}
+            </div>
+          )}
 
           {user && (
             <div style={{background: 'rgba(255,255,255,0.92)', color: '#1f2937', padding: '1rem', borderRadius: '0.75rem', marginBottom: '1.5rem', fontWeight: 700}}>

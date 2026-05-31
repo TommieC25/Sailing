@@ -14,6 +14,15 @@ const withTimeout = (promise, ms, message) => {
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
 };
 
+const setAuthDebug = (message) => {
+  if (typeof window === 'undefined') return;
+  try {
+    window.sessionStorage.setItem('sailingAuthDebug', `${new Date().toLocaleTimeString()}: ${message}`);
+  } catch {
+    // Some mobile privacy modes block sessionStorage.
+  }
+};
+
 export const clearStoredSupabaseSession = () => {
   if (!supabaseProjectRef || typeof window === 'undefined') return;
 
@@ -59,13 +68,14 @@ export function AuthProvider({ children }) {
     const initAuth = async () => {
       const timeout = setTimeout(() => setLoading(false), 6000);
       try {
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        if (sessionError) throw sessionError;
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) throw sessionError;
 
-        const sessionUser = session?.user ?? null;
-        setUser(sessionUser);
+      const sessionUser = session?.user ?? null;
+      setAuthDebug(sessionUser ? `Startup session found for ${sessionUser.email}` : 'Startup found no stored session');
+      setUser(sessionUser);
 
-        if (sessionUser) {
+      if (sessionUser) {
           const profileData = await loadProfile(sessionUser.id);
           setProfile(profileData);
         }
@@ -160,6 +170,7 @@ export function AuthProvider({ children }) {
       );
 
       if (error) throw error;
+      setAuthDebug(`Sign-in accepted for ${user?.email || email}`);
       const { data: { session }, error: sessionError } = await withTimeout(
         supabase.auth.getSession(),
         5000,
@@ -168,15 +179,19 @@ export function AuthProvider({ children }) {
 
       if (sessionError) throw sessionError;
       if (!session?.user) {
+        setAuthDebug(`No retained session after sign-in for ${email}`);
         throw new Error('Sign in succeeded, but the browser did not keep the session. Please close and reopen the app, then try again.');
       }
 
+      setAuthDebug(`Session retained for ${session.user.email}`);
       setUser(user);
       if (user) {
         const profileData = await loadProfile(user.id);
+        setAuthDebug(profileData ? `Profile loaded for ${session.user.email}` : `No profile row for ${session.user.email}`);
         setProfile(profileData);
       }
     } catch (err) {
+      setAuthDebug(`Sign-in failed: ${err.message}`);
       setError(err.message);
       throw err;
     } finally {

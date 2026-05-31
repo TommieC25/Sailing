@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
-import { formatLocalDate, todayLocalDateString } from '../utils/dateUtils';
+import { formatLocalDate, isPastLocalDate } from '../utils/dateUtils';
 
 const HEADER_BG = 'linear-gradient(135deg, #0c2340 0%, #0369a1 100%)';
 
@@ -23,7 +23,6 @@ export default function HomePage() {
             *,
             boats (name, size_ft, capacity, owner_id)
           `)
-          .gte('outing_date', todayLocalDateString())
           .order('outing_date', { ascending: true })
           .order('outing_time', { ascending: true });
 
@@ -43,7 +42,7 @@ export default function HomePage() {
         let pendingByOutingId = {};
         if (profile?.user_type === 'owner') {
           const yourOutingIds = (data || [])
-            .filter((outing) => outing.skipper_id === user.id)
+            .filter((outing) => outing.skipper_id === user.id && !isPastLocalDate(outing.outing_date))
             .map((outing) => outing.id);
 
           if (yourOutingIds.length > 0) {
@@ -88,8 +87,20 @@ export default function HomePage() {
 
   if (!user) return null;
 
-  const yourOutings = outings.filter((o) => o.skipper_id === user?.id);
-  const otherOutings = outings.filter((o) => o.skipper_id !== user?.id);
+  const sortUpcoming = (items) => [...items].sort((a, b) => {
+    const dateCompare = a.outing_date.localeCompare(b.outing_date);
+    if (dateCompare !== 0) return dateCompare;
+    return (a.outing_time || '').localeCompare(b.outing_time || '');
+  });
+  const sortPast = (items) => [...items].sort((a, b) => {
+    const dateCompare = b.outing_date.localeCompare(a.outing_date);
+    if (dateCompare !== 0) return dateCompare;
+    return (b.outing_time || '').localeCompare(a.outing_time || '');
+  });
+  const upcomingOutings = sortUpcoming(outings.filter((o) => !isPastLocalDate(o.outing_date)));
+  const pastOutings = sortPast(outings.filter((o) => isPastLocalDate(o.outing_date)));
+  const yourOutings = upcomingOutings.filter((o) => o.skipper_id === user?.id);
+  const otherOutings = upcomingOutings.filter((o) => o.skipper_id !== user?.id);
   const isSkipper = profile?.user_type === 'owner';
 
   return (
@@ -177,7 +188,7 @@ export default function HomePage() {
 
         {/* Other Outings */}
         {!loading && otherOutings.length > 0 && (
-          <div>
+          <div style={{marginBottom: pastOutings.length > 0 ? '22px' : 0}}>
             <h2 style={{fontSize: '1.25rem', fontWeight: 900, color: '#1e293b', marginBottom: '10px', margin: '0 0 10px 0'}}>
               {isSkipper ? '⛵ Other Upcoming Outings' : '⛵ Upcoming Outings'}
             </h2>
@@ -189,7 +200,20 @@ export default function HomePage() {
           </div>
         )}
 
-        {!loading && outings.length === 0 && (
+        {!loading && pastOutings.length > 0 && (
+          <div style={{borderTop: '2px solid #cbd5e1', paddingTop: '14px', opacity: 0.92}}>
+            <h2 style={{fontSize: '1.15rem', fontWeight: 900, color: '#475569', marginBottom: '10px', margin: '0 0 10px 0'}}>
+              🗄️ Past Outings ({pastOutings.length})
+            </h2>
+            <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '10px'}}>
+              {pastOutings.map((outing) => (
+                <OutingCard key={outing.id} outing={outing} isYours={outing.skipper_id === user?.id} isPast={true} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {!loading && upcomingOutings.length === 0 && pastOutings.length === 0 && (
           <div style={{background: '#ffffff', border: '2px solid #dbeafe', borderRadius: '10px', padding: '20px', textAlign: 'center'}}>
             <p style={{fontSize: '2rem', margin: '0 0 10px 0'}}>⛵</p>
             <p style={{fontSize: '1.25rem', fontWeight: 900, color: '#1e293b', margin: '0 0 6px 0'}}>No upcoming outings yet</p>
@@ -201,7 +225,7 @@ export default function HomePage() {
   );
 }
 
-function OutingCard({ outing, isYours }) {
+function OutingCard({ outing, isYours, isPast = false }) {
   const totalSpots = outing.boats?.capacity || 0;
   const availableSpots = outing.capacity_available || 0;
   const filledSpots = totalSpots - availableSpots;
@@ -211,23 +235,43 @@ function OutingCard({ outing, isYours }) {
       to={`/outing/${outing.id}`}
       style={{display: 'block', textDecoration: 'none', color: 'inherit'}}
     >
-      <div style={{background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '12px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.08)'}}>
+      <div style={{
+        background: isYours ? '#ecfeff' : '#ffffff',
+        border: isYours ? '2px solid #0891b2' : '1px solid #e2e8f0',
+        borderLeft: isYours ? '6px solid #0891b2' : '1px solid #e2e8f0',
+        borderRadius: '10px',
+        padding: '12px',
+        cursor: 'pointer',
+        transition: 'all 0.2s',
+        boxShadow: isYours ? '0 2px 8px rgba(8,145,178,0.18)' : '0 1px 3px rgba(0,0,0,0.08)',
+        opacity: isPast ? 0.88 : 1,
+      }}>
         {/* Title and availability badge */}
         <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px', gap: '8px'}}>
           <h3 style={{fontSize: '1.1rem', fontWeight: 900, color: '#1e293b', margin: 0}}>{outing.title}</h3>
-          {availableSpots > 0 && !isYours && (
+          {isPast && (
+            <span style={{background: '#e2e8f0', color: '#475569', padding: '4px 10px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 800, flexShrink: 0, whiteSpace: 'nowrap'}}>
+              Past
+            </span>
+          )}
+          {!isPast && availableSpots > 0 && !isYours && (
             <span style={{background: '#dcfce7', color: '#166534', padding: '4px 10px', borderRadius: '6px', fontSize: '0.875rem', fontWeight: 700, flexShrink: 0, whiteSpace: 'nowrap'}}>
               {availableSpots} spot{availableSpots !== 1 ? 's' : ''}
             </span>
           )}
-          {availableSpots === 0 && !isYours && (
+          {!isPast && availableSpots === 0 && !isYours && (
             <span style={{background: '#fee2e2', color: '#991b1b', padding: '4px 10px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700, flexShrink: 0}}>
               Full
             </span>
           )}
-          {isYours && (
+          {!isPast && isYours && (
             <span style={{background: outing.pendingCrewRequestCount > 0 ? '#fee2e2' : '#fef3c7', color: outing.pendingCrewRequestCount > 0 ? '#991b1b' : '#92400e', padding: '4px 10px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700, flexShrink: 0}}>
               {outing.pendingCrewRequestCount > 0 ? `${outing.pendingCrewRequestCount} request${outing.pendingCrewRequestCount !== 1 ? 's' : ''}` : 'Your outing'}
+            </span>
+          )}
+          {isPast && isYours && (
+            <span style={{background: '#cffafe', color: '#155e75', padding: '4px 10px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 800, flexShrink: 0, whiteSpace: 'nowrap'}}>
+              Yours
             </span>
           )}
         </div>
@@ -247,7 +291,7 @@ function OutingCard({ outing, isYours }) {
 
         {/* Button - touch-friendly (44px minimum height) */}
         <div style={{background: outing.pendingCrewRequestCount > 0 ? '#f59e0b' : '#06b6d4', color: outing.pendingCrewRequestCount > 0 ? '#111827' : '#ffffff', padding: '8px 12px', borderRadius: '8px', textAlign: 'center', fontWeight: 900, fontSize: '0.95rem', minHeight: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-          {outing.pendingCrewRequestCount > 0 ? 'Review Requests →' : 'View Details →'}
+          {outing.pendingCrewRequestCount > 0 ? 'Review Requests →' : isPast ? 'View Past Details →' : 'View Details →'}
         </div>
       </div>
     </Link>

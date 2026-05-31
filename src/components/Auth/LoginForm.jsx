@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 
 const styles = {
@@ -28,6 +28,7 @@ const styles = {
 
 export default function LoginForm() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, signIn, signOut, resendConfirmation } = useAuth();
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
@@ -168,6 +169,11 @@ export default function LoginForm() {
         <div style={{marginBottom: '1.5rem'}}>
 
           {error && <div style={styles.error}>{error}</div>}
+          {searchParams.get('reset') === 'success' && (
+            <div style={{background: 'rgba(22, 163, 74, 0.95)', color: '#ffffff', fontSize: '1.1rem', padding: '1rem', borderRadius: '0.75rem', marginBottom: '1.5rem', fontWeight: 800}}>
+              Password reset successfully. Sign in with your new password.
+            </div>
+          )}
           {authDebug && (
             <div style={{background: 'rgba(255,255,255,0.92)', color: '#1f2937', padding: '0.85rem', borderRadius: '0.75rem', marginBottom: '1rem', fontWeight: 700, fontSize: '0.95rem'}}>
               Auth diagnostic: {authDebug}

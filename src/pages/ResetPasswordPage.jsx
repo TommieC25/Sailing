@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../utils/supabaseClient';
+import { clearStoredSupabaseSession } from '../hooks/useAuth';
 
 const styles = {
   container: { minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(to bottom right, #0c3880, #0369a1, #06b6d4)', paddingLeft: '1rem', paddingRight: '1rem', paddingTop: '2rem', paddingBottom: '2rem' },
@@ -66,7 +67,9 @@ export default function ResetPasswordPage() {
       if (updateError) throw updateError;
 
       setSuccess('Password reset successfully! Redirecting to sign in...');
-      setTimeout(() => navigate('/login'), 2000);
+      await supabase.auth.signOut({ scope: 'local' }).catch(() => undefined);
+      clearStoredSupabaseSession();
+      setTimeout(() => navigate('/login?reset=success', { replace: true }), 2000);
     } catch (err) {
       setError(err.message || 'Failed to reset password');
     } finally {

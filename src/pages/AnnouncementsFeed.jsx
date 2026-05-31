@@ -15,7 +15,7 @@ const styles = {
   announcementRead: { borderLeft: '4px solid #e5e7eb' },
   announcementTitle: { fontSize: '1.25rem', fontWeight: 900, color: '#1e293b', margin: '0 0 8px 0' },
   announcementMeta: { fontSize: '0.875rem', color: '#64748b', fontWeight: 600, marginBottom: '12px' },
-  announcementMessage: { fontSize: '1rem', color: '#475569', lineHeight: '1.6', margin: 0 },
+  announcementMessage: { fontSize: '1rem', color: '#475569', lineHeight: '1.6', margin: 0, whiteSpace: 'pre-wrap' },
   emptyBox: { background: '#ffffff', borderRadius: '12px', border: '1px solid #e5e7eb', padding: '32px', textAlign: 'center' },
   emptyIcon: { fontSize: '3rem', marginBottom: '16px' },
   emptyTitle: { fontSize: '1.5rem', fontWeight: 900, color: '#1e293b', marginBottom: '8px', margin: '0 0 8px 0' },

@@ -26,6 +26,9 @@ const AdminDashboard = () => {
   const [error, setError] = useState(null);
   const [newAnnouncementTitle, setNewAnnouncementTitle] = useState('');
   const [newAnnouncementMessage, setNewAnnouncementMessage] = useState('');
+  const [editingAnnouncementId, setEditingAnnouncementId] = useState(null);
+  const [editingAnnouncementTitle, setEditingAnnouncementTitle] = useState('');
+  const [editingAnnouncementMessage, setEditingAnnouncementMessage] = useState('');
 
   const outingsBySkipperId = outings.reduce((grouped, outing) => {
     if (!outing.skipper_id) return grouped;
@@ -175,6 +178,45 @@ const AdminDashboard = () => {
       setNewAnnouncementTitle('');
       setNewAnnouncementMessage('');
       await loadDashboardData();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const startEditingAnnouncement = (announcement) => {
+    setEditingAnnouncementId(announcement.id);
+    setEditingAnnouncementTitle(announcement.title || '');
+    setEditingAnnouncementMessage(announcement.message || '');
+  };
+
+  const cancelEditingAnnouncement = () => {
+    setEditingAnnouncementId(null);
+    setEditingAnnouncementTitle('');
+    setEditingAnnouncementMessage('');
+  };
+
+  const handleUpdateAnnouncement = async (e) => {
+    e.preventDefault();
+    if (!editingAnnouncementId || !editingAnnouncementTitle.trim() || !editingAnnouncementMessage.trim()) return;
+
+    try {
+      const { error } = await supabase
+        .from('announcements')
+        .update({
+          title: editingAnnouncementTitle,
+          message: editingAnnouncementMessage,
+        })
+        .eq('id', editingAnnouncementId);
+
+      if (error) throw error;
+
+      setAnnouncements((current) => current.map((announcement) => (
+        announcement.id === editingAnnouncementId
+          ? { ...announcement, title: editingAnnouncementTitle, message: editingAnnouncementMessage }
+          : announcement
+      )));
+      cancelEditingAnnouncement();
+      window.dispatchEvent(new Event('sailing:announcements-updated'));
     } catch (err) {
       setError(err.message);
     }
@@ -853,13 +895,60 @@ const AdminDashboard = () => {
 
             {/* Announcements List */}
             <h3 style={{ fontSize: '1.25rem', fontWeight: 900, marginBottom: '16px' }}>Recent Announcements</h3>
-            {announcements.map((ann) => (
-              <div key={ann.id} style={{ background: '#ffffff', padding: '20px', marginBottom: '12px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-                <h4 style={{ margin: '0 0 8px', fontSize: '1.1rem', fontWeight: 900 }}>{ann.title}</h4>
-                <p style={{ margin: '8px 0', color: '#666', lineHeight: '1.6' }}>{ann.message}</p>
-                <p style={{ margin: '8px 0', fontSize: '0.85rem', color: '#999' }}>Posted {new Date(ann.created_at).toLocaleDateString()}</p>
-              </div>
-            ))}
+            {announcements.map((ann) => {
+              const isEditing = editingAnnouncementId === ann.id;
+              return (
+                <div key={ann.id} style={{ background: '#ffffff', padding: '20px', marginBottom: '12px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+                  {isEditing ? (
+                    <form onSubmit={handleUpdateAnnouncement} style={{ display: 'grid', gap: '12px' }}>
+                      <input
+                        type="text"
+                        value={editingAnnouncementTitle}
+                        onChange={(e) => setEditingAnnouncementTitle(e.target.value)}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '1rem', fontWeight: 800 }}
+                      />
+                      <textarea
+                        value={editingAnnouncementMessage}
+                        onChange={(e) => setEditingAnnouncementMessage(e.target.value)}
+                        rows={4}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '1rem', fontFamily: 'inherit', resize: 'vertical' }}
+                      />
+                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                        <button
+                          type="submit"
+                          disabled={!editingAnnouncementTitle.trim() || !editingAnnouncementMessage.trim()}
+                          style={{ padding: '9px 12px', borderRadius: '8px', border: 'none', background: '#16a34a', color: '#ffffff', fontWeight: 900, cursor: 'pointer', opacity: !editingAnnouncementTitle.trim() || !editingAnnouncementMessage.trim() ? 0.6 : 1 }}
+                        >
+                          Save Changes
+                        </button>
+                        <button
+                          type="button"
+                          onClick={cancelEditingAnnouncement}
+                          style={{ padding: '9px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#475569', fontWeight: 900, cursor: 'pointer' }}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </form>
+                  ) : (
+                    <>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+                        <h4 style={{ margin: '0 0 8px', fontSize: '1.1rem', fontWeight: 900 }}>{ann.title}</h4>
+                        <button
+                          type="button"
+                          onClick={() => startEditingAnnouncement(ann)}
+                          style={{ padding: '7px 10px', borderRadius: '8px', border: 'none', background: '#e0f2fe', color: '#0369a1', fontWeight: 900, cursor: 'pointer', flexShrink: 0 }}
+                        >
+                          Edit
+                        </button>
+                      </div>
+                      <p style={{ margin: '8px 0', color: '#666', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>{ann.message}</p>
+                      <p style={{ margin: '8px 0', fontSize: '0.85rem', color: '#999' }}>Posted {new Date(ann.created_at).toLocaleDateString()}</p>
+                    </>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
 

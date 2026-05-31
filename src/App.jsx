@@ -10,6 +10,8 @@ import AdminInboxPage from './pages/AdminInboxPage';
 import CreateOutingPage from './pages/CreateOutingPage';
 import BugReportPage from './pages/BugReportPage';
 import BugReportThreadPage from './pages/BugReportThreadPage';
+import MessagesPage from './pages/MessagesPage';
+import DirectMessageThreadPage from './pages/DirectMessageThreadPage';
 import FeatureRequestPage from './pages/FeatureRequestPage';
 import ContactAdminPage from './pages/ContactAdminPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
@@ -119,6 +121,8 @@ function App() {
           <Route path="/community" element={<Navigate to="/" replace />} />
           <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
           <Route path="/profile/:id" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+          <Route path="/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
+          <Route path="/messages/:memberId" element={<ProtectedRoute><DirectMessageThreadPage /></ProtectedRoute>} />
           <Route path="/outing/:id" element={<ProtectedRoute><OutingDetailPage /></ProtectedRoute>} />
           <Route path="/skipper-dashboard" element={<ProtectedRoute><SkipperDashboard /></ProtectedRoute>} />
           <Route path="/create-outing" element={<ProtectedRoute><CreateOutingPage /></ProtectedRoute>} />

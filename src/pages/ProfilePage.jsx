@@ -351,6 +351,16 @@ export default function ProfilePage() {
         )}
         <h1 style={styles.title}>{isViewingOther ? displayProfile?.full_name : 'My Profile'}</h1>
 
+        {isViewingOther && (
+          <button
+            type="button"
+            onClick={() => navigate(`/messages/${profileId}`)}
+            style={{...styles.button, width: '100%', marginBottom: '1.5rem'}}
+          >
+            Message {displayProfile?.full_name || 'Member'}
+          </button>
+        )}
+
         {message && (
           <div style={{marginBottom: '1.5rem', padding: '16px', borderRadius: '8px', fontSize: '1rem', fontWeight: 600, background: message.includes('Error') ? '#fee2e2' : '#f0fdf4', color: message.includes('Error') ? '#991b1b' : '#166534', border: message.includes('Error') ? '2px solid #dc2626' : '2px solid #16a34a'}}>
             {message}

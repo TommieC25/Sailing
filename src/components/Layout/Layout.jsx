@@ -14,11 +14,12 @@ export default function Layout({ children }) {
   const [unreadAnnouncementCount, setUnreadAnnouncementCount] = useState(0);
   const [unreadInboxCounts, setUnreadInboxCounts] = useState({ messages: 0, bugs: 0, features: 0 });
   const [unreadBugReplyCount, setUnreadBugReplyCount] = useState(0);
+  const [unreadDirectMessageCount, setUnreadDirectMessageCount] = useState(0);
   const [pendingCrewRequestCount, setPendingCrewRequestCount] = useState(0);
   const isAdmin = profile?.role === 'admin';
   const isSkipper = profile?.user_type === 'owner';
   const unreadInboxCount = isAdmin ? unreadInboxCounts.messages + unreadInboxCounts.bugs + unreadInboxCounts.features : 0;
-  const totalNotificationCount = unreadAnnouncementCount + pendingCrewRequestCount + unreadBugReplyCount;
+  const totalNotificationCount = unreadAnnouncementCount + pendingCrewRequestCount + unreadBugReplyCount + unreadDirectMessageCount;
   const adminInboxLink = unreadInboxCounts.messages > 0
     ? '/admin/inbox?tab=messages'
     : unreadInboxCounts.bugs > 0
@@ -57,6 +58,30 @@ export default function Layout({ children }) {
     };
 
     fetchUnreadCount();
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchDirectMessageCount = async () => {
+      try {
+        const { count, error } = await supabase
+          .from('direct_messages')
+          .select('id', { count: 'exact', head: true })
+          .eq('recipient_id', user.id)
+          .is('read_at', null);
+
+        if (error) throw error;
+        setUnreadDirectMessageCount(count || 0);
+      } catch (err) {
+        console.error('Error fetching direct message count:', err);
+      }
+    };
+
+    fetchDirectMessageCount();
+    window.addEventListener('sailing:direct-messages-updated', fetchDirectMessageCount);
+
+    return () => window.removeEventListener('sailing:direct-messages-updated', fetchDirectMessageCount);
   }, [user]);
 
   useEffect(() => {
@@ -194,6 +219,7 @@ export default function Layout({ children }) {
                   {profile?.user_type === 'owner' && (
                     <Link to="/skipper-dashboard" style={navLinkStyle}>My Outings</Link>
                   )}
+                  <Link to="/messages" style={navLinkStyle}>Messages</Link>
                   <Link to="/profile" style={navLinkStyle}>Profile</Link>
                   <button onClick={handleSignOut} style={{background: '#06b6d4', color: '#ffffff', fontWeight: 900, padding: '8px 16px', borderRadius: '12px', border: 'none', cursor: 'pointer', fontSize: '1rem'}}>
                     Sign Out
@@ -261,6 +287,21 @@ export default function Layout({ children }) {
                         </span>
                       </button>
                     )}
+                    {unreadDirectMessageCount > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNotificationMenuOpen(false);
+                          navigate('/messages');
+                        }}
+                        style={{width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', padding: '12px 14px', background: 'none', border: 'none', borderBottom: '1px solid #e2e8f0', cursor: 'pointer', color: '#1e293b', textAlign: 'left', fontSize: '1rem', fontWeight: 700}}
+                      >
+                        <span>Messages</span>
+                        <span style={{background: '#ef4444', color: '#ffffff', borderRadius: '999px', minWidth: '24px', padding: '2px 8px', textAlign: 'center', fontWeight: 900}}>
+                          {unreadDirectMessageCount}
+                        </span>
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() => {
@@ -322,6 +363,9 @@ export default function Layout({ children }) {
                       📋 My Outings{pendingCrewRequestCount > 0 ? ` (${pendingCrewRequestCount})` : ''}
                     </Link>
                   )}
+                  <Link to="/messages" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#ffffff', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>
+                    💬 Messages{unreadDirectMessageCount > 0 ? ` (${unreadDirectMessageCount})` : ''}
+                  </Link>
                   <Link to="/profile" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#ffffff', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>👤 Profile</Link>
                   {isAdmin && (
                     <>

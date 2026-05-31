@@ -59,11 +59,14 @@ export function AuthProvider({ children }) {
     const initAuth = async () => {
       const timeout = setTimeout(() => setLoading(false), 6000);
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        setUser(user);
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) throw sessionError;
 
-        if (user) {
-          const profileData = await loadProfile(user.id);
+        const sessionUser = session?.user ?? null;
+        setUser(sessionUser);
+
+        if (sessionUser) {
+          const profileData = await loadProfile(sessionUser.id);
           setProfile(profileData);
         }
       } catch (err) {

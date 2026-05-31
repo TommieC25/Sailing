@@ -9,6 +9,7 @@ const AdminDashboard = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   const [inboxFilter, setInboxFilter] = useState('all');
+  const [outingsFilter, setOutingsFilter] = useState('all');
   const [selectedFeedback, setSelectedFeedback] = useState(null);
   const [stats, setStats] = useState(null);
   const [users, setUsers] = useState([]);
@@ -278,6 +279,7 @@ const AdminDashboard = () => {
   const goToTab = (tab, options = {}) => {
     setActiveTab(tab);
     if (options.inboxFilter) setInboxFilter(options.inboxFilter);
+    setOutingsFilter(tab === 'outings' ? (options.outingsFilter || 'all') : 'all');
     setSelectedFeedback(options.selectedFeedback || null);
   };
 
@@ -285,6 +287,26 @@ const AdminDashboard = () => {
     setInboxFilter(type);
     setSelectedFeedback({ type, item });
   };
+
+  const sortedActiveOutings = [...outings]
+    .filter((outing) => !isPastLocalDate(outing.outing_date))
+    .sort((a, b) => {
+      const dateCompare = a.outing_date.localeCompare(b.outing_date);
+      if (dateCompare !== 0) return dateCompare;
+      return (a.outing_time || '').localeCompare(b.outing_time || '');
+    });
+  const sortedArchivedOutings = [...outings]
+    .filter((outing) => isPastLocalDate(outing.outing_date))
+    .sort((a, b) => {
+      const dateCompare = b.outing_date.localeCompare(a.outing_date);
+      if (dateCompare !== 0) return dateCompare;
+      return (b.outing_time || '').localeCompare(a.outing_time || '');
+    });
+  const visibleAdminOutings = outingsFilter === 'active'
+    ? sortedActiveOutings
+    : outingsFilter === 'archived'
+      ? sortedArchivedOutings
+      : [...sortedActiveOutings, ...sortedArchivedOutings];
 
   const feedbackConfig = {
     bugs: {
@@ -456,7 +478,7 @@ const AdminDashboard = () => {
         {['overview', 'members', 'boats', 'outings', 'crewRequests', 'inbox', 'announcements', 'activity', 'admins', 'moderation', 'reports'].map((tab) => (
           <button
             key={tab}
-            onClick={() => setActiveTab(tab)}
+            onClick={() => goToTab(tab)}
             style={activeTab === tab ? activeTabStyle : tabStyle}
           >
             {{
@@ -487,8 +509,8 @@ const AdminDashboard = () => {
               {[
                 { label: 'Total Members', value: stats?.totalUsers, icon: '👥', tab: 'members' },
                 { label: 'Total Boats', value: stats?.totalBoats, icon: '⛵', tab: 'boats' },
-                { label: 'Active Outings', value: stats?.activeOutings, icon: '🌊', tab: 'outings' },
-                { label: 'Archived Outings', value: stats?.archivedOutings, icon: '🗄️', tab: 'outings' },
+                { label: 'Active Outings', value: stats?.activeOutings, icon: '🌊', tab: 'outings', outingsFilter: 'active' },
+                { label: 'Archived Outings', value: stats?.archivedOutings, icon: '🗄️', tab: 'outings', outingsFilter: 'archived' },
                 { label: 'Crew Requests', value: stats?.totalCrewRequests, icon: '🤝', tab: 'crewRequests' },
                 { label: 'Bug Reports', value: stats?.openBugReports, icon: '🐛', tab: 'inbox', inboxFilter: 'bugs' },
                 { label: 'Feature Requests', value: stats?.openFeatureRequests, icon: '⭐', tab: 'inbox', inboxFilter: 'features' },
@@ -498,7 +520,7 @@ const AdminDashboard = () => {
                 <button
                   key={stat.label}
                   type="button"
-                  onClick={() => goToTab(stat.tab, stat.inboxFilter ? { inboxFilter: stat.inboxFilter } : {})}
+                  onClick={() => goToTab(stat.tab, { inboxFilter: stat.inboxFilter, outingsFilter: stat.outingsFilter })}
                   style={{ background: '#ffffff', padding: '10px 12px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', border: '1px solid #e2e8f0', cursor: 'pointer', textAlign: 'left', display: 'grid', gridTemplateColumns: '32px 1fr auto', alignItems: 'center', gap: '10px', minHeight: '48px', width: '100%' }}
                 >
                   <span style={{ fontSize: '1.25rem', lineHeight: 1, width: '32px', textAlign: 'center' }}>{stat.icon}</span>
@@ -650,11 +672,39 @@ const AdminDashboard = () => {
         {/* OUTINGS TAB */}
         {activeTab === 'outings' && (
           <div>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '24px' }}>🌊 Outings</h2>
-            {outings.length === 0 ? (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap', marginBottom: '16px' }}>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: 900, margin: 0 }}>
+                🌊 {outingsFilter === 'active' ? 'Active Outings' : outingsFilter === 'archived' ? 'Archived Outings' : 'All Outings'}
+              </h2>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {[
+                  { key: 'all', label: `All (${outings.length})` },
+                  { key: 'active', label: `Active (${sortedActiveOutings.length})` },
+                  { key: 'archived', label: `Past (${sortedArchivedOutings.length})` },
+                ].map((filter) => (
+                  <button
+                    key={filter.key}
+                    type="button"
+                    onClick={() => setOutingsFilter(filter.key)}
+                    style={{
+                      padding: '8px 12px',
+                      borderRadius: '999px',
+                      border: outingsFilter === filter.key ? '2px solid #0369a1' : '1px solid #cbd5e1',
+                      background: outingsFilter === filter.key ? '#e0f2fe' : '#ffffff',
+                      color: outingsFilter === filter.key ? '#075985' : '#475569',
+                      fontWeight: 900,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {filter.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {visibleAdminOutings.length === 0 ? (
               <div style={{ background: '#ffffff', padding: '20px', borderRadius: '10px', border: '1px solid #e2e8f0', color: '#64748b', fontWeight: 700 }}>No outings posted yet.</div>
             ) : (
-              outings.map((outing) => renderDataCard({
+              visibleAdminOutings.map((outing) => renderDataCard({
                 key: outing.id,
                 title: outing.title || 'Untitled outing',
                 onTitleClick: () => navigate(`/outing/${outing.id}`),

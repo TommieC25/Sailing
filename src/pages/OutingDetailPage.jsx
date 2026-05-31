@@ -7,15 +7,15 @@ import { formatLocalDate, isPastLocalDate } from '../utils/dateUtils';
 const styles = {
   container: { display: 'grid', gap: '12px' },
   backButton: { background: '#e0f2fe', border: '2px solid #0369a1', color: '#0369a1', fontSize: '1rem', fontWeight: 900, padding: '9px 12px', borderRadius: '8px', marginBottom: '6px', cursor: 'pointer', textDecoration: 'none', transition: 'all 0.2s' },
-  mainCard: { background: '#ffffff', borderRadius: '8px', boxShadow: '0 6px 12px rgba(0,0,0,0.08)', padding: '16px' },
-  header: { display: 'grid', gap: '8px', marginBottom: '12px' },
+  mainCard: { background: '#ffffff', borderRadius: '8px', boxShadow: '0 6px 12px rgba(0,0,0,0.08)', padding: '14px 16px' },
+  header: { display: 'flex', gap: '10px', marginBottom: '10px', alignItems: 'center', flexWrap: 'wrap' },
   title: { fontSize: '1.5rem', fontWeight: 'bold', color: '#1f2937', margin: 0 },
   statusBadge: { display: 'inline-block', padding: '5px 9px', borderRadius: '999px', fontSize: '0.8rem', fontWeight: 600, textTransform: 'capitalize', width: 'fit-content' },
   grid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px', marginBottom: '32px' },
   section: { display: 'grid', gap: '12px' },
   sectionTitle: { fontSize: '1.25rem', fontWeight: 600, color: '#1f2937', margin: 0 },
-  detailLabel: { fontSize: '0.875rem', color: '#6b7280' },
-  detailValue: { fontSize: '1rem', fontWeight: 500, color: '#1f2937' },
+  detailLabel: { fontSize: '0.82rem', color: '#6b7280', margin: '0 0 3px 0' },
+  detailValue: { fontSize: '1rem', fontWeight: 500, color: '#1f2937', margin: 0 },
   skipperCard: { border: '1px solid #e5e7eb', borderRadius: '8px', padding: '16px' },
   skipperPhoto: { width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', marginBottom: '12px' },
   skipperPhotoPlaceholder: { width: '64px', height: '64px', borderRadius: '50%', background: '#e5e7eb', marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' },
@@ -49,7 +49,7 @@ const styles = {
   infoApproved: { background: '#d1fae5', border: '1px solid #a7f3d0' },
   infoDeclined: { background: '#fee2e2', border: '1px solid #fecaca' },
   infoSignIn: { background: '#eff6ff', border: '1px solid #bfdbfe', color: '#1e40af' },
-  joinButton: { color: '#ffffff', padding: '12px 24px', borderRadius: '8px', fontWeight: 600, transition: 'all 0.2s', border: 'none', cursor: 'pointer', fontSize: '1rem' },
+  joinButton: { color: '#ffffff', padding: '10px 16px', borderRadius: '8px', fontWeight: 600, transition: 'all 0.2s', border: 'none', cursor: 'pointer', fontSize: '0.95rem' },
   loadingSpinner: { display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '48px' },
   spinner: { width: '32px', height: '32px', borderRadius: '50%', border: '4px solid #e5e7eb', borderTopColor: '#0369a1', animation: 'spin 0.8s linear infinite' },
   errorBox: { background: '#fef2f2', border: '1px solid #fecaca', color: '#991b1b', padding: '16px', borderRadius: '8px' },
@@ -383,7 +383,7 @@ export default function OutingDetailPage() {
         </div>
 
         {isSkipper && (
-          <div style={{marginBottom: '12px'}}>
+          <div style={{marginBottom: '10px'}}>
             <button
               onClick={handleDeleteOuting}
               style={{background: '#dc2626', color: '#ffffff', padding: '9px 12px', borderRadius: '8px', fontSize: '0.95rem', fontWeight: 900, border: 'none', cursor: 'pointer', transition: 'all 0.2s'}}
@@ -396,7 +396,7 @@ export default function OutingDetailPage() {
         )}
 
         {/* Key Info */}
-        <div style={{display: 'grid', gap: '12px', marginBottom: '16px'}}>
+        <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '10px', marginBottom: '12px'}}>
           <div>
             <p style={styles.detailLabel}>📍 Location</p>
             <p style={{...styles.detailValue, fontSize: '1.1rem', color: '#0c2340'}}>{outing.location}</p>
@@ -416,8 +416,8 @@ export default function OutingDetailPage() {
         </div>
 
         {/* Boat Information */}
-        <div style={{background: '#f0f9ff', border: '2px solid #bfdbfe', borderRadius: '8px', padding: '14px', marginBottom: '14px', display: 'grid', gap: '8px'}}>
-          <p style={{fontSize: '1.05rem', fontWeight: 900, color: '#0c2340', margin: '0 0 6px 0', paddingBottom: '8px', borderBottom: '2px solid #e0f2fe'}}>🚢 Boat</p>
+        <div style={{background: '#f0f9ff', border: '2px solid #bfdbfe', borderRadius: '8px', padding: '12px 14px', marginBottom: '12px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '10px 14px'}}>
+          <p style={{fontSize: '1.05rem', fontWeight: 900, color: '#0c2340', margin: 0, paddingBottom: '7px', borderBottom: '2px solid #e0f2fe', gridColumn: '1 / -1'}}>🚢 Boat</p>
           <div>
             <p style={styles.detailLabel}>Name</p>
             <p style={styles.detailValue}>{boat.name || 'Boat details unavailable'}</p>
@@ -442,7 +442,7 @@ export default function OutingDetailPage() {
         <button
           type="button"
           onClick={() => navigate(`/profile/${outing.skipper_id}?returnTo=${encodeURIComponent(`/outing/${id}`)}`)}
-          style={{background: '#ffffff', border: '2px solid #e5e7eb', borderRadius: '8px', padding: '14px', marginBottom: '14px', display: 'flex', gap: '12px', alignItems: 'center', width: '100%', textAlign: 'left', cursor: 'pointer'}}
+          style={{background: '#ffffff', border: '2px solid #e5e7eb', borderRadius: '8px', padding: '12px 14px', marginBottom: '12px', display: 'flex', gap: '12px', alignItems: 'center', width: '100%', textAlign: 'left', cursor: 'pointer'}}
         >
           {skipper?.photo_url ? (
             <img src={skipper.photo_url} alt={skipper.full_name} style={{width: '52px', height: '52px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0}} />
@@ -450,7 +450,7 @@ export default function OutingDetailPage() {
             <div style={{width: '52px', height: '52px', borderRadius: '50%', background: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', flexShrink: 0}}>👤</div>
           )}
           <div>
-            <p style={{fontSize: '1.125rem', fontWeight: 900, color: '#1e293b', margin: '0 0 4px 0'}}>⛵ Skipper</p>
+            <p style={{fontSize: '1rem', fontWeight: 900, color: '#1e293b', margin: '0 0 2px 0'}}>⛵ Skipper</p>
             <p style={{fontSize: '1rem', color: '#1e293b', fontWeight: 600, margin: '0 0 2px 0'}}>{skipper?.full_name}</p>
             {skipper?.sailing_experience && (
               <p style={{fontSize: '0.875rem', color: '#64748b', margin: 0, textTransform: 'capitalize'}}>{skipper.sailing_experience} sailor</p>
@@ -461,7 +461,7 @@ export default function OutingDetailPage() {
 
         {/* Description */}
         {outing.description && (
-          <div style={{background: '#ffffff', border: '2px solid #e5e7eb', borderRadius: '8px', padding: '14px', marginBottom: '14px'}}>
+          <div style={{background: '#ffffff', border: '2px solid #e5e7eb', borderRadius: '8px', padding: '12px 14px', marginBottom: '12px'}}>
             <p style={{fontSize: '1rem', fontWeight: 900, color: '#1e293b', margin: '0 0 8px 0', paddingBottom: '8px', borderBottom: '2px solid #e0f2fe'}}>ℹ️ About This Outing</p>
             <p style={{fontSize: '0.95rem', color: '#475569', lineHeight: '1.45', margin: 0}}>{outing.description}</p>
           </div>

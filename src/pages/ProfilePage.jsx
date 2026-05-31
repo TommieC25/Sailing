@@ -346,7 +346,7 @@ export default function ProfilePage() {
             onClick={() => navigate(returnTo)}
             style={{...styles.button, background: '#0c2340', marginBottom: '1.5rem'}}
           >
-            Back to Request
+            Back to Previous
           </button>
         )}
         <h1 style={styles.title}>{isViewingOther ? displayProfile?.full_name : 'My Profile'}</h1>

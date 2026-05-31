@@ -5,34 +5,34 @@ import { supabase } from '../utils/supabaseClient';
 
 const styles = {
   container: { maxWidth: '900px', margin: '0 auto' },
-  backButton: { background: '#e0f2fe', border: '2px solid #0369a1', color: '#0369a1', fontWeight: 900, fontSize: '1.125rem', marginBottom: '16px', cursor: 'pointer', textDecoration: 'none', padding: '12px 16px', borderRadius: '8px', transition: 'all 0.2s' },
-  header: { borderRadius: '12px', padding: '24px', marginBottom: '24px', background: 'linear-gradient(135deg, #0c2340 0%, #0369a1 100%)' },
-  headerTitle: { fontSize: '1.875rem', fontWeight: 900, color: '#ffffff', margin: '0 0 8px 0' },
-  headerStats: { color: '#e0f2fe', fontSize: '1rem', fontWeight: 600, margin: 0 },
-  errorBox: { background: '#fee2e2', border: '2px solid #dc2626', color: '#991b1b', fontSize: '1rem', padding: '16px', borderRadius: '8px', marginBottom: '24px', fontWeight: 700 },
-  successBox: { background: '#f0fdf4', border: '2px solid #16a34a', color: '#166534', fontSize: '1rem', padding: '16px', borderRadius: '8px', marginBottom: '24px', fontWeight: 700 },
-  tabs: { display: 'flex', gap: '8px', marginBottom: '24px', borderBottom: '2px solid #e5e7eb', overflowX: 'auto' },
-  tab: { padding: '12px 16px', background: 'none', border: 'none', fontSize: '1.125rem', fontWeight: 700, color: '#64748b', cursor: 'pointer', borderBottom: '3px solid transparent', transition: 'all 0.2s' },
+  backButton: { background: '#e0f2fe', border: '2px solid #0369a1', color: '#0369a1', fontWeight: 900, fontSize: '1rem', marginBottom: '10px', cursor: 'pointer', textDecoration: 'none', padding: '9px 12px', borderRadius: '8px', transition: 'all 0.2s' },
+  header: { borderRadius: '10px', padding: '16px', marginBottom: '12px', background: 'linear-gradient(135deg, #0c2340 0%, #0369a1 100%)' },
+  headerTitle: { fontSize: '1.45rem', fontWeight: 900, color: '#ffffff', margin: '0 0 4px 0' },
+  headerStats: { color: '#e0f2fe', fontSize: '0.9rem', fontWeight: 600, margin: 0 },
+  errorBox: { background: '#fee2e2', border: '2px solid #dc2626', color: '#991b1b', fontSize: '0.95rem', padding: '12px', borderRadius: '8px', marginBottom: '12px', fontWeight: 700 },
+  successBox: { background: '#f0fdf4', border: '2px solid #16a34a', color: '#166534', fontSize: '0.95rem', padding: '12px', borderRadius: '8px', marginBottom: '12px', fontWeight: 700 },
+  tabs: { display: 'flex', gap: '6px', marginBottom: '12px', borderBottom: '2px solid #e5e7eb', overflowX: 'auto' },
+  tab: { padding: '8px 10px', background: 'none', border: 'none', fontSize: '0.98rem', fontWeight: 700, color: '#64748b', cursor: 'pointer', borderBottom: '3px solid transparent', transition: 'all 0.2s' },
   tabActive: { color: '#0369a1', borderBottomColor: '#0369a1' },
-  items: { display: 'grid', gap: '16px' },
-  item: { background: '#ffffff', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid #e5e7eb', padding: '20px', borderLeft: '4px solid #0369a1' },
+  items: { display: 'grid', gap: '9px' },
+  item: { background: '#ffffff', borderRadius: '10px', boxShadow: '0 1px 2px rgba(0,0,0,0.06)', border: '1px solid #e5e7eb', padding: '12px', borderLeft: '4px solid #0369a1' },
   itemNew: { background: '#f0f9ff', borderLeftColor: '#06b6d4' },
   itemOpen: { borderLeftColor: '#fbbf24' },
   itemResolved: { borderLeftColor: '#16a34a', opacity: 0.7 },
-  itemHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '12px' },
-  itemTitle: { fontSize: '1.25rem', fontWeight: 900, color: '#1e293b', margin: 0 },
-  itemBadge: { fontSize: '0.875rem', fontWeight: 700, padding: '4px 8px', borderRadius: '6px' },
+  itemHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '7px', gap: '10px' },
+  itemTitle: { fontSize: '1.05rem', fontWeight: 900, color: '#1e293b', margin: 0 },
+  itemBadge: { fontSize: '0.78rem', fontWeight: 700, padding: '3px 7px', borderRadius: '6px' },
   badgeOpen: { background: '#fef3c7', color: '#92400e' },
   badgeResolved: { background: '#dcfce7', color: '#166534' },
   badgeInProgress: { background: '#dbeafe', color: '#1e40af' },
-  itemMeta: { fontSize: '0.875rem', color: '#64748b', fontWeight: 600, marginBottom: '12px' },
-  itemContent: { fontSize: '1rem', color: '#475569', lineHeight: '1.6', marginBottom: '16px', whiteSpace: 'pre-wrap' },
-  itemUser: { fontSize: '0.95rem', color: '#334155', margin: 0, fontWeight: 700, lineHeight: 1.4 },
-  itemUserSub: { display: 'block', fontSize: '0.85rem', color: '#64748b', fontWeight: 600 },
-  statusSelect: { padding: '8px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '0.875rem', fontWeight: 600, background: '#ffffff', cursor: 'pointer' },
-  emptyBox: { background: '#ffffff', borderRadius: '12px', border: '1px solid #e5e7eb', padding: '48px 24px', textAlign: 'center' },
-  emptyIcon: { fontSize: '3rem', marginBottom: '16px' },
-  emptyText: { fontSize: '1.125rem', color: '#64748b', fontWeight: 600, margin: 0 },
+  itemMeta: { fontSize: '0.8rem', color: '#64748b', fontWeight: 600, margin: '0 0 7px' },
+  itemContent: { fontSize: '0.92rem', color: '#475569', lineHeight: '1.42', margin: '0 0 10px', whiteSpace: 'pre-wrap' },
+  itemUser: { fontSize: '0.88rem', color: '#334155', margin: 0, fontWeight: 700, lineHeight: 1.3 },
+  itemUserSub: { display: 'block', fontSize: '0.78rem', color: '#64748b', fontWeight: 600 },
+  statusSelect: { padding: '7px 9px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 600, background: '#ffffff', cursor: 'pointer' },
+  emptyBox: { background: '#ffffff', borderRadius: '10px', border: '1px solid #e5e7eb', padding: '24px 16px', textAlign: 'center' },
+  emptyIcon: { fontSize: '2rem', marginBottom: '8px' },
+  emptyText: { fontSize: '1rem', color: '#64748b', fontWeight: 600, margin: 0 },
   loadingSpinner: { textAlign: 'center', padding: '40px' },
   spinner: { display: 'inline-block', width: '40px', height: '40px', borderRadius: '50%', border: '4px solid #e2e8f0', borderTopColor: '#0369a1', animation: 'spin 0.8s linear infinite' },
   restrictedBox: { background: '#fef2f2', border: '2px solid #dc2626', color: '#991b1b', padding: '20px', borderRadius: '8px', textAlign: 'center', fontSize: '1.125rem', fontWeight: 600 },
@@ -277,23 +277,23 @@ export default function AdminInboxPage() {
           <button
             type="button"
             onClick={() => navigate(`/bug-report/${item.id}?returnTo=${encodeURIComponent('/admin/inbox?tab=bugs')}`)}
-            style={{ width: '100%', padding: '12px 14px', border: 'none', borderRadius: '8px', background: '#0369a1', color: '#ffffff', fontSize: '1rem', fontWeight: 900, cursor: 'pointer', marginBottom: '14px' }}
+            style={{ width: '100%', padding: '9px 12px', border: 'none', borderRadius: '8px', background: '#0369a1', color: '#ffffff', fontSize: '0.92rem', fontWeight: 900, cursor: 'pointer', marginBottom: '10px' }}
           >
             Open full conversation
           </button>
         )}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
           <p style={styles.itemUser}>
             From: {submitterName}
             <span style={styles.itemUserSub}>{submitterDetail || `User ID: ${item.user_id}`}</span>
           </p>
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
             {item.status !== 'resolved' && (
               <button
                 type="button"
                 onClick={() => updateStatus(table, item.id, 'resolved')}
                 disabled={updating === item.id}
-                style={{ padding: '8px 12px', border: '1px solid #16a34a', borderRadius: '6px', background: '#16a34a', color: '#ffffff', fontSize: '0.875rem', fontWeight: 900, cursor: updating === item.id ? 'wait' : 'pointer', opacity: updating === item.id ? 0.6 : 1 }}
+                style={{ padding: '7px 9px', border: '1px solid #16a34a', borderRadius: '6px', background: '#16a34a', color: '#ffffff', fontSize: '0.82rem', fontWeight: 900, cursor: updating === item.id ? 'wait' : 'pointer', opacity: updating === item.id ? 0.6 : 1 }}
               >
                 Dismiss as resolved
               </button>

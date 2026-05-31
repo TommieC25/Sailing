@@ -5,30 +5,30 @@ import { supabase } from '../utils/supabaseClient';
 
 const styles = {
   container: { maxWidth: '600px', margin: '0 auto' },
-  backButton: { background: '#e0f2fe', border: '2px solid #0369a1', color: '#0369a1', fontWeight: 900, fontSize: '1.125rem', marginBottom: '16px', cursor: 'pointer', textDecoration: 'none', padding: '12px 16px', borderRadius: '8px', transition: 'all 0.2s' },
-  header: { borderRadius: '12px', padding: '24px', marginBottom: '24px', background: 'linear-gradient(135deg, #0c2340 0%, #0369a1 100%)' },
-  headerTitle: { fontSize: '1.875rem', fontWeight: 900, color: '#ffffff', margin: '0 0 8px 0' },
-  headerSubtitle: { color: '#e0f2fe', fontSize: '1.125rem', fontWeight: 600, margin: 0 },
-  card: { background: '#ffffff', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid #e5e7eb', padding: '24px', marginBottom: '24px' },
-  guidanceBox: { background: '#f0f9ff', border: '2px solid #bfdbfe', color: '#0c2340', borderRadius: '8px', padding: '16px', fontSize: '1rem', fontWeight: 700, lineHeight: 1.5 },
-  form: { display: 'grid', gap: '20px' },
-  fieldGroup: { display: 'grid', gap: '8px' },
-  label: { fontSize: '1rem', fontWeight: 700, color: '#1e293b', display: 'block' },
-  input: { width: '100%', padding: '12px 16px', border: '2px solid #dbeafe', borderRadius: '8px', fontSize: '1rem', fontWeight: 500, color: '#1e293b', fontFamily: 'inherit', background: '#ffffff' },
-  textarea: { width: '100%', padding: '12px 16px', border: '2px solid #dbeafe', borderRadius: '8px', fontSize: '1rem', fontWeight: 500, color: '#1e293b', fontFamily: 'inherit', minHeight: '120px', resize: 'vertical', background: '#ffffff' },
-  fileInput: { padding: '12px 16px', border: '2px dashed #dbeafe', borderRadius: '8px', fontSize: '1rem', color: '#1e293b', cursor: 'pointer', background: '#f0f9ff' },
-  attachedFile: { background: '#f0fdf4', border: '2px solid #bbf7d0', color: '#166534', borderRadius: '8px', padding: '12px', fontSize: '0.95rem', fontWeight: 800, lineHeight: 1.4 },
-  buttons: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', paddingBottom: '8px' },
-  submitButton: { padding: '16px', borderRadius: '8px', fontWeight: 900, fontSize: '1.125rem', color: '#ffffff', border: 'none', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', transition: 'all 0.2s' },
-  cancelButton: { padding: '16px', borderRadius: '8px', fontWeight: 900, fontSize: '1.125rem', background: '#e5e7eb', color: '#1e293b', border: 'none', cursor: 'pointer', transition: 'all 0.2s' },
-  errorBox: { background: '#fee2e2', border: '2px solid #dc2626', color: '#991b1b', fontSize: '1rem', padding: '16px', borderRadius: '8px', marginBottom: '24px', fontWeight: 600 },
-  successBox: { background: '#f0fdf4', border: '2px solid #16a34a', color: '#166534', fontSize: '1rem', padding: '16px', borderRadius: '8px', marginBottom: '24px', fontWeight: 600 },
+  backButton: { background: '#e0f2fe', border: '2px solid #0369a1', color: '#0369a1', fontWeight: 900, fontSize: '0.98rem', marginBottom: '10px', cursor: 'pointer', textDecoration: 'none', padding: '9px 12px', borderRadius: '8px', transition: 'all 0.2s' },
+  header: { borderRadius: '10px', padding: '16px', marginBottom: '12px', background: 'linear-gradient(135deg, #0c2340 0%, #0369a1 100%)' },
+  headerTitle: { fontSize: '1.5rem', fontWeight: 900, color: '#ffffff', margin: '0 0 4px 0' },
+  headerSubtitle: { color: '#e0f2fe', fontSize: '0.95rem', fontWeight: 600, margin: 0 },
+  card: { background: '#ffffff', borderRadius: '10px', boxShadow: '0 1px 2px rgba(0,0,0,0.06)', border: '1px solid #e5e7eb', padding: '14px', marginBottom: '12px' },
+  guidanceBox: { background: '#f0f9ff', border: '2px solid #bfdbfe', color: '#0c2340', borderRadius: '8px', padding: '10px 12px', fontSize: '0.92rem', fontWeight: 700, lineHeight: 1.38 },
+  form: { display: 'grid', gap: '12px' },
+  fieldGroup: { display: 'grid', gap: '5px' },
+  label: { fontSize: '0.95rem', fontWeight: 700, color: '#1e293b', display: 'block' },
+  input: { width: '100%', padding: '10px 12px', border: '2px solid #dbeafe', borderRadius: '8px', fontSize: '0.95rem', fontWeight: 500, color: '#1e293b', fontFamily: 'inherit', background: '#ffffff' },
+  textarea: { width: '100%', padding: '10px 12px', border: '2px solid #dbeafe', borderRadius: '8px', fontSize: '0.95rem', fontWeight: 500, color: '#1e293b', fontFamily: 'inherit', minHeight: '88px', resize: 'vertical', background: '#ffffff' },
+  fileInput: { padding: '10px 12px', border: '2px dashed #dbeafe', borderRadius: '8px', fontSize: '0.92rem', color: '#1e293b', cursor: 'pointer', background: '#f0f9ff' },
+  attachedFile: { background: '#f0fdf4', border: '2px solid #bbf7d0', color: '#166534', borderRadius: '8px', padding: '10px', fontSize: '0.9rem', fontWeight: 800, lineHeight: 1.35 },
+  buttons: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', paddingBottom: '4px' },
+  submitButton: { padding: '11px', borderRadius: '8px', fontWeight: 900, fontSize: '1rem', color: '#ffffff', border: 'none', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.08)', transition: 'all 0.2s' },
+  cancelButton: { padding: '11px', borderRadius: '8px', fontWeight: 900, fontSize: '1rem', background: '#e5e7eb', color: '#1e293b', border: 'none', cursor: 'pointer', transition: 'all 0.2s' },
+  errorBox: { background: '#fee2e2', border: '2px solid #dc2626', color: '#991b1b', fontSize: '0.95rem', padding: '12px', borderRadius: '8px', marginBottom: '12px', fontWeight: 600 },
+  successBox: { background: '#f0fdf4', border: '2px solid #16a34a', color: '#166534', fontSize: '0.95rem', padding: '12px', borderRadius: '8px', marginBottom: '12px', fontWeight: 600 },
   screenshotPreview: { display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center', marginTop: '8px' },
   screenshotThumb: { width: '80px', height: '80px', borderRadius: '8px', objectFit: 'cover', border: '2px solid #dbeafe', position: 'relative' },
   removeButton: { position: 'absolute', top: '-8px', right: '-8px', background: '#dc2626', color: '#ffffff', border: 'none', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer', fontWeight: 900, fontSize: '0.75rem' },
   reportList: { display: 'grid', gap: '12px' },
-  reportCard: { background: '#ffffff', borderRadius: '10px', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', padding: '16px' },
-  replyCard: { background: '#f0f9ff', border: '1px solid #bfdbfe', borderRadius: '8px', padding: '12px', marginTop: '10px' },
+  reportCard: { background: '#ffffff', borderRadius: '10px', border: '1px solid #e5e7eb', boxShadow: '0 1px 2px rgba(0,0,0,0.06)', padding: '12px' },
+  replyCard: { background: '#f0f9ff', border: '1px solid #bfdbfe', borderRadius: '8px', padding: '10px', marginTop: '8px' },
 };
 
 export default function BugReportPage() {
@@ -397,7 +397,7 @@ export default function BugReportPage() {
       </div>
 
       <div style={styles.card}>
-        <h2 style={{ fontSize: '1.25rem', fontWeight: 900, color: '#1e293b', margin: '0 0 16px 0' }}>Your Bug Reports</h2>
+        <h2 style={{ fontSize: '1.1rem', fontWeight: 900, color: '#1e293b', margin: '0 0 10px 0' }}>Your Bug Reports</h2>
         {reportsLoading ? (
           <p style={{ color: '#64748b', fontWeight: 700, margin: 0 }}>Loading...</p>
         ) : myReports.length === 0 ? (
@@ -406,11 +406,11 @@ export default function BugReportPage() {
           <div style={styles.reportList}>
             {myReports.map((report) => (
               <div key={report.id} style={styles.reportCard}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', marginBottom: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px', marginBottom: '6px' }}>
                   <button
                     type="button"
                     onClick={() => navigate(`/bug-report/${report.id}?returnTo=${encodeURIComponent('/bug-report')}`)}
-                    style={{ fontSize: '1rem', fontWeight: 900, color: '#0369a1', margin: 0, background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left' }}
+                    style={{ fontSize: '0.98rem', fontWeight: 900, color: '#0369a1', margin: 0, background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left' }}
                   >
                     {report.title}
                   </button>
@@ -418,10 +418,10 @@ export default function BugReportPage() {
                     {report.status}
                   </span>
                 </div>
-                <p style={{ color: '#64748b', fontSize: '0.9rem', fontWeight: 600, margin: '0 0 8px 0' }}>
+                <p style={{ color: '#64748b', fontSize: '0.82rem', fontWeight: 600, margin: '0 0 6px 0' }}>
                   Submitted {new Date(report.created_at).toLocaleString()}
                 </p>
-                <p style={{ color: '#475569', margin: 0, lineHeight: 1.45, whiteSpace: 'pre-wrap' }}>{report.description}</p>
+                <p style={{ color: '#475569', margin: 0, lineHeight: 1.38, fontSize: '0.92rem', whiteSpace: 'pre-wrap' }}>{report.description}</p>
                 {report.screenshot_url && (
                   <a href={report.screenshot_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', marginTop: '10px', color: '#0369a1', fontWeight: 900 }}>
                     View screenshot
@@ -430,7 +430,7 @@ export default function BugReportPage() {
                 <button
                   type="button"
                   onClick={() => navigate(`/bug-report/${report.id}?returnTo=${encodeURIComponent('/bug-report')}`)}
-                  style={{ display: 'block', marginTop: '10px', background: '#e0f2fe', color: '#0369a1', border: '1px solid #0369a1', borderRadius: '8px', padding: '10px 12px', fontWeight: 900, cursor: 'pointer' }}
+                  style={{ display: 'block', marginTop: '8px', background: '#e0f2fe', color: '#0369a1', border: '1px solid #0369a1', borderRadius: '8px', padding: '8px 10px', fontWeight: 900, cursor: 'pointer' }}
                 >
                   Open conversation
                 </button>
@@ -442,19 +442,19 @@ export default function BugReportPage() {
                     <p style={{ margin: 0, color: '#334155', lineHeight: 1.45, whiteSpace: 'pre-wrap' }}>{reply.message}</p>
                   </div>
                 ))}
-                <div style={{ display: 'grid', gap: '8px', marginTop: '12px' }}>
+                <div style={{ display: 'grid', gap: '6px', marginTop: '8px' }}>
                   <textarea
                     value={replyDrafts[report.id] || ''}
                     onChange={(e) => setReplyDrafts((current) => ({ ...current, [report.id]: e.target.value }))}
                     placeholder="Reply in the app..."
-                    rows={3}
-                    style={{ width: '100%', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '10px', fontFamily: 'inherit', fontSize: '0.95rem', resize: 'vertical' }}
+                    rows={2}
+                    style={{ width: '100%', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '8px 10px', fontFamily: 'inherit', fontSize: '0.92rem', resize: 'vertical' }}
                   />
                   <button
                     type="button"
                     onClick={() => sendReportReply(report)}
                     disabled={sendingReply === report.id || !(replyDrafts[report.id] || '').trim()}
-                    style={{ padding: '10px 12px', border: 'none', borderRadius: '8px', background: '#0369a1', color: '#ffffff', fontSize: '0.95rem', fontWeight: 900, cursor: sendingReply === report.id ? 'wait' : 'pointer', opacity: sendingReply === report.id || !(replyDrafts[report.id] || '').trim() ? 0.65 : 1 }}
+                    style={{ padding: '8px 10px', border: 'none', borderRadius: '8px', background: '#0369a1', color: '#ffffff', fontSize: '0.92rem', fontWeight: 900, cursor: sendingReply === report.id ? 'wait' : 'pointer', opacity: sendingReply === report.id || !(replyDrafts[report.id] || '').trim() ? 0.65 : 1 }}
                   >
                     {sendingReply === report.id ? 'Sending...' : 'Send reply'}
                   </button>

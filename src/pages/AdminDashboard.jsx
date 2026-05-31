@@ -293,12 +293,12 @@ const AdminDashboard = () => {
   };
 
   const tabStyle = {
-    padding: '12px 16px',
+    padding: '8px 11px',
     background: '#f8fafc',
     border: '1px solid #cbd5e1',
-    borderRadius: '10px',
+    borderRadius: '8px',
     color: '#0f172a',
-    fontSize: '1rem',
+    fontSize: '0.92rem',
     fontWeight: 700,
     cursor: 'pointer',
     whiteSpace: 'nowrap',
@@ -390,22 +390,22 @@ const AdminDashboard = () => {
   };
 
   const renderDataCard = ({ key, title, meta, details, action, onTitleClick }) => (
-    <div key={key} style={{ background: '#ffffff', padding: '16px', marginBottom: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', flexWrap: 'wrap' }}>
+    <div key={key} style={{ background: '#ffffff', padding: '11px 12px', marginBottom: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px', flexWrap: 'wrap' }}>
         <div style={{ minWidth: 0, flex: '1 1 240px' }}>
           {onTitleClick ? (
             <button
               type="button"
               onClick={onTitleClick}
-              style={{ margin: '0 0 6px', color: '#0369a1', fontSize: '1.05rem', fontWeight: 900, background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left' }}
+              style={{ margin: '0 0 4px', color: '#0369a1', fontSize: '1rem', fontWeight: 900, background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left' }}
             >
               {title}
             </button>
           ) : (
-            <h3 style={{ margin: '0 0 6px', color: '#0f172a', fontSize: '1.05rem', fontWeight: 900 }}>{title}</h3>
+            <h3 style={{ margin: '0 0 4px', color: '#0f172a', fontSize: '1rem', fontWeight: 900 }}>{title}</h3>
           )}
-          {meta && <p style={{ margin: '0 0 6px', color: '#334155', fontWeight: 700, fontSize: '0.92rem' }}>{meta}</p>}
-          {details && <p style={{ margin: 0, color: '#64748b', fontWeight: 600, fontSize: '0.9rem', lineHeight: 1.45 }}>{details}</p>}
+          {meta && <p style={{ margin: '0 0 4px', color: '#334155', fontWeight: 700, fontSize: '0.88rem' }}>{meta}</p>}
+          {details && <p style={{ margin: 0, color: '#64748b', fontWeight: 600, fontSize: '0.86rem', lineHeight: 1.35 }}>{details}</p>}
         </div>
         {action}
       </div>
@@ -417,37 +417,37 @@ const AdminDashboard = () => {
     const openItems = config.items.filter((item) => item.status === 'open').length;
 
     return (
-      <div style={{ marginBottom: '32px' }}>
-        <h3 style={{ fontSize: '1.25rem', fontWeight: 900, marginBottom: '16px' }}>
+      <div style={{ marginBottom: '20px' }}>
+        <h3 style={{ fontSize: '1.1rem', fontWeight: 900, marginBottom: '10px' }}>
           {config.icon} {config.title} ({openItems} open / {config.items.length} total)
         </h3>
         {config.items.length === 0 ? (
-          <div style={{ background: '#ffffff', padding: '18px', borderRadius: '10px', border: '1px solid #e5e7eb', color: '#64748b', fontWeight: 700 }}>
+          <div style={{ background: '#ffffff', padding: '12px', borderRadius: '8px', border: '1px solid #e5e7eb', color: '#64748b', fontWeight: 700 }}>
             No {config.tableLabel}s yet.
           </div>
         ) : (
           config.items.map((item) => {
             const isSelected = selectedFeedback?.type === type && selectedFeedback?.item?.id === item.id;
             return (
-              <div key={item.id} style={{ background: '#ffffff', padding: '16px', marginBottom: '12px', borderRadius: '8px', borderLeft: `4px solid ${config.accent}`, boxShadow: isSelected ? '0 0 0 3px #bfdbfe' : '0 1px 3px rgba(0,0,0,0.08)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '12px', flexWrap: 'wrap', marginBottom: '8px' }}>
+              <div key={item.id} style={{ background: '#ffffff', padding: '12px', marginBottom: '8px', borderRadius: '8px', borderLeft: `4px solid ${config.accent}`, boxShadow: isSelected ? '0 0 0 3px #bfdbfe' : '0 1px 2px rgba(0,0,0,0.06)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '10px', flexWrap: 'wrap', marginBottom: '6px' }}>
                   <button
                     type="button"
                     onClick={() => type === 'bugs' ? navigate(`/bug-report/${item.id}?returnTo=${encodeURIComponent('/admin/dashboard')}`) : openFeedback(type, item)}
                     style={{ minWidth: 0, flex: '1 1 240px', textAlign: 'left', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
                   >
-                    <h4 style={{ margin: 0, fontWeight: 900, color: '#0369a1', fontSize: '1.05rem' }}>{feedbackTitle(type, item)}</h4>
-                    <p style={{ margin: '6px 0', fontSize: '0.95rem', color: '#475569', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>
+                    <h4 style={{ margin: 0, fontWeight: 900, color: '#0369a1', fontSize: '1rem' }}>{feedbackTitle(type, item)}</h4>
+                    <p style={{ margin: '4px 0', fontSize: '0.9rem', color: '#475569', lineHeight: 1.38, whiteSpace: 'pre-wrap' }}>
                       {isSelected ? feedbackBody(type, item) : `${feedbackBody(type, item)?.substring(0, 180) || ''}${feedbackBody(type, item)?.length > 180 ? '...' : ''}`}
                     </p>
-                    <p style={{ margin: '4px 0', fontSize: '0.9rem', color: '#334155', fontWeight: 700 }}>From: {submitterText(item)}</p>
-                    <p style={{ margin: '4px 0', fontSize: '0.85rem', color: '#64748b' }}>Submitted {new Date(item.created_at).toLocaleString()}</p>
+                    <p style={{ margin: '3px 0', fontSize: '0.86rem', color: '#334155', fontWeight: 700 }}>From: {submitterText(item)}</p>
+                    <p style={{ margin: '3px 0', fontSize: '0.8rem', color: '#64748b' }}>Submitted {new Date(item.created_at).toLocaleString()}</p>
                   </button>
-                  <div style={{ display: 'grid', gap: '8px', minWidth: '150px' }}>
+                  <div style={{ display: 'grid', gap: '6px', minWidth: '140px' }}>
                     <select
                       value={item.status}
                       onChange={(e) => config.statusHandler(item.id, e.target.value)}
-                      style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontWeight: 700, background: '#ffffff' }}
+                      style={{ padding: '7px 10px', borderRadius: '6px', border: '1px solid #d1d5db', fontWeight: 700, background: '#ffffff' }}
                     >
                       <option value="open">Open</option>
                       <option value="in_progress">In Progress</option>
@@ -458,7 +458,7 @@ const AdminDashboard = () => {
                     <button
                       type="button"
                       onClick={() => type === 'bugs' ? navigate(`/bug-report/${item.id}?returnTo=${encodeURIComponent('/admin/dashboard')}`) : openFeedback(type, item)}
-                      style={{ padding: '8px 12px', borderRadius: '6px', border: 'none', background: '#0369a1', color: '#ffffff', fontWeight: 900, cursor: 'pointer' }}
+                      style={{ padding: '7px 10px', borderRadius: '6px', border: 'none', background: '#0369a1', color: '#ffffff', fontWeight: 900, cursor: 'pointer' }}
                     >
                       {type === 'bugs' ? 'Open Thread' : isSelected ? 'Open' : 'View'}
                     </button>
@@ -466,7 +466,7 @@ const AdminDashboard = () => {
                       <button
                         type="button"
                         onClick={() => navigate(`/bug-report/${item.id}?returnTo=${encodeURIComponent('/admin/dashboard')}`)}
-                        style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #0369a1', background: '#e0f2fe', color: '#0369a1', fontWeight: 900, cursor: 'pointer' }}
+                        style={{ padding: '7px 10px', borderRadius: '6px', border: '1px solid #0369a1', background: '#e0f2fe', color: '#0369a1', fontWeight: 900, cursor: 'pointer' }}
                       >
                         Reply
                       </button>
@@ -474,7 +474,7 @@ const AdminDashboard = () => {
                   </div>
                 </div>
                 {isSelected && (
-                  <div style={{ marginTop: '12px', padding: '14px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                  <div style={{ marginTop: '8px', padding: '10px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
                     <p style={{ margin: '0 0 8px', color: '#0f172a', fontWeight: 900 }}>Full {config.tableLabel}</p>
                     <p style={{ margin: 0, color: '#334155', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{feedbackBody(type, item)}</p>
                     {type === 'bugs' && item.screenshot_url && (
@@ -503,20 +503,20 @@ const AdminDashboard = () => {
   return (
     <div style={{ background: '#f0f4f8', minHeight: '100vh' }}>
       {/* Header */}
-      <div style={{ background: 'linear-gradient(135deg, #0c2340 0%, #0369a1 100%)', padding: '24px', color: '#ffffff' }}>
-        <h1 style={{ margin: 0, fontSize: '2rem', fontWeight: 900 }}>⚙️ Admin Dashboard</h1>
-        <p style={{ margin: '8px 0 0', fontSize: '1rem', color: '#a5f3fc' }}>Community Management & Monitoring</p>
+      <div style={{ background: 'linear-gradient(135deg, #0c2340 0%, #0369a1 100%)', padding: '16px 18px', color: '#ffffff' }}>
+        <h1 style={{ margin: 0, fontSize: '1.55rem', fontWeight: 900 }}>⚙️ Admin Dashboard</h1>
+        <p style={{ margin: '4px 0 0', fontSize: '0.92rem', color: '#a5f3fc' }}>Community Management & Monitoring</p>
       </div>
 
       {error && (
-        <div style={{ background: '#fee2e2', color: '#991b1b', padding: '16px', margin: '16px', borderRadius: '8px', fontWeight: 700 }}>
+        <div style={{ background: '#fee2e2', color: '#991b1b', padding: '12px', margin: '12px', borderRadius: '8px', fontWeight: 700 }}>
           ⚠️ {error}
         </div>
       )}
 
       {/* Tab Navigation */}
-      <div style={{ background: '#ffffff', borderBottom: '2px solid #e5e7eb', padding: '12px 16px', overflowX: 'auto' }}>
-        <div style={{ display: 'flex', gap: '8px', minWidth: 'max-content' }}>
+      <div style={{ background: '#ffffff', borderBottom: '2px solid #e5e7eb', padding: '8px 10px', overflowX: 'auto' }}>
+        <div style={{ display: 'flex', gap: '6px', minWidth: 'max-content' }}>
         {['overview', 'members', 'boats', 'outings', 'crewRequests', 'inbox', 'announcements', 'activity', 'admins', 'moderation', 'reports'].map((tab) => (
           <button
             key={tab}
@@ -542,12 +542,12 @@ const AdminDashboard = () => {
       </div>
 
       {/* Content Area */}
-      <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
+      <div style={{ padding: '14px 12px', maxWidth: '1200px', margin: '0 auto' }}>
         {/* OVERVIEW TAB */}
         {activeTab === 'overview' && (
           <div>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '24px' }}>System Overview</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '8px', marginBottom: '28px' }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 900, margin: '0 0 12px' }}>System Overview</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '7px', marginBottom: '18px' }}>
               {[
                 { label: 'Total Members', value: stats?.totalUsers, icon: '👥', tab: 'members' },
                 { label: 'Total Boats', value: stats?.totalBoats, icon: '⛵', tab: 'boats' },
@@ -563,17 +563,17 @@ const AdminDashboard = () => {
                   key={stat.label}
                   type="button"
                   onClick={() => goToTab(stat.tab, { inboxFilter: stat.inboxFilter, outingsFilter: stat.outingsFilter })}
-                  style={{ background: '#ffffff', padding: '10px 12px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', border: '1px solid #e2e8f0', cursor: 'pointer', textAlign: 'left', display: 'grid', gridTemplateColumns: '32px 1fr auto', alignItems: 'center', gap: '10px', minHeight: '48px', width: '100%' }}
+                  style={{ background: '#ffffff', padding: '8px 10px', borderRadius: '8px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', cursor: 'pointer', textAlign: 'left', display: 'grid', gridTemplateColumns: '28px 1fr auto', alignItems: 'center', gap: '8px', minHeight: '40px', width: '100%' }}
                 >
-                  <span style={{ fontSize: '1.25rem', lineHeight: 1, width: '32px', textAlign: 'center' }}>{stat.icon}</span>
-                  <span style={{ fontSize: '0.98rem', color: '#0f172a', fontWeight: 900, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{stat.label}</span>
-                  <span style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0369a1', minWidth: '36px', textAlign: 'right' }}>{stat.value}</span>
+                  <span style={{ fontSize: '1.05rem', lineHeight: 1, width: '28px', textAlign: 'center' }}>{stat.icon}</span>
+                  <span style={{ fontSize: '0.92rem', color: '#0f172a', fontWeight: 900, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{stat.label}</span>
+                  <span style={{ fontSize: '1.1rem', fontWeight: 900, color: '#0369a1', minWidth: '32px', textAlign: 'right' }}>{stat.value}</span>
                 </button>
               ))}
             </div>
 
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 900, marginBottom: '16px' }}>⚡ Quick Actions</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 900, margin: '0 0 10px' }}>⚡ Quick Actions</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '8px' }}>
               {[
                 { action: 'announcements', label: '📢 Create Announcement' },
                 { action: 'members', label: '👥 View Members' },
@@ -584,7 +584,7 @@ const AdminDashboard = () => {
                   key={item.action}
                   onClick={() => goToTab(item.action, item.options || {})}
                   style={{
-                    padding: '16px',
+                    padding: '10px 12px',
                     background: '#0369a1',
                     color: '#ffffff',
                     border: 'none',
@@ -607,17 +607,17 @@ const AdminDashboard = () => {
         {/* MEMBERS TAB */}
         {activeTab === 'members' && (
           <div>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '24px' }}>👥 Member Management</h2>
-            <div style={{ background: '#ffffff', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', overflowX: 'auto' }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 900, margin: '0 0 12px' }}>👥 Member Management</h2>
+            <div style={{ background: '#ffffff', borderRadius: '10px', boxShadow: '0 1px 4px rgba(0,0,0,0.08)', overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '720px' }}>
                 <thead>
                   <tr style={{ background: '#f3f4f6', borderBottom: '2px solid #e5e7eb' }}>
-                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: 700 }}>User</th>
-                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: 700 }}>Email</th>
-                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: 700 }}>Type</th>
-                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: 700 }}>Outings</th>
-                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: 700 }}>Joined</th>
-                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: 700 }}>Actions</th>
+                    <th style={{ padding: '8px 10px', textAlign: 'left', fontWeight: 700 }}>User</th>
+                    <th style={{ padding: '8px 10px', textAlign: 'left', fontWeight: 700 }}>Email</th>
+                    <th style={{ padding: '8px 10px', textAlign: 'left', fontWeight: 700 }}>Type</th>
+                    <th style={{ padding: '8px 10px', textAlign: 'left', fontWeight: 700 }}>Outings</th>
+                    <th style={{ padding: '8px 10px', textAlign: 'left', fontWeight: 700 }}>Joined</th>
+                    <th style={{ padding: '8px 10px', textAlign: 'left', fontWeight: 700 }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -625,18 +625,18 @@ const AdminDashboard = () => {
                     const memberOutings = sortMemberOutings(outingsBySkipperId[u.id] || []);
                     return (
                       <tr key={u.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
-                        <td style={{ padding: '12px' }}>
+                        <td style={{ padding: '8px 10px' }}>
                           <button onClick={() => navigate(`/profile/${u.id}?returnTo=${encodeURIComponent('/admin/dashboard')}`)} style={{ background: 'none', border: 'none', color: '#0369a1', cursor: 'pointer', fontWeight: 700 }}>
                             {u.full_name || 'Unknown'}
                           </button>
                         </td>
-                        <td style={{ padding: '12px', fontSize: '0.9rem', color: '#666' }}>{u.email}</td>
-                        <td style={{ padding: '12px', fontSize: '0.9rem' }}>
+                        <td style={{ padding: '8px 10px', fontSize: '0.86rem', color: '#666' }}>{u.email}</td>
+                        <td style={{ padding: '8px 10px', fontSize: '0.86rem' }}>
                           <span style={{ background: u.user_type === 'owner' ? '#dcfce7' : '#e0f2fe', color: u.user_type === 'owner' ? '#166534' : '#0c4a6e', padding: '4px 8px', borderRadius: '4px', fontWeight: 600 }}>
                             {u.user_type}
                           </span>
                         </td>
-                        <td style={{ padding: '12px', fontSize: '0.9rem', minWidth: '180px' }}>
+                        <td style={{ padding: '8px 10px', fontSize: '0.86rem', minWidth: '180px' }}>
                           {u.user_type === 'owner' ? (
                             memberOutings.length > 0 ? (
                               <div style={{ display: 'grid', gap: '6px' }}>
@@ -659,8 +659,8 @@ const AdminDashboard = () => {
                             <span style={{ color: '#94a3b8' }}>—</span>
                           )}
                         </td>
-                        <td style={{ padding: '12px', fontSize: '0.9rem', color: '#666' }}>{new Date(u.created_at).toLocaleDateString()}</td>
-                        <td style={{ padding: '12px', fontSize: '0.9rem' }}>
+                        <td style={{ padding: '8px 10px', fontSize: '0.86rem', color: '#666' }}>{new Date(u.created_at).toLocaleDateString()}</td>
+                        <td style={{ padding: '8px 10px', fontSize: '0.86rem' }}>
                           <button onClick={() => navigate(`/profile/${u.id}?returnTo=${encodeURIComponent('/admin/dashboard')}`)} style={{ background: '#e0f2fe', color: '#0369a1', padding: '6px 12px', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 700, marginRight: '8px' }}>
                             Details
                           </button>
@@ -687,9 +687,9 @@ const AdminDashboard = () => {
         {/* BOATS TAB */}
         {activeTab === 'boats' && (
           <div>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '24px' }}>⛵ Boats</h2>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 900, margin: '0 0 12px' }}>⛵ Boats</h2>
             {boats.length === 0 ? (
-              <div style={{ background: '#ffffff', padding: '20px', borderRadius: '10px', border: '1px solid #e2e8f0', color: '#64748b', fontWeight: 700 }}>No boats registered yet.</div>
+              <div style={{ background: '#ffffff', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', color: '#64748b', fontWeight: 700 }}>No boats registered yet.</div>
             ) : (
               boats.map((boat) => renderDataCard({
                 key: boat.id,
@@ -714,8 +714,8 @@ const AdminDashboard = () => {
         {/* OUTINGS TAB */}
         {activeTab === 'outings' && (
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap', marginBottom: '16px' }}>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: 900, margin: 0 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '12px' }}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 900, margin: 0 }}>
                 🌊 {outingsFilter === 'active' ? 'Active Outings' : outingsFilter === 'archived' ? 'Archived Outings' : 'All Outings'}
               </h2>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -729,7 +729,7 @@ const AdminDashboard = () => {
                     type="button"
                     onClick={() => setOutingsFilter(filter.key)}
                     style={{
-                      padding: '8px 12px',
+                      padding: '7px 10px',
                       borderRadius: '999px',
                       border: outingsFilter === filter.key ? '2px solid #0369a1' : '1px solid #cbd5e1',
                       background: outingsFilter === filter.key ? '#e0f2fe' : '#ffffff',
@@ -744,7 +744,7 @@ const AdminDashboard = () => {
               </div>
             </div>
             {visibleAdminOutings.length === 0 ? (
-              <div style={{ background: '#ffffff', padding: '20px', borderRadius: '10px', border: '1px solid #e2e8f0', color: '#64748b', fontWeight: 700 }}>No outings posted yet.</div>
+              <div style={{ background: '#ffffff', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', color: '#64748b', fontWeight: 700 }}>No outings posted yet.</div>
             ) : (
               visibleAdminOutings.map((outing) => renderDataCard({
                 key: outing.id,
@@ -779,9 +779,9 @@ const AdminDashboard = () => {
         {/* CREW REQUESTS TAB */}
         {activeTab === 'crewRequests' && (
           <div>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '24px' }}>🤝 Crew Requests</h2>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 900, margin: '0 0 12px' }}>🤝 Crew Requests</h2>
             {crewRequests.length === 0 ? (
-              <div style={{ background: '#ffffff', padding: '20px', borderRadius: '10px', border: '1px solid #e2e8f0', color: '#64748b', fontWeight: 700 }}>No crew requests yet.</div>
+              <div style={{ background: '#ffffff', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', color: '#64748b', fontWeight: 700 }}>No crew requests yet.</div>
             ) : (
               crewRequests.map((request) => renderDataCard({
                 key: request.id,
@@ -815,8 +815,8 @@ const AdminDashboard = () => {
         {/* INBOX TAB */}
         {activeTab === 'inbox' && (
           <div>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '24px' }}>📬 Admin Inbox</h2>
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '20px' }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 900, margin: '0 0 12px' }}>📬 Admin Inbox</h2>
+            <div style={{ display: 'flex', gap: '7px', flexWrap: 'wrap', marginBottom: '12px' }}>
               {[
                 { key: 'all', label: 'All' },
                 { key: 'bugs', label: `Bugs (${bugReports.length})` },
@@ -830,7 +830,7 @@ const AdminDashboard = () => {
                     setInboxFilter(filter.key);
                     setSelectedFeedback(null);
                   }}
-                  style={{ padding: '10px 14px', borderRadius: '999px', border: '1px solid #cbd5e1', background: inboxFilter === filter.key ? '#0369a1' : '#ffffff', color: inboxFilter === filter.key ? '#ffffff' : '#0f172a', fontWeight: 900, cursor: 'pointer' }}
+                  style={{ padding: '7px 10px', borderRadius: '999px', border: '1px solid #cbd5e1', background: inboxFilter === filter.key ? '#0369a1' : '#ffffff', color: inboxFilter === filter.key ? '#ffffff' : '#0f172a', fontWeight: 900, cursor: 'pointer' }}
                 >
                   {filter.label}
                 </button>
@@ -846,36 +846,36 @@ const AdminDashboard = () => {
         {/* ANNOUNCEMENTS TAB */}
         {activeTab === 'announcements' && (
           <div>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '24px' }}>📢 Announcements</h2>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 900, margin: '0 0 12px' }}>📢 Announcements</h2>
 
             {/* Create Announcement Form */}
-            <div style={{ background: '#ffffff', padding: '24px', borderRadius: '12px', marginBottom: '32px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 900, marginBottom: '16px' }}>✍️ Create New Announcement</h3>
-              <form onSubmit={handleCreateAnnouncement} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ background: '#ffffff', padding: '14px', borderRadius: '10px', marginBottom: '18px', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 900, margin: '0 0 10px' }}>✍️ Create New Announcement</h3>
+              <form onSubmit={handleCreateAnnouncement} style={{ display: 'grid', gap: '10px' }}>
                 <div>
-                  <label style={{ fontWeight: 700, marginBottom: '8px', display: 'block' }}>Title</label>
+                  <label style={{ fontWeight: 700, marginBottom: '5px', display: 'block' }}>Title</label>
                   <input
                     type="text"
                     value={newAnnouncementTitle}
                     onChange={(e) => setNewAnnouncementTitle(e.target.value)}
                     placeholder="Announcement title"
-                    style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '1rem' }}
+                    style={{ width: '100%', padding: '9px 10px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.95rem' }}
                   />
                 </div>
                 <div>
-                  <label style={{ fontWeight: 700, marginBottom: '8px', display: 'block' }}>Message</label>
+                  <label style={{ fontWeight: 700, marginBottom: '5px', display: 'block' }}>Message</label>
                   <textarea
                     value={newAnnouncementMessage}
                     onChange={(e) => setNewAnnouncementMessage(e.target.value)}
                     placeholder="Announcement message"
                     rows={4}
-                    style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '1rem', fontFamily: 'inherit' }}
+                    style={{ width: '100%', padding: '9px 10px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.95rem', fontFamily: 'inherit' }}
                   />
                 </div>
                 <button
                   type="submit"
                   style={{
-                    padding: '12px 24px',
+                    padding: '10px 14px',
                     background: '#06b6d4',
                     color: '#000',
                     border: 'none',
@@ -894,13 +894,13 @@ const AdminDashboard = () => {
             </div>
 
             {/* Announcements List */}
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 900, marginBottom: '16px' }}>Recent Announcements</h3>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 900, margin: '0 0 10px' }}>Recent Announcements</h3>
             {announcements.map((ann) => {
               const isEditing = editingAnnouncementId === ann.id;
               return (
-                <div key={ann.id} style={{ background: '#ffffff', padding: '20px', marginBottom: '12px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+                <div key={ann.id} style={{ background: '#ffffff', padding: '12px', marginBottom: '8px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
                   {isEditing ? (
-                    <form onSubmit={handleUpdateAnnouncement} style={{ display: 'grid', gap: '12px' }}>
+                    <form onSubmit={handleUpdateAnnouncement} style={{ display: 'grid', gap: '8px' }}>
                       <input
                         type="text"
                         value={editingAnnouncementTitle}
@@ -942,8 +942,8 @@ const AdminDashboard = () => {
                           Edit
                         </button>
                       </div>
-                      <p style={{ margin: '8px 0', color: '#666', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>{ann.message}</p>
-                      <p style={{ margin: '8px 0', fontSize: '0.85rem', color: '#999' }}>Posted {new Date(ann.created_at).toLocaleDateString()}</p>
+                      <p style={{ margin: '6px 0', color: '#666', lineHeight: '1.42', whiteSpace: 'pre-wrap' }}>{ann.message}</p>
+                      <p style={{ margin: '6px 0 0', fontSize: '0.82rem', color: '#999' }}>Posted {new Date(ann.created_at).toLocaleDateString()}</p>
                     </>
                   )}
                 </div>
@@ -955,15 +955,15 @@ const AdminDashboard = () => {
         {/* ACTIVITY TAB */}
         {activeTab === 'activity' && (
           <div>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '24px' }}>📈 Recent Activity</h2>
-            <div style={{ background: '#ffffff', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 900, margin: '0 0 12px' }}>📈 Recent Activity</h2>
+            <div style={{ background: '#ffffff', borderRadius: '10px', overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
               {recentActivity.map((activity, idx) => (
                 <button
                   key={idx}
                   type="button"
                   onClick={() => openActivity(activity)}
                   disabled={!activity.id}
-                  style={{ width: '100%', padding: '16px', border: 'none', borderBottom: idx < recentActivity.length - 1 ? '1px solid #e5e7eb' : 'none', background: '#ffffff', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: activity.id ? 'pointer' : 'default', textAlign: 'left', gap: '12px' }}
+                  style={{ width: '100%', padding: '10px 12px', border: 'none', borderBottom: idx < recentActivity.length - 1 ? '1px solid #e5e7eb' : 'none', background: '#ffffff', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: activity.id ? 'pointer' : 'default', textAlign: 'left', gap: '10px' }}
                 >
                   <div>
                     <div style={{ fontWeight: 700, color: '#000' }}>
@@ -986,31 +986,31 @@ const AdminDashboard = () => {
         {/* ADMINS TAB */}
         {activeTab === 'admins' && (
           <div>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '24px' }}>🔐 Admin Management</h2>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 900, margin: '0 0 12px' }}>🔐 Admin Management</h2>
 
-            <div style={{ background: '#ffffff', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', marginBottom: '32px' }}>
+            <div style={{ background: '#ffffff', borderRadius: '10px', overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.08)', marginBottom: '14px' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ background: '#f3f4f6', borderBottom: '2px solid #e5e7eb' }}>
-                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: 700 }}>Admin Name</th>
-                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: 700 }}>Email</th>
-                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: 700 }}>Role</th>
-                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: 700 }}>Since</th>
-                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: 700 }}>Actions</th>
+                    <th style={{ padding: '8px 10px', textAlign: 'left', fontWeight: 700 }}>Admin Name</th>
+                    <th style={{ padding: '8px 10px', textAlign: 'left', fontWeight: 700 }}>Email</th>
+                    <th style={{ padding: '8px 10px', textAlign: 'left', fontWeight: 700 }}>Role</th>
+                    <th style={{ padding: '8px 10px', textAlign: 'left', fontWeight: 700 }}>Since</th>
+                    <th style={{ padding: '8px 10px', textAlign: 'left', fontWeight: 700 }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {admins.map((admin) => (
                     <tr key={admin.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
-                      <td style={{ padding: '12px', fontWeight: 700 }}>{admin.full_name || 'Unknown'}</td>
-                      <td style={{ padding: '12px', fontSize: '0.9rem', color: '#666' }}>{admin.email}</td>
-                      <td style={{ padding: '12px' }}>
+                      <td style={{ padding: '8px 10px', fontWeight: 700 }}>{admin.full_name || 'Unknown'}</td>
+                      <td style={{ padding: '8px 10px', fontSize: '0.86rem', color: '#666' }}>{admin.email}</td>
+                      <td style={{ padding: '8px 10px' }}>
                         <span style={{ background: '#fef3c7', color: '#92400e', padding: '4px 8px', borderRadius: '4px', fontWeight: 600, fontSize: '0.9rem' }}>
                           admin
                         </span>
                       </td>
-                      <td style={{ padding: '12px', fontSize: '0.9rem', color: '#666' }}>{new Date(admin.created_at).toLocaleDateString()}</td>
-                      <td style={{ padding: '12px' }}>
+                      <td style={{ padding: '8px 10px', fontSize: '0.86rem', color: '#666' }}>{new Date(admin.created_at).toLocaleDateString()}</td>
+                      <td style={{ padding: '8px 10px' }}>
                         {admin.id !== user.id && (
                           <button onClick={() => handleRemoveAdmin(admin.id)} style={{ background: '#fca5a5', color: '#7f1d1d', padding: '6px 12px', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 600, fontSize: '0.9rem' }}>
                             Remove
@@ -1025,9 +1025,9 @@ const AdminDashboard = () => {
             </div>
 
             {users && (
-              <div style={{ background: '#ffffff', padding: '20px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: 900, marginBottom: '16px' }}>➕ Add New Admin</h3>
-                <p style={{ color: '#666', marginBottom: '16px' }}>Select a user from the Community tab and click "Make Admin"</p>
+              <div style={{ background: '#ffffff', padding: '12px', borderRadius: '10px', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
+                <h3 style={{ fontSize: '1.05rem', fontWeight: 900, margin: '0 0 6px' }}>➕ Add New Admin</h3>
+                <p style={{ color: '#666', margin: 0 }}>Select a user from the Community tab and click "Make Admin"</p>
               </div>
             )}
           </div>
@@ -1036,19 +1036,19 @@ const AdminDashboard = () => {
         {/* MODERATION TAB */}
         {activeTab === 'moderation' && (
           <div>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '24px' }}>🚫 Moderation Tools</h2>
-            <div style={{ background: '#ffffff', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-              <p style={{ fontSize: '1.05rem', color: '#475569', lineHeight: '1.6', marginTop: 0 }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 900, margin: '0 0 12px' }}>🚫 Moderation Tools</h2>
+            <div style={{ background: '#ffffff', padding: '12px', borderRadius: '10px', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
+              <p style={{ fontSize: '0.95rem', color: '#475569', lineHeight: '1.4', margin: '0 0 10px' }}>
                 Moderation currently happens through the live admin areas below. Future-only features are not listed as fake tools.
               </p>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
-                <button type="button" onClick={() => goToTab('members')} style={{ padding: '16px', background: '#0369a1', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: 900, cursor: 'pointer' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '8px' }}>
+                <button type="button" onClick={() => goToTab('members')} style={{ padding: '10px 12px', background: '#0369a1', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: 900, cursor: 'pointer' }}>
                   View Members
                 </button>
-                <button type="button" onClick={() => goToTab('inbox', { inboxFilter: 'all' })} style={{ padding: '16px', background: '#0369a1', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: 900, cursor: 'pointer' }}>
+                <button type="button" onClick={() => goToTab('inbox', { inboxFilter: 'all' })} style={{ padding: '10px 12px', background: '#0369a1', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: 900, cursor: 'pointer' }}>
                   Review Reports
                 </button>
-                <button type="button" onClick={() => goToTab('activity')} style={{ padding: '16px', background: '#0369a1', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: 900, cursor: 'pointer' }}>
+                <button type="button" onClick={() => goToTab('activity')} style={{ padding: '10px 12px', background: '#0369a1', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: 900, cursor: 'pointer' }}>
                   Review Activity
                 </button>
               </div>
@@ -1059,20 +1059,20 @@ const AdminDashboard = () => {
         {/* REPORTS TAB */}
         {activeTab === 'reports' && (
           <div>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '24px' }}>📋 Reports & Analytics</h2>
-            <div style={{ background: '#ffffff', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 900, marginBottom: '16px' }}>Available Reports</h3>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
-                <button type="button" onClick={() => goToTab('overview')} style={{ padding: '16px', background: '#0369a1', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: 900, cursor: 'pointer' }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 900, margin: '0 0 12px' }}>📋 Reports & Analytics</h2>
+            <div style={{ background: '#ffffff', padding: '12px', borderRadius: '10px', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
+              <h3 style={{ fontSize: '1.05rem', fontWeight: 900, margin: '0 0 10px' }}>Available Reports</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '8px' }}>
+                <button type="button" onClick={() => goToTab('overview')} style={{ padding: '10px 12px', background: '#0369a1', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: 900, cursor: 'pointer' }}>
                   System Overview
                 </button>
-                <button type="button" onClick={() => goToTab('members')} style={{ padding: '16px', background: '#0369a1', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: 900, cursor: 'pointer' }}>
+                <button type="button" onClick={() => goToTab('members')} style={{ padding: '10px 12px', background: '#0369a1', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: 900, cursor: 'pointer' }}>
                   Member List
                 </button>
-                <button type="button" onClick={() => goToTab('inbox', { inboxFilter: 'all' })} style={{ padding: '16px', background: '#0369a1', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: 900, cursor: 'pointer' }}>
+                <button type="button" onClick={() => goToTab('inbox', { inboxFilter: 'all' })} style={{ padding: '10px 12px', background: '#0369a1', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: 900, cursor: 'pointer' }}>
                   Support Inbox
                 </button>
-                <button type="button" onClick={() => goToTab('activity')} style={{ padding: '16px', background: '#0369a1', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: 900, cursor: 'pointer' }}>
+                <button type="button" onClick={() => goToTab('activity')} style={{ padding: '10px 12px', background: '#0369a1', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: 900, cursor: 'pointer' }}>
                   Recent Activity
                 </button>
               </div>

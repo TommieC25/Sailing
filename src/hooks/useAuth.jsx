@@ -146,6 +146,7 @@ export function AuthProvider({ children }) {
   const signIn = async (email, password) => {
     try {
       setLoading(true);
+      clearStoredSupabaseSession();
       const { data: { user }, error } = await withTimeout(
         supabase.auth.signInWithPassword({
           email,
@@ -156,6 +157,17 @@ export function AuthProvider({ children }) {
       );
 
       if (error) throw error;
+      const { data: { session }, error: sessionError } = await withTimeout(
+        supabase.auth.getSession(),
+        5000,
+        'Sign in succeeded, but the browser did not keep the session. Please close and reopen the app, then try again.'
+      );
+
+      if (sessionError) throw sessionError;
+      if (!session?.user) {
+        throw new Error('Sign in succeeded, but the browser did not keep the session. Please close and reopen the app, then try again.');
+      }
+
       setUser(user);
       if (user) {
         const profileData = await loadProfile(user.id);

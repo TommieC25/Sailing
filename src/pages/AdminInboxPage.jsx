@@ -10,11 +10,13 @@ const styles = {
   header: { borderRadius: '10px', padding: '16px', marginBottom: '12px', background: 'linear-gradient(135deg, #0c2340 0%, #0369a1 100%)' },
   headerTitle: { fontSize: '1.45rem', fontWeight: 900, color: '#ffffff', margin: '0 0 4px 0' },
   headerStats: { color: '#e0f2fe', fontSize: '0.9rem', fontWeight: 600, margin: 0 },
+  attentionPill: { display: 'inline-flex', alignItems: 'center', gap: '5px', marginTop: '8px', padding: '4px 9px', borderRadius: '999px', background: '#ef4444', color: '#ffffff', fontSize: '0.78rem', fontWeight: 900 },
   errorBox: { background: '#fee2e2', border: '2px solid #dc2626', color: '#991b1b', fontSize: '0.95rem', padding: '12px', borderRadius: '8px', marginBottom: '12px', fontWeight: 700 },
   successBox: { background: '#f0fdf4', border: '2px solid #16a34a', color: '#166534', fontSize: '0.95rem', padding: '12px', borderRadius: '8px', marginBottom: '12px', fontWeight: 700 },
   tabs: { display: 'flex', gap: '6px', marginBottom: '12px', borderBottom: '2px solid #e5e7eb', overflowX: 'auto' },
-  tab: { padding: '8px 10px', background: 'none', border: 'none', fontSize: '0.98rem', fontWeight: 700, color: '#64748b', cursor: 'pointer', borderBottom: '3px solid transparent', transition: 'all 0.2s' },
+  tab: { display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 10px', background: 'none', border: 'none', fontSize: '0.98rem', fontWeight: 700, color: '#64748b', cursor: 'pointer', borderBottom: '3px solid transparent', transition: 'all 0.2s' },
   tabActive: { color: '#0369a1', borderBottomColor: '#0369a1' },
+  tabCount: { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: '22px', padding: '1px 7px', borderRadius: '999px', background: '#e2e8f0', color: '#475569', fontSize: '0.78rem', fontWeight: 900 },
   items: { display: 'grid', gap: '9px' },
   item: { background: '#ffffff', borderRadius: '10px', boxShadow: '0 1px 2px rgba(0,0,0,0.06)', border: '1px solid #e5e7eb', padding: '12px', borderLeft: '4px solid #0369a1' },
   itemNew: { background: '#f0f9ff', borderLeftColor: '#06b6d4' },
@@ -534,6 +536,9 @@ export default function AdminInboxPage() {
     { key: 'bugs', label: '🐛 Bug Reports', count: bugReports.length },
     { key: 'features', label: '⭐ Feature Requests', count: featureRequests.length },
   ];
+  const attentionCount = messages.filter((message) => message.status === 'open').length
+    + bugReports.filter((bug) => bug.status === 'open').length
+    + featureRequests.filter((feature) => ['pending', 'in_development'].includes(featureStatusValue(feature.status))).length;
 
   const currentData = {
     messages: messages,
@@ -557,8 +562,13 @@ export default function AdminInboxPage() {
       <div style={styles.header}>
         <h1 style={styles.headerTitle}>📬 Admin Inbox</h1>
         <p style={styles.headerStats}>
-          {messages.length} messages • {bugReports.length} bug reports • {featureRequests.length} feature requests
+          Total: {messages.length} messages • {bugReports.length} bug reports • {featureRequests.length} feature requests
         </p>
+        {attentionCount > 0 && (
+          <span style={styles.attentionPill}>
+            {attentionCount} need attention
+          </span>
+        )}
       </div>
 
       {inboxError && <div style={styles.errorBox}>{inboxError}</div>}
@@ -575,7 +585,8 @@ export default function AdminInboxPage() {
               ...(activeTab === tab.key ? styles.tabActive : {}),
             }}
           >
-            {tab.label} ({tab.count})
+            <span>{tab.label}</span>
+            <span style={styles.tabCount} title="Total in this tab">{tab.count}</span>
           </button>
         ))}
       </div>

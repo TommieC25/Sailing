@@ -170,16 +170,43 @@ export default function AdminInboxPage() {
     fetchData();
   }, [user, isAdmin]);
 
-  const updateStatus = async (table, id, status) => {
+  const featureStatusMessage = (status, title) => {
+    if (status === 'in_development') {
+      return `Your feature request "${title}" is now in development. We'll follow up here as progress continues.`;
+    }
+    if (status === 'implemented') {
+      return `Your feature request "${title}" has been implemented. Thank you for helping improve the app.`;
+    }
+    return null;
+  };
+
+  const updateStatus = async (table, id, status, item = null) => {
     try {
       setUpdating(id);
       setInboxError('');
+      const previousStatus = item?.status;
       const { error } = await supabase
         .from(table)
         .update({ status, updated_at: new Date().toISOString() })
         .eq('id', id);
 
       if (error) throw error;
+
+      if (table === 'feature_requests' && previousStatus !== status) {
+        const automaticMessage = featureStatusMessage(status, item?.title || 'this feature request');
+        if (automaticMessage) {
+          const { error: replyError } = await supabase
+            .from('feature_request_replies')
+            .insert({
+              feature_request_id: id,
+              sender_id: user.id,
+              message: automaticMessage,
+            });
+
+          if (replyError) throw replyError;
+          window.dispatchEvent(new Event('sailing:feature-replies-updated'));
+        }
+      }
 
       // Update local state
       if (table === 'contact_messages') {
@@ -462,18 +489,31 @@ export default function AdminInboxPage() {
         }}
       >
         <div style={styles.itemHeader}>
-          <h3 style={styles.itemTitle}>⭐ {item.title}</h3>
+          <button
+            type="button"
+            onClick={() => navigate(`/feature-request/${item.id}?returnTo=${encodeURIComponent('/admin/inbox?tab=features')}`)}
+            style={{ ...styles.itemTitle, color: '#0369a1', background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left' }}
+          >
+            ⭐ {item.title}
+          </button>
           <span style={statusBadgeStyle(featureStatus)}>{statusLabel(featureStatus)}</span>
         </div>
         <p style={styles.itemMeta}>
           {new Date(item.created_at).toLocaleDateString()} at {new Date(item.created_at).toLocaleTimeString()}
         </p>
         <p style={styles.itemContent}>{item.description}</p>
+        <button
+          type="button"
+          onClick={() => navigate(`/feature-request/${item.id}?returnTo=${encodeURIComponent('/admin/inbox?tab=features')}`)}
+          style={{ width: '100%', padding: '9px 12px', border: 'none', borderRadius: '8px', background: '#0369a1', color: '#ffffff', fontSize: '0.92rem', fontWeight: 900, cursor: 'pointer', marginBottom: '10px' }}
+        >
+          Open full conversation
+        </button>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
           {renderSubmitter(item)}
           <select
             value={featureStatus}
-            onChange={(e) => updateStatus('feature_requests', item.id, e.target.value)}
+            onChange={(e) => updateStatus('feature_requests', item.id, e.target.value, { ...item, status: featureStatus })}
             disabled={updating === item.id}
             style={styles.statusSelect}
           >

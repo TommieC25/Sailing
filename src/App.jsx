@@ -14,6 +14,7 @@ import MessagesPage from './pages/MessagesPage';
 import DirectMessageThreadPage from './pages/DirectMessageThreadPage';
 import MyOutingRequestsPage from './pages/MyOutingRequestsPage';
 import FeatureRequestPage from './pages/FeatureRequestPage';
+import FeatureRequestThreadPage from './pages/FeatureRequestThreadPage';
 import ContactAdminPage from './pages/ContactAdminPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
@@ -131,6 +132,7 @@ function App() {
           <Route path="/bug-report" element={<ProtectedRoute><BugReportPage /></ProtectedRoute>} />
           <Route path="/bug-report/:id" element={<ProtectedRoute><BugReportThreadPage /></ProtectedRoute>} />
           <Route path="/feature-request" element={<ProtectedRoute><FeatureRequestPage /></ProtectedRoute>} />
+          <Route path="/feature-request/:id" element={<ProtectedRoute><FeatureRequestThreadPage /></ProtectedRoute>} />
           <Route path="/contact-admin" element={<ProtectedRoute><ContactAdminPage /></ProtectedRoute>} />
           <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
           <Route path="/admin/inbox" element={<AdminRoute><AdminInboxPage /></AdminRoute>} />

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
@@ -18,15 +18,60 @@ const styles = {
   input: { width: '100%', padding: '12px', border: '2px solid #cbd5e1', borderRadius: '8px', fontSize: '1rem', fontFamily: 'inherit' },
   textarea: { width: '100%', padding: '12px', border: '2px solid #cbd5e1', borderRadius: '8px', fontSize: '1rem', fontFamily: 'inherit', minHeight: '120px', resize: 'vertical' },
   button: { width: '100%', padding: '12px', background: 'linear-gradient(135deg, #0c2340 0%, #0369a1 100%)', color: '#ffffff', fontWeight: 900, fontSize: '1.125rem', border: 'none', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s' },
+  requestList: { display: 'grid', gap: '10px', marginTop: '14px' },
+  requestCard: { background: '#ffffff', borderRadius: '10px', border: '1px solid #e5e7eb', boxShadow: '0 1px 2px rgba(0,0,0,0.06)', padding: '12px' },
+  statusBadge: { borderRadius: '999px', padding: '4px 8px', fontSize: '0.75rem', fontWeight: 900 },
+  openButton: { display: 'block', marginTop: '8px', background: '#e0f2fe', color: '#0369a1', border: '1px solid #0369a1', borderRadius: '8px', padding: '8px 10px', fontWeight: 900, cursor: 'pointer' },
+};
+
+const statusLabel = (status) => {
+  const labels = {
+    pending: 'Pending',
+    in_development: 'In Development',
+    implemented: 'Implemented',
+  };
+  return labels[status] || 'Pending';
+};
+
+const statusColors = (status) => {
+  if (status === 'implemented') return { background: '#dcfce7', color: '#166534' };
+  if (status === 'in_development') return { background: '#dbeafe', color: '#1e40af' };
+  return { background: '#fef3c7', color: '#92400e' };
 };
 
 export default function FeatureRequestPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [formData, setFormData] = useState({ title: '', description: '' });
+  const [myRequests, setMyRequests] = useState([]);
+  const [requestsLoading, setRequestsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchMyRequests = async () => {
+      try {
+        setRequestsLoading(true);
+        const { data, error: requestsError } = await supabase
+          .from('feature_requests')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (requestsError) throw requestsError;
+        setMyRequests(data || []);
+      } catch (err) {
+        setError(err.message || 'Could not load feature requests');
+      } finally {
+        setRequestsLoading(false);
+      }
+    };
+
+    fetchMyRequests();
+  }, [user]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -50,18 +95,18 @@ export default function FeatureRequestPage() {
     try {
       setLoading(true);
 
-      const { error: insertError } = await supabase.from('feature_requests').insert({
+      const { data: inserted, error: insertError } = await supabase.from('feature_requests').insert({
         user_id: user.id,
         title: formData.title,
         description: formData.description,
         status: 'pending',
-      });
+      }).select().single();
 
       if (insertError) throw insertError;
 
       setSuccess('Feature request submitted! Thank you for helping us improve.');
+      setMyRequests((current) => [inserted, ...current]);
       setFormData({ title: '', description: '' });
-      setTimeout(() => navigate('/'), 2000);
     } catch (err) {
       setError(err.message || 'Failed to submit feature request');
     } finally {
@@ -127,6 +172,45 @@ export default function FeatureRequestPage() {
             {loading ? 'Submitting...' : 'Submit Feature Request →'}
           </button>
         </form>
+      </div>
+
+      <div style={{ ...styles.card, marginTop: '14px' }}>
+        <h2 style={{ fontSize: '1.1rem', fontWeight: 900, color: '#1e293b', margin: '0 0 10px 0' }}>Your Feature Requests</h2>
+        {requestsLoading ? (
+          <p style={{ color: '#64748b', fontWeight: 700, margin: 0 }}>Loading...</p>
+        ) : myRequests.length === 0 ? (
+          <p style={{ color: '#64748b', fontWeight: 700, margin: 0 }}>No feature requests submitted yet.</p>
+        ) : (
+          <div style={styles.requestList}>
+            {myRequests.map((request) => (
+              <div key={request.id} style={styles.requestCard}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px', marginBottom: '6px' }}>
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/feature-request/${request.id}?returnTo=${encodeURIComponent('/feature-request')}`)}
+                    style={{ fontSize: '0.98rem', fontWeight: 900, color: '#0369a1', margin: 0, background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left' }}
+                  >
+                    {request.title}
+                  </button>
+                  <span style={{ ...styles.statusBadge, ...statusColors(request.status) }}>
+                    {statusLabel(request.status)}
+                  </span>
+                </div>
+                <p style={{ color: '#64748b', fontSize: '0.82rem', fontWeight: 600, margin: '0 0 6px 0' }}>
+                  Submitted {new Date(request.created_at).toLocaleString()}
+                </p>
+                <p style={{ color: '#475569', margin: 0, lineHeight: 1.38, fontSize: '0.92rem', whiteSpace: 'pre-wrap' }}>{request.description}</p>
+                <button
+                  type="button"
+                  onClick={() => navigate(`/feature-request/${request.id}?returnTo=${encodeURIComponent('/feature-request')}`)}
+                  style={styles.openButton}
+                >
+                  Open conversation
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

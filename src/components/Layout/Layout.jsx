@@ -15,13 +15,14 @@ export default function Layout({ children }) {
   const [unreadAnnouncementCount, setUnreadAnnouncementCount] = useState(0);
   const [unreadInboxCounts, setUnreadInboxCounts] = useState({ messages: 0, bugs: 0, features: 0 });
   const [unreadBugReplyCount, setUnreadBugReplyCount] = useState(0);
+  const [unreadFeatureReplyCount, setUnreadFeatureReplyCount] = useState(0);
   const [unreadDirectMessageCount, setUnreadDirectMessageCount] = useState(0);
   const [unreadOutingRequestStatusCount, setUnreadOutingRequestStatusCount] = useState(0);
   const [pendingCrewRequestCount, setPendingCrewRequestCount] = useState(0);
   const isAdmin = profile?.role === 'admin';
   const isSkipper = profile?.user_type === 'owner';
   const unreadInboxCount = isAdmin ? unreadInboxCounts.messages + unreadInboxCounts.bugs + unreadInboxCounts.features : 0;
-  const totalNotificationCount = unreadAnnouncementCount + pendingCrewRequestCount + unreadBugReplyCount + unreadDirectMessageCount + unreadOutingRequestStatusCount;
+  const totalNotificationCount = unreadAnnouncementCount + pendingCrewRequestCount + unreadBugReplyCount + unreadFeatureReplyCount + unreadDirectMessageCount + unreadOutingRequestStatusCount;
   const adminInboxLink = unreadInboxCounts.messages > 0
     ? '/admin/inbox?tab=messages'
     : unreadInboxCounts.bugs > 0
@@ -113,6 +114,30 @@ export default function Layout({ children }) {
     window.addEventListener('sailing:direct-messages-updated', fetchDirectMessageCount);
 
     return () => window.removeEventListener('sailing:direct-messages-updated', fetchDirectMessageCount);
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchFeatureReplyCount = async () => {
+      try {
+        const { count, error } = await supabase
+          .from('feature_request_replies')
+          .select('id', { count: 'exact', head: true })
+          .is('read_at', null)
+          .neq('sender_id', user.id);
+
+        if (error) throw error;
+        setUnreadFeatureReplyCount(count || 0);
+      } catch (err) {
+        console.error('Error fetching feature reply count:', err);
+      }
+    };
+
+    fetchFeatureReplyCount();
+    window.addEventListener('sailing:feature-replies-updated', fetchFeatureReplyCount);
+
+    return () => window.removeEventListener('sailing:feature-replies-updated', fetchFeatureReplyCount);
   }, [user]);
 
   useEffect(() => {
@@ -350,6 +375,21 @@ export default function Layout({ children }) {
                         </span>
                       </button>
                     )}
+                    {unreadFeatureReplyCount > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNotificationMenuOpen(false);
+                          navigate(isAdmin ? '/admin/inbox?tab=features' : '/feature-request');
+                        }}
+                        style={{width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', padding: '12px 14px', background: 'none', border: 'none', borderBottom: '1px solid #e2e8f0', cursor: 'pointer', color: '#1e293b', textAlign: 'left', fontSize: '1rem', fontWeight: 700}}
+                      >
+                        <span>Feature request replies</span>
+                        <span style={{background: '#ef4444', color: '#ffffff', borderRadius: '999px', minWidth: '24px', padding: '2px 8px', textAlign: 'center', fontWeight: 900}}>
+                          {unreadFeatureReplyCount}
+                        </span>
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() => {
@@ -427,7 +467,9 @@ export default function Layout({ children }) {
                   {!isAdmin && (
                     <>
                       <Link to="/bug-report" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#a7f3d0', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>🐛 Report Bug</Link>
-                      <Link to="/feature-request" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#a7f3d0', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>⭐ Feature Request</Link>
+                      <Link to="/feature-request" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#a7f3d0', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>
+                        ⭐ Feature Request{unreadFeatureReplyCount > 0 ? ` (${unreadFeatureReplyCount})` : ''}
+                      </Link>
                       <Link to="/contact-admin" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#a7f3d0', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>📧 Contact Admin</Link>
                     </>
                   )}
@@ -440,7 +482,9 @@ export default function Layout({ children }) {
                   <Link to="/login" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#ffffff', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none'}}>Sign In</Link>
                   <Link to="/signup" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#ffffff', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none'}}>Sign Up</Link>
                   <Link to="/bug-report" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#a7f3d0', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>🐛 Report Bug</Link>
-                  <Link to="/feature-request" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#a7f3d0', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>⭐ Feature Request</Link>
+                  <Link to="/feature-request" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#a7f3d0', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>
+                    ⭐ Feature Request{unreadFeatureReplyCount > 0 ? ` (${unreadFeatureReplyCount})` : ''}
+                  </Link>
                   <Link to="/contact-admin" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#a7f3d0', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>📧 Contact Admin</Link>
                 </>
               )}

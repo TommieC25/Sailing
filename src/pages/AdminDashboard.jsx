@@ -236,14 +236,40 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleUpdateFeatureRequest = async (id, newStatus) => {
+  const featureStatusMessage = (status, title) => {
+    if (status === 'in_development') {
+      return `Your feature request "${title}" is now in development. We'll follow up here as progress continues.`;
+    }
+    if (status === 'implemented') {
+      return `Your feature request "${title}" has been implemented. Thank you for helping improve the app.`;
+    }
+    return null;
+  };
+
+  const handleUpdateFeatureRequest = async (id, newStatus, item = null) => {
     try {
+      const previousStatus = item?.status;
       const { error } = await supabase
         .from('feature_requests')
         .update({ status: newStatus })
         .eq('id', id);
 
       if (error) throw error;
+      if (previousStatus !== newStatus) {
+        const automaticMessage = featureStatusMessage(newStatus, item?.title || 'this feature request');
+        if (automaticMessage) {
+          const { error: replyError } = await supabase
+            .from('feature_request_replies')
+            .insert({
+              feature_request_id: id,
+              sender_id: user.id,
+              message: automaticMessage,
+            });
+
+          if (replyError) throw replyError;
+          window.dispatchEvent(new Event('sailing:feature-replies-updated'));
+        }
+      }
       await loadDashboardData();
     } catch (err) {
       setError(err.message);
@@ -443,7 +469,11 @@ const AdminDashboard = () => {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '10px', flexWrap: 'wrap', marginBottom: '6px' }}>
                   <button
                     type="button"
-                    onClick={() => type === 'bugs' ? navigate(`/bug-report/${item.id}?returnTo=${encodeURIComponent('/admin/dashboard')}`) : openFeedback(type, item)}
+                    onClick={() => type === 'bugs'
+                      ? navigate(`/bug-report/${item.id}?returnTo=${encodeURIComponent('/admin/dashboard')}`)
+                      : type === 'features'
+                        ? navigate(`/feature-request/${item.id}?returnTo=${encodeURIComponent('/admin/dashboard')}`)
+                        : openFeedback(type, item)}
                     style={{ minWidth: 0, flex: '1 1 240px', textAlign: 'left', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
                   >
                     <h4 style={{ margin: 0, fontWeight: 900, color: '#0369a1', fontSize: '1rem' }}>{feedbackTitle(type, item)}</h4>
@@ -456,7 +486,7 @@ const AdminDashboard = () => {
                   <div style={{ display: 'grid', gap: '6px', minWidth: '140px' }}>
                     <select
                       value={type === 'features' ? featureDashboardStatusValue(item.status) : item.status}
-                      onChange={(e) => config.statusHandler(item.id, e.target.value)}
+                      onChange={(e) => config.statusHandler(item.id, e.target.value, item)}
                       style={{ padding: '7px 10px', borderRadius: '6px', border: '1px solid #d1d5db', fontWeight: 700, background: '#ffffff' }}
                     >
                       {type === 'features' ? (
@@ -475,10 +505,14 @@ const AdminDashboard = () => {
                     </select>
                     <button
                       type="button"
-                      onClick={() => type === 'bugs' ? navigate(`/bug-report/${item.id}?returnTo=${encodeURIComponent('/admin/dashboard')}`) : openFeedback(type, item)}
+                      onClick={() => type === 'bugs'
+                        ? navigate(`/bug-report/${item.id}?returnTo=${encodeURIComponent('/admin/dashboard')}`)
+                        : type === 'features'
+                          ? navigate(`/feature-request/${item.id}?returnTo=${encodeURIComponent('/admin/dashboard')}`)
+                          : openFeedback(type, item)}
                       style={{ padding: '7px 10px', borderRadius: '6px', border: 'none', background: '#0369a1', color: '#ffffff', fontWeight: 900, cursor: 'pointer' }}
                     >
-                      {type === 'bugs' ? 'Open Thread' : isSelected ? 'Open' : 'View'}
+                      {type === 'bugs' || type === 'features' ? 'Open Thread' : isSelected ? 'Open' : 'View'}
                     </button>
                     {type === 'bugs' && (
                       <button

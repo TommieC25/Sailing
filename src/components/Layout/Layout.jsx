@@ -16,11 +16,12 @@ export default function Layout({ children }) {
   const [unreadInboxCounts, setUnreadInboxCounts] = useState({ messages: 0, bugs: 0, features: 0 });
   const [unreadBugReplyCount, setUnreadBugReplyCount] = useState(0);
   const [unreadDirectMessageCount, setUnreadDirectMessageCount] = useState(0);
+  const [unreadOutingRequestStatusCount, setUnreadOutingRequestStatusCount] = useState(0);
   const [pendingCrewRequestCount, setPendingCrewRequestCount] = useState(0);
   const isAdmin = profile?.role === 'admin';
   const isSkipper = profile?.user_type === 'owner';
   const unreadInboxCount = isAdmin ? unreadInboxCounts.messages + unreadInboxCounts.bugs + unreadInboxCounts.features : 0;
-  const totalNotificationCount = unreadAnnouncementCount + pendingCrewRequestCount + unreadBugReplyCount + unreadDirectMessageCount;
+  const totalNotificationCount = unreadAnnouncementCount + pendingCrewRequestCount + unreadBugReplyCount + unreadDirectMessageCount + unreadOutingRequestStatusCount;
   const adminInboxLink = unreadInboxCounts.messages > 0
     ? '/admin/inbox?tab=messages'
     : unreadInboxCounts.bugs > 0
@@ -59,6 +60,35 @@ export default function Layout({ children }) {
     };
 
     fetchUnreadCount();
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchOutingRequestStatusCount = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('crew_requests')
+          .select('id, status, status_changed_at, status_seen_at')
+          .eq('crew_id', user.id)
+          .in('status', ['approved', 'declined', 'waitlisted']);
+
+        if (error) throw error;
+        const unreadCount = (data || []).filter((request) => (
+          request.status_changed_at
+          && (!request.status_seen_at || new Date(request.status_seen_at) < new Date(request.status_changed_at))
+        )).length;
+        setUnreadOutingRequestStatusCount(unreadCount);
+      } catch (err) {
+        console.error('Error fetching outing request status count:', err);
+        setUnreadOutingRequestStatusCount(0);
+      }
+    };
+
+    fetchOutingRequestStatusCount();
+    window.addEventListener('sailing:outing-requests-updated', fetchOutingRequestStatusCount);
+
+    return () => window.removeEventListener('sailing:outing-requests-updated', fetchOutingRequestStatusCount);
   }, [user]);
 
   useEffect(() => {
@@ -218,6 +248,7 @@ export default function Layout({ children }) {
               {user ? (
                 <>
                   <Link to="/" style={navLinkStyle}>Outings</Link>
+                  <Link to="/my-outing-requests" style={navLinkStyle}>My Outing Requests</Link>
                   {profile?.user_type === 'owner' && (
                     <Link to="/skipper-dashboard" style={navLinkStyle}>My Outings</Link>
                   )}
@@ -271,6 +302,21 @@ export default function Layout({ children }) {
                         <span>Crew requests</span>
                         <span style={{background: pendingCrewRequestCount > 0 ? '#ef4444' : '#e2e8f0', color: pendingCrewRequestCount > 0 ? '#ffffff' : '#475569', borderRadius: '999px', minWidth: '24px', padding: '2px 8px', textAlign: 'center', fontWeight: 900}}>
                           {pendingCrewRequestCount}
+                        </span>
+                      </button>
+                    )}
+                    {unreadOutingRequestStatusCount > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNotificationMenuOpen(false);
+                          navigate('/my-outing-requests');
+                        }}
+                        style={{width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', padding: '12px 14px', background: 'none', border: 'none', borderBottom: '1px solid #e2e8f0', cursor: 'pointer', color: '#1e293b', textAlign: 'left', fontSize: '1rem', fontWeight: 700}}
+                      >
+                        <span>My Outing Requests</span>
+                        <span style={{background: '#ef4444', color: '#ffffff', borderRadius: '999px', minWidth: '24px', padding: '2px 8px', textAlign: 'center', fontWeight: 900}}>
+                          {unreadOutingRequestStatusCount}
                         </span>
                       </button>
                     )}
@@ -360,6 +406,9 @@ export default function Layout({ children }) {
               {user ? (
                 <>
                   <Link to="/" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#ffffff', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>⛵ Outings</Link>
+                  <Link to="/my-outing-requests" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#ffffff', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>
+                    📌 My Outing Requests{unreadOutingRequestStatusCount > 0 ? ` (${unreadOutingRequestStatusCount})` : ''}
+                  </Link>
                   {isSkipper && (
                     <Link to="/skipper-dashboard" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#ffffff', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>
                       📋 My Outings{pendingCrewRequestCount > 0 ? ` (${pendingCrewRequestCount})` : ''}

@@ -29,6 +29,7 @@ const styles = {
   requestCardPending: { borderLeft: '4px solid #fbbf24', background: '#fffbeb' },
   requestCardApproved: { borderLeft: '4px solid #34d399', background: '#f0fdf4' },
   requestCardDeclined: { borderLeft: '4px solid #f87171', background: '#fef2f2' },
+  requestCardWaitlisted: { borderLeft: '4px solid #38bdf8', background: '#f0f9ff' },
   requestPhoto: { width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 },
   requestPhotoPlaceholder: { width: '48px', height: '48px', borderRadius: '50%', background: '#e5e7eb', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' },
   requestInfo: { flex: 1 },
@@ -42,12 +43,15 @@ const styles = {
   statusText: { padding: '8px 12px', borderRadius: '8px', fontSize: '0.875rem', fontWeight: 'bold', textAlign: 'center' },
   statusApproved: { background: '#16a34a', color: '#ffffff' },
   statusDeclined: { background: '#dc2626', color: '#ffffff' },
+  statusWaitlisted: { background: '#0284c7', color: '#ffffff' },
   joinSection: { borderTop: '1px solid #e5e7eb', paddingTop: '14px', marginTop: '14px' },
   joinTitle: { fontSize: '1.15rem', fontWeight: 600, color: '#1f2937', marginBottom: '12px', margin: '0 0 12px 0' },
+  joinNote: { background: '#f8fafc', border: '1px solid #cbd5e1', color: '#334155', borderRadius: '8px', padding: '10px 12px', margin: '0 0 10px 0', fontSize: '0.9rem', fontWeight: 600, lineHeight: 1.35 },
   infoBox: { borderRadius: '8px', padding: '12px', border: '1px solid #e5e7eb' },
   infoPending: { background: '#fef3c7', border: '1px solid #fcd34d' },
   infoApproved: { background: '#d1fae5', border: '1px solid #a7f3d0' },
   infoDeclined: { background: '#fee2e2', border: '1px solid #fecaca' },
+  infoWaitlisted: { background: '#e0f2fe', border: '1px solid #7dd3fc' },
   infoSignIn: { background: '#eff6ff', border: '1px solid #bfdbfe', color: '#1e40af' },
   joinButton: { color: '#ffffff', padding: '10px 16px', borderRadius: '8px', fontWeight: 600, transition: 'all 0.2s', border: 'none', cursor: 'pointer', fontSize: '0.95rem' },
   loadingSpinner: { display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '48px' },
@@ -93,6 +97,27 @@ export default function OutingDetailPage() {
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [actionLoading, setActionLoading] = useState({});
+
+  const refreshRequestNotifications = () => {
+    window.dispatchEvent(new Event('sailing:crew-requests-updated'));
+    window.dispatchEvent(new Event('sailing:outing-requests-updated'));
+  };
+
+  const statusUpdatePayload = (status, note = null) => {
+    const now = new Date().toISOString();
+    const payload = {
+      status,
+      responded_at: now,
+      status_changed_at: now,
+      status_seen_at: null,
+    };
+
+    if (status === 'declined') {
+      payload.skipper_response_note = note || null;
+    }
+
+    return payload;
+  };
 
   useEffect(() => {
     const fetchOutingDetails = async () => {
@@ -258,17 +283,26 @@ export default function OutingDetailPage() {
   const handleApproveRequest = async (requestId) => {
     try {
       setActionLoading((prev) => ({ ...prev, [requestId]: true }));
+      const payload = statusUpdatePayload('approved');
       const { error } = await supabase
         .from('crew_requests')
-        .update({ status: 'approved', responded_at: new Date().toISOString() })
+        .update(payload)
         .eq('id', requestId);
 
       if (error) throw error;
+      const approvedRequest = crewRequests.find((req) => req.id === requestId);
       setCrewRequests((prev) =>
         prev.map((req) =>
-          req.id === requestId ? { ...req, status: 'approved' } : req
+          req.id === requestId ? { ...req, ...payload } : req
         )
       );
+      if (approvedRequest) {
+        setApprovedCrew((prev) => {
+          if (prev.some((req) => req.id === requestId)) return prev;
+          return [...prev, { ...approvedRequest, ...payload }];
+        });
+      }
+      refreshRequestNotifications();
     } catch (err) {
       setError(err.message);
     } finally {
@@ -277,23 +311,49 @@ export default function OutingDetailPage() {
   };
 
   const handleDeclineRequest = async (requestId) => {
+    const note = window.prompt('Optional note to the member about this decision:', '');
+    if (note === null) return;
+
     try {
       setActionLoading((prev) => ({ ...prev, [requestId]: true }));
+      const payload = statusUpdatePayload('declined', note.trim());
       const { error } = await supabase
         .from('crew_requests')
-        .update({ status: 'declined', responded_at: new Date().toISOString() })
+        .update(payload)
         .eq('id', requestId);
 
       if (error) throw error;
       setCrewRequests((prev) =>
         prev.map((req) =>
-          req.id === requestId ? { ...req, status: 'declined' } : req
+          req.id === requestId ? { ...req, ...payload } : req
         )
       );
+      setApprovedCrew((prev) => prev.filter((req) => req.id !== requestId));
+      refreshRequestNotifications();
     } catch (err) {
       setError(err.message);
     } finally {
       setActionLoading((prev) => ({ ...prev, [requestId]: false }));
+    }
+  };
+
+  const handleJoinWaitlist = async () => {
+    if (!crewRequest) return;
+
+    try {
+      setActionLoading((prev) => ({ ...prev, [crewRequest.id]: true }));
+      const { data, error: waitlistError } = await supabase.rpc('join_crew_request_waitlist', {
+        p_request_id: crewRequest.id,
+      });
+
+      if (waitlistError) throw waitlistError;
+      const updated = Array.isArray(data) ? data[0] : data;
+      setCrewRequest((prev) => ({ ...prev, ...updated }));
+      refreshRequestNotifications();
+    } catch (err) {
+      setError(err.message || 'Could not join waitlist');
+    } finally {
+      setActionLoading((prev) => ({ ...prev, [crewRequest.id]: false }));
     }
   };
 
@@ -360,8 +420,82 @@ export default function OutingDetailPage() {
     approved: { bg: '#d1fae5', text: '#065f46' },
     pending: { bg: '#fef3c7', text: '#92400e' },
     declined: { bg: '#fee2e2', text: '#991b1b' },
+    waitlisted: { bg: '#e0f2fe', text: '#075985' },
   };
   const displayStatus = isArchived ? 'archived' : outing.status;
+  const pendingRequests = crewRequests.filter((request) => request.status === 'pending');
+  const approvedRequests = crewRequests.filter((request) => request.status === 'approved');
+  const waitlistedRequests = crewRequests.filter((request) => request.status === 'waitlisted');
+  const declinedRequests = crewRequests.filter((request) => request.status === 'declined');
+  const requestCardStyle = (status) => ({
+    ...styles.requestCard,
+    ...(status === 'pending'
+      ? styles.requestCardPending
+      : status === 'approved'
+        ? styles.requestCardApproved
+        : status === 'waitlisted'
+          ? styles.requestCardWaitlisted
+          : styles.requestCardDeclined),
+  });
+  const requestStatusStyle = (status) => ({
+    ...styles.statusText,
+    ...(status === 'approved'
+      ? styles.statusApproved
+      : status === 'waitlisted'
+        ? styles.statusWaitlisted
+        : styles.statusDeclined),
+  });
+  const renderSkipperRequest = (req) => (
+    <div key={req.id} style={requestCardStyle(req.status)}>
+      {req.crew?.photo_url ? (
+        <img src={req.crew.photo_url} alt={req.crew.full_name} style={styles.requestPhoto} />
+      ) : (
+        <div style={styles.requestPhotoPlaceholder}>📷</div>
+      )}
+      <div style={styles.requestInfo}>
+        <button
+          type="button"
+          onClick={() => navigate(`/profile/${req.crew_id}?returnTo=${encodeURIComponent(`/outing/${id}`)}`)}
+          style={styles.profileLinkButton}
+        >
+          {req.crew?.full_name || 'View profile'}
+        </button>
+        <p style={styles.requestSkill}>{req.crew?.sailing_experience || 'Experience not listed'} sailor</p>
+        {req.crew?.bio && <p style={styles.requestBio}>{req.crew.bio}</p>}
+        {req.skipper_response_note && <p style={styles.requestBio}>Note: {req.skipper_response_note}</p>}
+        <p style={styles.requestDate}>Requested: {new Date(req.requested_at).toLocaleDateString()}</p>
+      </div>
+      <div style={styles.requestActions}>
+        {(req.status === 'pending' || req.status === 'waitlisted') && (
+          <button
+            onClick={() => handleApproveRequest(req.id)}
+            disabled={actionLoading[req.id]}
+            style={{ ...styles.approveBtn, opacity: actionLoading[req.id] ? 0.6 : 1 }}
+            onMouseEnter={(e) => !actionLoading[req.id] && (e.target.style.background = '#15803d')}
+            onMouseLeave={(e) => (e.target.style.background = '#16a34a')}
+          >
+            {req.status === 'waitlisted' ? '✓ Approve from Waitlist' : '✓ Approve'}
+          </button>
+        )}
+        {req.status === 'pending' && (
+          <button
+            onClick={() => handleDeclineRequest(req.id)}
+            disabled={actionLoading[req.id]}
+            style={{ ...styles.declineBtn, opacity: actionLoading[req.id] ? 0.6 : 1 }}
+            onMouseEnter={(e) => !actionLoading[req.id] && (e.target.style.background = '#b91c1c')}
+            onMouseLeave={(e) => (e.target.style.background = '#dc2626')}
+          >
+            ✗ Decline
+          </button>
+        )}
+        {req.status !== 'pending' && req.status !== 'waitlisted' && (
+          <p style={requestStatusStyle(req.status)}>
+            {req.status === 'approved' ? 'Approved' : 'Declined'}
+          </p>
+        )}
+      </div>
+    </div>
+  );
 
   return (
     <div style={styles.container}>
@@ -570,62 +704,30 @@ export default function OutingDetailPage() {
               <p style={styles.noRequestsText}>No crew requests yet</p>
             ) : (
               <div style={styles.requestsList}>
-                {crewRequests.map((req) => (
-                  <div
-                    key={req.id}
-                    style={{
-                      ...styles.requestCard,
-                      ...(req.status === 'pending' ? styles.requestCardPending : req.status === 'approved' ? styles.requestCardApproved : styles.requestCardDeclined),
-                    }}
-                  >
-                    {req.crew?.photo_url ? (
-                      <img src={req.crew.photo_url} alt={req.crew.full_name} style={styles.requestPhoto} />
-                    ) : (
-                      <div style={styles.requestPhotoPlaceholder}>📷</div>
-                    )}
-                    <div style={styles.requestInfo}>
-                      <button
-                        type="button"
-                        onClick={() => navigate(`/profile/${req.crew_id}?returnTo=${encodeURIComponent(`/outing/${id}`)}`)}
-                        style={styles.profileLinkButton}
-                      >
-                        {req.crew?.full_name || 'View profile'}
-                      </button>
-                      <p style={styles.requestSkill}>{req.crew?.sailing_experience} sailor</p>
-                      {req.crew?.bio && <p style={styles.requestBio}>{req.crew.bio}</p>}
-                      <p style={styles.requestDate}>Requested: {new Date(req.requested_at).toLocaleDateString()}</p>
-                    </div>
-                    <div style={styles.requestActions}>
-                      {req.status === 'pending' && (
-                        <>
-                          <button
-                            onClick={() => handleApproveRequest(req.id)}
-                            disabled={actionLoading[req.id]}
-                            style={{ ...styles.approveBtn, opacity: actionLoading[req.id] ? 0.6 : 1 }}
-                            onMouseEnter={(e) => !actionLoading[req.id] && (e.target.style.background = '#15803d')}
-                            onMouseLeave={(e) => (e.target.style.background = '#16a34a')}
-                          >
-                            ✓ Approve
-                          </button>
-                          <button
-                            onClick={() => handleDeclineRequest(req.id)}
-                            disabled={actionLoading[req.id]}
-                            style={{ ...styles.declineBtn, opacity: actionLoading[req.id] ? 0.6 : 1 }}
-                            onMouseEnter={(e) => !actionLoading[req.id] && (e.target.style.background = '#b91c1c')}
-                            onMouseLeave={(e) => (e.target.style.background = '#dc2626')}
-                          >
-                            ✗ Decline
-                          </button>
-                        </>
-                      )}
-                      {req.status !== 'pending' && (
-                        <p style={{ ...styles.statusText, ...(req.status === 'approved' ? styles.statusApproved : styles.statusDeclined) }}>
-                          {req.status === 'approved' ? 'Approved' : 'Declined'}
-                        </p>
-                      )}
-                    </div>
+                {pendingRequests.length > 0 && (
+                  <div style={styles.requestsList}>
+                    <h3 style={{...styles.sectionTitle, margin: 0}}>Pending Requests ({pendingRequests.length})</h3>
+                    {pendingRequests.map(renderSkipperRequest)}
                   </div>
-                ))}
+                )}
+                {approvedRequests.length > 0 && (
+                  <div style={styles.requestsList}>
+                    <h3 style={{...styles.sectionTitle, margin: 0}}>Approved Crew ({approvedRequests.length})</h3>
+                    {approvedRequests.map(renderSkipperRequest)}
+                  </div>
+                )}
+                {waitlistedRequests.length > 0 && (
+                  <div style={styles.requestsList}>
+                    <h3 style={{...styles.sectionTitle, margin: 0}}>Waitlist ({waitlistedRequests.length})</h3>
+                    {waitlistedRequests.map(renderSkipperRequest)}
+                  </div>
+                )}
+                {declinedRequests.length > 0 && (
+                  <div style={styles.requestsList}>
+                    <h3 style={{...styles.sectionTitle, margin: 0}}>Declined / Not Accommodated ({declinedRequests.length})</h3>
+                    {declinedRequests.map(renderSkipperRequest)}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -634,6 +736,9 @@ export default function OutingDetailPage() {
         {!isSkipper && (
           <div style={styles.joinSection}>
             <h2 style={styles.joinTitle}>Join This Outing</h2>
+            <p style={styles.joinNote}>
+              Please note: Availability is not guaranteed, subject to Skipper approval and available crew space. You’ll be notified of the status of your request.
+            </p>
 
             {isArchived ? (
               <div style={{ ...styles.infoBox, background: '#f1f5f9', border: '1px solid #cbd5e1', color: '#475569' }}>
@@ -644,13 +749,36 @@ export default function OutingDetailPage() {
                 <p>Sign in to request to join this outing</p>
               </div>
             ) : crewRequest ? (
-              <div style={{ ...styles.infoBox, ...(crewRequest.status === 'pending' ? styles.infoPending : crewRequest.status === 'approved' ? styles.infoApproved : styles.infoDeclined) }}>
+              <div style={{
+                ...styles.infoBox,
+                ...(crewRequest.status === 'pending'
+                  ? styles.infoPending
+                  : crewRequest.status === 'approved'
+                    ? styles.infoApproved
+                    : crewRequest.status === 'waitlisted'
+                      ? styles.infoWaitlisted
+                      : styles.infoDeclined),
+              }}>
                 <p style={{ fontWeight: 600, marginBottom: '8px', textTransform: 'capitalize' }}>
-                  Request Status: {crewRequest.status}
+                  Request Status: {crewRequest.status === 'waitlisted' ? 'Waitlisted' : crewRequest.status}
                 </p>
                 {crewRequest.status === 'pending' && <p style={{ fontSize: '0.875rem' }}>Waiting for the skipper to review your request</p>}
-                {crewRequest.status === 'approved' && <p style={{ fontSize: '0.875rem' }}>Great! You're approved to join this outing</p>}
-                {crewRequest.status === 'declined' && <p style={{ fontSize: '0.875rem' }}>Your request was not approved for this outing</p>}
+                {crewRequest.status === 'approved' && <p style={{ fontSize: '0.875rem' }}>Your request to join {outing.title} has been approved. Have a great time!</p>}
+                {crewRequest.status === 'declined' && (
+                  <>
+                    <p style={{ fontSize: '0.875rem' }}>Unfortunately, your request to join {outing.title} could not be accommodated at this time. You may request to be waitlisted in case space becomes available.</p>
+                    {crewRequest.skipper_response_note && <p style={{ fontSize: '0.875rem' }}>Skipper note: {crewRequest.skipper_response_note}</p>}
+                    <button
+                      type="button"
+                      onClick={handleJoinWaitlist}
+                      disabled={actionLoading[crewRequest.id]}
+                      style={{ ...styles.joinButton, background: '#f59e0b', color: '#111827', marginTop: '10px', opacity: actionLoading[crewRequest.id] ? 0.6 : 1 }}
+                    >
+                      {actionLoading[crewRequest.id] ? 'Adding...' : 'Join Waitlist'}
+                    </button>
+                  </>
+                )}
+                {crewRequest.status === 'waitlisted' && <p style={{ fontSize: '0.875rem' }}>You have been added to the waitlist for {outing.title} and will be notified if a crew spot becomes available.</p>}
               </div>
             ) : (
               <button

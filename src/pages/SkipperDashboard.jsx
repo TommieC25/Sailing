@@ -27,6 +27,7 @@ const styles = {
   sectionTitle: { fontSize: '1.25rem', fontWeight: 900, color: '#1e293b', marginBottom: '12px', margin: '0 0 12px 0' },
   requestsList: { display: 'grid', gap: '12px' },
   pendingRequest: { background: '#fffbeb', border: '2px solid #fcd34d', borderRadius: '12px', padding: '16px' },
+  waitlistedRequest: { background: '#f0f9ff', border: '2px solid #7dd3fc', borderRadius: '12px', padding: '16px' },
   requestHeader: { display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '12px' },
   photo: { width: '56px', height: '56px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 },
   photoPlaceholder: { width: '56px', height: '56px', borderRadius: '50%', background: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '1.5rem' },
@@ -64,6 +65,23 @@ export default function SkipperDashboard() {
 
   const refreshNotificationCounts = () => {
     window.dispatchEvent(new Event('sailing:crew-requests-updated'));
+    window.dispatchEvent(new Event('sailing:outing-requests-updated'));
+  };
+
+  const statusUpdatePayload = (status, note = null) => {
+    const now = new Date().toISOString();
+    const payload = {
+      status,
+      responded_at: now,
+      status_changed_at: now,
+      status_seen_at: null,
+    };
+
+    if (status === 'declined') {
+      payload.skipper_response_note = note || null;
+    }
+
+    return payload;
   };
 
   useEffect(() => {
@@ -139,15 +157,16 @@ export default function SkipperDashboard() {
   const handleApprove = async (requestId, outingId) => {
     try {
       setActionLoading((prev) => ({ ...prev, [requestId]: true }));
+      const payload = statusUpdatePayload('approved');
       const { error } = await supabase
         .from('crew_requests')
-        .update({ status: 'approved', responded_at: new Date().toISOString() })
+        .update(payload)
         .eq('id', requestId);
       if (error) throw error;
       setOutings((prev) => prev.map((o) => o.id !== outingId ? o : {
         ...o,
         crew_requests: o.crew_requests.map((r) =>
-          r.id === requestId ? { ...r, status: 'approved' } : r
+          r.id === requestId ? { ...r, ...payload } : r
         ),
       }));
       refreshNotificationCounts();
@@ -159,17 +178,21 @@ export default function SkipperDashboard() {
   };
 
   const handleDecline = async (requestId, outingId) => {
+    const note = window.prompt('Optional note to the member about this decision:', '');
+    if (note === null) return;
+
     try {
       setActionLoading((prev) => ({ ...prev, [requestId]: true }));
+      const payload = statusUpdatePayload('declined', note.trim());
       const { error } = await supabase
         .from('crew_requests')
-        .update({ status: 'declined', responded_at: new Date().toISOString() })
+        .update(payload)
         .eq('id', requestId);
       if (error) throw error;
       setOutings((prev) => prev.map((o) => o.id !== outingId ? o : {
         ...o,
         crew_requests: o.crew_requests.map((r) =>
-          r.id === requestId ? { ...r, status: 'declined' } : r
+          r.id === requestId ? { ...r, ...payload } : r
         ),
       }));
       refreshNotificationCounts();
@@ -279,6 +302,7 @@ export default function SkipperDashboard() {
             const isExpanded = expandedOutings[outing.id];
             const pending = outing.crew_requests.filter((r) => r.status === 'pending');
             const approved = outing.crew_requests.filter((r) => r.status === 'approved');
+            const waitlisted = outing.crew_requests.filter((r) => r.status === 'waitlisted');
             const declined = outing.crew_requests.filter((r) => r.status === 'declined');
             const isArchived = isPastLocalDate(outing.outing_date);
 
@@ -426,19 +450,73 @@ export default function SkipperDashboard() {
                       </div>
                     )}
 
+                    {!isArchived && waitlisted.length > 0 && (
+                      <div>
+                        <h4 style={styles.sectionTitle}>Waitlist ({waitlisted.length})</h4>
+                        <div style={styles.requestsList}>
+                          {waitlisted.map((req) => (
+                            <div key={req.id} style={styles.waitlistedRequest}>
+                              <div style={styles.requestHeader}>
+                                {req.crew?.photo_url ? (
+                                  <img src={req.crew.photo_url} alt={req.crew.full_name} style={styles.photo} />
+                                ) : (
+                                  <div style={styles.photoPlaceholder}>📷</div>
+                                )}
+                                <div>
+                                  <button
+                                    type="button"
+                                    onClick={() => navigate(`/profile/${req.crew_id}?returnTo=${encodeURIComponent('/skipper-dashboard')}`)}
+                                    style={{...styles.requestName, background: 'none', border: 'none', padding: 0, color: '#0369a1', cursor: 'pointer', textAlign: 'left'}}
+                                  >
+                                    {req.crew?.full_name || 'View profile'}
+                                  </button>
+                                  <p style={styles.requestSkill}>{req.crew?.sailing_experience} sailor</p>
+                                  {req.crew?.bio && <p style={styles.requestBio}>{req.crew.bio}</p>}
+                                </div>
+                              </div>
+                              <div style={styles.requestActions}>
+                                <button
+                                  onClick={() => handleApprove(req.id, outing.id)}
+                                  disabled={actionLoading[req.id]}
+                                  style={{...styles.approveBtn, opacity: actionLoading[req.id] ? 0.5 : 1}}
+                                  onMouseEnter={(e) => !actionLoading[req.id] && (e.target.style.background = '#15803d')}
+                                  onMouseLeave={(e) => (e.target.style.background = '#16a34a')}
+                                >
+                                  {actionLoading[req.id] ? '...' : '✓ Approve from Waitlist'}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => navigate(`/profile/${req.crew_id}?returnTo=${encodeURIComponent('/skipper-dashboard')}`)}
+                                  style={styles.profileBtn}
+                                  onMouseEnter={(e) => (e.target.style.background = '#075985')}
+                                  onMouseLeave={(e) => (e.target.style.background = '#0369a1')}
+                                >
+                                  View Profile
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                     {declined.length > 0 && (
                       <div>
-                        <h4 style={styles.sectionTitle}>Declined ({declined.length})</h4>
+                        <h4 style={styles.sectionTitle}>Declined / Not Accommodated ({declined.length})</h4>
                         <div>
                           {declined.map((req) => (
-                            <button
-                              key={req.id}
-                              type="button"
-                              onClick={() => navigate(`/profile/${req.crew_id}?returnTo=${encodeURIComponent('/skipper-dashboard')}`)}
-                              style={{...styles.declinedText, background: 'none', border: 'none', padding: 0, color: '#0369a1', cursor: 'pointer', textAlign: 'left'}}
-                            >
-                              {req.crew?.full_name || 'View profile'}
-                            </button>
+                            <div key={req.id} style={{display: 'grid', gap: '4px', marginBottom: '8px'}}>
+                              <button
+                                type="button"
+                                onClick={() => navigate(`/profile/${req.crew_id}?returnTo=${encodeURIComponent('/skipper-dashboard')}`)}
+                                style={{...styles.declinedText, background: 'none', border: 'none', padding: 0, color: '#0369a1', cursor: 'pointer', textAlign: 'left'}}
+                              >
+                                {req.crew?.full_name || 'View profile'}
+                              </button>
+                              {req.skipper_response_note && (
+                                <span style={{fontSize: '0.9rem', color: '#64748b', fontWeight: 600}}>Note: {req.skipper_response_note}</span>
+                              )}
+                            </div>
                           ))}
                         </div>
                       </div>

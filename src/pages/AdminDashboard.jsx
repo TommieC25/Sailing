@@ -379,6 +379,12 @@ const AdminDashboard = () => {
 
   const feedbackTitle = (type, item) => (type === 'messages' ? item.subject : item.title);
   const feedbackBody = (type, item) => (type === 'messages' ? item.message : item.description);
+  const featureDashboardStatusValue = (status) => {
+    if (status === 'open') return 'pending';
+    if (status === 'in_progress' || status === 'planned') return 'in_development';
+    if (status === 'resolved' || status === 'completed') return 'implemented';
+    return status || 'pending';
+  };
 
   const openActivity = (activity) => {
     if (activity.type === 'outing' || activity.type === 'crew_request') {
@@ -414,12 +420,16 @@ const AdminDashboard = () => {
 
   const renderFeedbackSection = (type) => {
     const config = feedbackConfig[type];
-    const openItems = config.items.filter((item) => item.status === 'open').length;
+    const openItems = config.items.filter((item) => (
+      type === 'features'
+        ? featureDashboardStatusValue(item.status) !== 'implemented'
+        : item.status === 'open'
+    )).length;
 
     return (
       <div style={{ marginBottom: '20px' }}>
         <h3 style={{ fontSize: '1.1rem', fontWeight: 900, marginBottom: '10px' }}>
-          {config.icon} {config.title} ({openItems} open / {config.items.length} total)
+          {config.icon} {config.title} ({openItems} {type === 'features' ? 'active' : 'open'} / {config.items.length} total)
         </h3>
         {config.items.length === 0 ? (
           <div style={{ background: '#ffffff', padding: '12px', borderRadius: '8px', border: '1px solid #e5e7eb', color: '#64748b', fontWeight: 700 }}>
@@ -445,15 +455,23 @@ const AdminDashboard = () => {
                   </button>
                   <div style={{ display: 'grid', gap: '6px', minWidth: '140px' }}>
                     <select
-                      value={item.status}
+                      value={type === 'features' ? featureDashboardStatusValue(item.status) : item.status}
                       onChange={(e) => config.statusHandler(item.id, e.target.value)}
                       style={{ padding: '7px 10px', borderRadius: '6px', border: '1px solid #d1d5db', fontWeight: 700, background: '#ffffff' }}
                     >
-                      <option value="open">Open</option>
-                      <option value="in_progress">In Progress</option>
-                      {type === 'features' && <option value="planned">Planned</option>}
-                      {type === 'features' && <option value="completed">Completed</option>}
-                      <option value="resolved">Resolved</option>
+                      {type === 'features' ? (
+                        <>
+                          <option value="pending">Pending</option>
+                          <option value="in_development">In Development</option>
+                          <option value="implemented">Implemented</option>
+                        </>
+                      ) : (
+                        <>
+                          <option value="open">Open</option>
+                          <option value="in_progress">In Progress</option>
+                          <option value="resolved">Resolved</option>
+                        </>
+                      )}
                     </select>
                     <button
                       type="button"

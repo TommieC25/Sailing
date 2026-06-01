@@ -147,7 +147,7 @@ export default function Layout({ children }) {
         const [messagesRes, bugsRes, featuresRes] = await Promise.all([
           supabase.from('contact_messages').select('id').eq('status', 'open'),
           supabase.from('bug_reports').select('id').eq('status', 'open'),
-          supabase.from('feature_requests').select('id').eq('status', 'open'),
+          supabase.from('feature_requests').select('id').in('status', ['pending', 'in_development']),
         ]);
 
         setUnreadInboxCounts({

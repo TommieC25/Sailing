@@ -54,6 +54,7 @@ export default function FeatureRequestPage() {
         user_id: user.id,
         title: formData.title,
         description: formData.description,
+        status: 'pending',
       });
 
       if (insertError) throw insertError;

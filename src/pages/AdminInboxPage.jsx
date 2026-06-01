@@ -56,6 +56,7 @@ export default function AdminInboxPage() {
   const [featureRequests, setFeatureRequests] = useState([]);
   const [loading, setLoading] = useState(false);
   const [updating, setUpdating] = useState(null);
+  const [inboxError, setInboxError] = useState('');
   const isAdmin = profile?.role === 'admin';
 
   const attachSubmitters = async (items) => {
@@ -172,6 +173,7 @@ export default function AdminInboxPage() {
   const updateStatus = async (table, id, status) => {
     try {
       setUpdating(id);
+      setInboxError('');
       const { error } = await supabase
         .from(table)
         .update({ status, updated_at: new Date().toISOString() })
@@ -190,6 +192,7 @@ export default function AdminInboxPage() {
       window.dispatchEvent(new Event('sailing:admin-inbox-updated'));
     } catch (err) {
       console.error('Error updating status:', err);
+      setInboxError(err.message || 'Could not update status');
     } finally {
       setUpdating(null);
     }
@@ -198,6 +201,7 @@ export default function AdminInboxPage() {
   const archiveMessage = async (id) => {
     try {
       setUpdating(id);
+      setInboxError('');
       const { error } = await supabase
         .from('contact_messages')
         .update({ status: 'archived' })
@@ -208,6 +212,7 @@ export default function AdminInboxPage() {
       window.dispatchEvent(new Event('sailing:admin-inbox-updated'));
     } catch (err) {
       console.error('Error archiving message:', err);
+      setInboxError(err.message || 'Could not archive message');
     } finally {
       setUpdating(null);
     }
@@ -218,6 +223,7 @@ export default function AdminInboxPage() {
 
     try {
       setUpdating(id);
+      setInboxError('');
       const { error } = await supabase
         .from('contact_messages')
         .delete()
@@ -228,6 +234,7 @@ export default function AdminInboxPage() {
       window.dispatchEvent(new Event('sailing:admin-inbox-updated'));
     } catch (err) {
       console.error('Error deleting message:', err);
+      setInboxError(err.message || 'Could not delete message');
     } finally {
       setUpdating(null);
     }
@@ -502,6 +509,8 @@ export default function AdminInboxPage() {
           {messages.length} messages • {bugReports.length} bug reports • {featureRequests.length} feature requests
         </p>
       </div>
+
+      {inboxError && <div style={styles.errorBox}>{inboxError}</div>}
 
       <div style={styles.tabs}>
         {tabs.map((tab) => (

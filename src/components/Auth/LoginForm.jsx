@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { supabase } from '../../utils/supabaseClient';
 
 const styles = {
   container: { minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(to bottom right, #0c3880, #0369a1, #06b6d4)', paddingLeft: '1.25rem', paddingRight: '1.25rem', paddingTop: '2rem', paddingBottom: '2rem' },
@@ -16,6 +17,9 @@ const styles = {
   button: { width: '100%', padding: '1.25rem', borderRadius: '0.75rem', fontWeight: 900, fontSize: '1.5rem', background: '#06b6d4', color: '#111827', border: 'none', cursor: 'pointer', boxShadow: '0 10px 15px rgba(0,0,0,0.2)', transition: 'all 0.2s' },
   buttonDisabled: { opacity: 0.5, cursor: 'not-allowed' },
   error: { background: 'rgba(239, 68, 68, 0.8)', color: '#ffffff', fontSize: '1.1rem', padding: '1rem', borderRadius: '0.75rem', marginBottom: '1.5rem', fontWeight: 700 },
+  loginError: { background: '#fee2e2', color: '#7f1d1d', fontSize: '1.05rem', padding: '1rem', borderRadius: '0.75rem', marginBottom: '1rem', fontWeight: 800, border: '2px solid #ef4444', lineHeight: 1.45 },
+  loginErrorActions: { display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginTop: '0.75rem' },
+  loginErrorLink: { color: '#991b1b', fontWeight: 900, textDecoration: 'underline' },
   section: { marginBottom: '2rem' },
   description: { color: '#e0f2fe', fontSize: '1.125rem', fontWeight: 600, lineHeight: '1.6' },
   card: { display: 'flex', alignItems: 'flex-start', gap: '1rem', background: 'rgba(255,255,255,0.1)', borderRadius: '0.75rem', padding: '1rem', border: '1px solid rgba(255,255,255,0.2)', marginBottom: '0.75rem' },
@@ -54,10 +58,24 @@ export default function LoginForm() {
     setError('');
     setNeedsConfirmation(false);
     setResendStatus('');
-    const email = e.target.email.value;
+    const email = e.target.email.value.trim();
     const password = e.target.password.value;
     try {
       setLoading(true);
+      let accountExists = null;
+      const { data: emailExists, error: lookupError } = await supabase
+        .rpc('auth_email_exists', { p_email: email });
+
+      if (lookupError) {
+        console.warn('Could not verify account before sign in:', lookupError.message);
+      } else {
+        accountExists = Boolean(emailExists);
+        if (!accountExists) {
+          setError('No such user account exists. Please sign up.');
+          return;
+        }
+      }
+
       await signIn(email, password);
       navigate('/');
     } catch (err) {
@@ -73,8 +91,7 @@ export default function LoginForm() {
         setNeedsConfirmation(true);
         setError('');
       } else if (/invalid login credentials/i.test(msg) || /user not found/i.test(msg) || code === 'invalid_grant') {
-        // User doesn't exist or wrong password - offer signup link
-        setError(`We couldn't find an account with that email or the password was incorrect. Want to create an account instead? Use the "Create Account" button below.`);
+        setError('Invalid password. Please try again or reset your password.');
       } else {
         setError(msg);
       }
@@ -168,7 +185,6 @@ export default function LoginForm() {
         {/* Sign In Form */}
         <div style={{marginBottom: '1.5rem'}}>
 
-          {error && <div style={styles.error}>{error}</div>}
           {searchParams.get('reset') === 'success' && (
             <div style={{background: 'rgba(22, 163, 74, 0.95)', color: '#ffffff', fontSize: '1.1rem', padding: '1rem', borderRadius: '0.75rem', marginBottom: '1.5rem', fontWeight: 800}}>
               Password reset successfully. Sign in with your new password.
@@ -190,6 +206,16 @@ export default function LoginForm() {
               >
                 Sign Out
               </button>
+            </div>
+          )}
+
+          {error && (
+            <div role="alert" aria-live="assertive" style={styles.loginError}>
+              <div>{error}</div>
+              <div style={styles.loginErrorActions}>
+                <Link to="/forgot-password" style={styles.loginErrorLink}>Reset password</Link>
+                <Link to="/signup" style={styles.loginErrorLink}>Create account</Link>
+              </div>
             </div>
           )}
 

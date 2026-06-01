@@ -197,30 +197,28 @@ export default function BugReportPage() {
       return;
     }
 
-    if (!screenshot) {
-      setError('Please attach a screenshot so we can see the issue');
-      return;
-    }
-
     try {
       setLoading(true);
-      setStatusMessage('Uploading screenshot...');
-      const rawExt = screenshot.name.split('.').pop() || 'png';
-      const fileExt = rawExt.toLowerCase().replace(/[^a-z0-9]/g, '') || 'png';
-      const filePath = `bug-reports/${user.id}/${Date.now()}.${fileExt}`;
+      let screenshotUrl = null;
+      if (screenshot) {
+        setStatusMessage('Uploading screenshot...');
+        const rawExt = screenshot.name.split('.').pop() || 'png';
+        const fileExt = rawExt.toLowerCase().replace(/[^a-z0-9]/g, '') || 'png';
+        const filePath = `bug-reports/${user.id}/${Date.now()}.${fileExt}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from('profiles')
-        .upload(filePath, screenshot, {
-          cacheControl: '3600',
-          contentType: screenshot.type || undefined,
-          upsert: false,
-        });
+        const { error: uploadError } = await supabase.storage
+          .from('profiles')
+          .upload(filePath, screenshot, {
+            cacheControl: '3600',
+            contentType: screenshot.type || undefined,
+            upsert: false,
+          });
 
-      if (uploadError) throw uploadError;
+        if (uploadError) throw uploadError;
 
-      const { data } = supabase.storage.from('profiles').getPublicUrl(filePath);
-      const screenshotUrl = data.publicUrl;
+        const { data } = supabase.storage.from('profiles').getPublicUrl(filePath);
+        screenshotUrl = data.publicUrl;
+      }
       setStatusMessage('Submitting bug report...');
 
       const { error: insertError } = await supabase
@@ -314,7 +312,7 @@ export default function BugReportPage() {
 
         <form onSubmit={handleSubmit} style={styles.form}>
           <div style={styles.guidanceBox}>
-            Please be clear and specific. Describe what you expected to happen, what you actually saw, and why the result does not seem right. Attach a screenshot so we can see the issue. Thank you!
+            Please be clear and specific. Describe what you expected to happen, what you actually saw, and why the result does not seem right. A screenshot is helpful but optional. Thank you!
           </div>
 
           <div style={styles.fieldGroup}>
@@ -341,13 +339,12 @@ export default function BugReportPage() {
           </div>
 
           <div style={styles.fieldGroup}>
-            <label style={styles.label}>Screenshot *</label>
+            <label style={styles.label}>Screenshot or attachment (optional)</label>
             <input
               ref={screenshotInputRef}
               type="file"
-              accept="image/*"
+              accept=".png,.jpg,.jpeg,.gif,.webp,.heic,.heif"
               onChange={handleScreenshotChange}
-              required
               style={styles.fileInput}
             />
             {screenshot && (

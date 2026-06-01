@@ -158,6 +158,7 @@ export default function OutingDetailPage() {
           capacity: null,
         });
 
+        let currentUserRequestData = null;
         if (user) {
           const { data: requestData, error: requestError } = await supabase
             .from('crew_requests')
@@ -169,6 +170,7 @@ export default function OutingDetailPage() {
             .maybeSingle();
 
           if (requestError) throw requestError;
+          currentUserRequestData = requestData || null;
           setCrewRequest(requestData || null);
 
           if (user.id === outingData.skipper_id) {
@@ -222,11 +224,31 @@ export default function OutingDetailPage() {
           crew: approvedById[request.crew_id] || null,
         })));
 
-        const { data: msgs, error: msgsError } = await supabase
-          .from('event_chat')
-          .select('*')
-          .eq('outing_id', id)
-          .order('created_at', { ascending: true });
+        const currentUserRequest = user
+          ? user.id === outingData.skipper_id
+            ? null
+            : currentUserRequestData
+          : null;
+        const canViewChat = user && (
+          user.id === outingData.skipper_id
+          || currentUserRequest?.status === 'approved'
+        );
+
+        let chatQuery = canViewChat
+          ? supabase
+              .from('event_chat')
+              .select('*')
+              .eq('outing_id', id)
+              .order('created_at', { ascending: true })
+          : null;
+
+        if (chatQuery && currentUserRequest?.status === 'approved') {
+          chatQuery = chatQuery.gte('created_at', currentUserRequest.responded_at || currentUserRequest.requested_at);
+        }
+
+        const { data: msgs, error: msgsError } = chatQuery
+          ? await chatQuery
+          : { data: [], error: null };
 
         if (msgsError) throw msgsError;
 

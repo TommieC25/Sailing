@@ -124,8 +124,17 @@ export default function ForgotPasswordPage() {
             <p style={{ margin: '0 0 12px 0', color: '#64748b', fontSize: '0.875rem' }}>
               Remember your password?
             </p>
+            <Link
+              to="/login"
+              style={styles.footerLink}
+              onMouseEnter={(e) => (e.target.style.textDecoration = 'underline')}
+              onMouseLeave={(e) => (e.target.style.textDecoration = 'none')}
+            >
+              Sign In →
+            </Link>
             {error === 'No such user account exists. Please sign up.' && (
-              <p style={{ margin: '0 0 12px 0' }}>
+              <p style={{ margin: '16px 0 0 0', color: '#64748b', fontSize: '0.875rem' }}>
+                Need an account?{' '}
                 <Link
                   to="/signup"
                   style={styles.footerLink}
@@ -136,14 +145,6 @@ export default function ForgotPasswordPage() {
                 </Link>
               </p>
             )}
-            <Link
-              to="/login"
-              style={styles.footerLink}
-              onMouseEnter={(e) => (e.target.style.textDecoration = 'underline')}
-              onMouseLeave={(e) => (e.target.style.textDecoration = 'none')}
-            >
-              Back to Sign In →
-            </Link>
           </div>
         </div>
 

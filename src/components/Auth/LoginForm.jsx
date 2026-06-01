@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../utils/supabaseClient';
 
@@ -31,7 +31,6 @@ const styles = {
 };
 
 export default function LoginForm() {
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user, signIn, signOut, resendConfirmation } = useAuth();
   const [formData, setFormData] = useState({ email: '', password: '' });
@@ -78,7 +77,7 @@ export default function LoginForm() {
       }
 
       await signIn(email, password);
-      navigate('/');
+      window.location.assign(`${window.location.origin}/Sailing/`);
     } catch (err) {
       try {
         setAuthDebug(window.sessionStorage.getItem('sailingAuthDebug') || '');

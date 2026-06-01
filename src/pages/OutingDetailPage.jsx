@@ -120,6 +120,14 @@ export default function OutingDetailPage() {
     return payload;
   };
 
+  const canApproveRequest = (requestId) => {
+    const crewLimit = Number(outing?.capacity_available || 0);
+    const approvedCount = crewRequests.filter((request) => (
+      request.status === 'approved' && request.id !== requestId
+    )).length;
+    return crewLimit < 1 || approvedCount < crewLimit;
+  };
+
   useEffect(() => {
     const fetchOutingDetails = async () => {
       try {
@@ -298,6 +306,10 @@ export default function OutingDetailPage() {
   const handleApproveRequest = async (requestId) => {
     try {
       setActionLoading((prev) => ({ ...prev, [requestId]: true }));
+      setError('');
+      if (!canApproveRequest(requestId)) {
+        throw new Error('This outing is already full. Decline the request or keep the member waitlisted until space opens.');
+      }
       const payload = statusUpdatePayload('approved');
       const { error } = await supabase
         .from('crew_requests')

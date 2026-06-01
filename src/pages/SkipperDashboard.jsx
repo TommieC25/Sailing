@@ -84,6 +84,14 @@ export default function SkipperDashboard() {
     return payload;
   };
 
+  const canApproveRequest = (outing, requestId) => {
+    const crewLimit = Number(outing?.capacity_available || 0);
+    const approvedCount = (outing?.crew_requests || []).filter((request) => (
+      request.status === 'approved' && request.id !== requestId
+    )).length;
+    return crewLimit < 1 || approvedCount < crewLimit;
+  };
+
   useEffect(() => {
     if (authLoading) return;
 
@@ -157,6 +165,11 @@ export default function SkipperDashboard() {
   const handleApprove = async (requestId, outingId) => {
     try {
       setActionLoading((prev) => ({ ...prev, [requestId]: true }));
+      setError('');
+      const outing = outings.find((item) => item.id === outingId);
+      if (!canApproveRequest(outing, requestId)) {
+        throw new Error('This outing is already full. Decline the request or keep the member waitlisted until space opens.');
+      }
       const payload = statusUpdatePayload('approved');
       const { error } = await supabase
         .from('crew_requests')

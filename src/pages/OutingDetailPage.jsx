@@ -68,7 +68,7 @@ const styles = {
   crewMeta: { color: '#64748b', fontSize: '0.82rem', lineHeight: 1.3 },
   messageBtn: { background: '#0c2340', color: '#ffffff', border: 'none', borderRadius: '8px', padding: '8px 10px', fontWeight: 900, cursor: 'pointer', fontSize: '0.85rem', flexShrink: 0 },
   chatSection: { borderTop: '1px solid #e5e7eb', paddingTop: '14px', marginTop: '14px' },
-  chatMessages: { background: '#f9fafb', borderRadius: '8px', padding: '10px', height: '220px', overflowY: 'auto', marginBottom: '10px', display: 'flex', flexDirection: 'column', gap: '8px' },
+  chatMessages: { background: '#f9fafb', borderRadius: '8px', padding: '10px', maxHeight: '220px', overflowY: 'auto', marginBottom: '10px', display: 'flex', flexDirection: 'column', gap: '8px' },
   chatMessage: { padding: '9px 12px', borderRadius: '8px', maxWidth: '80%' },
   chatMessageOwn: { background: '#06b6d4', color: '#ffffff', alignSelf: 'flex-end' },
   chatMessageOther: { background: '#e5e7eb', color: '#1f2937' },
@@ -733,7 +733,7 @@ export default function OutingDetailPage() {
           </div>
         )}
 
-        {!isSkipper && (
+        {!isSkipper && crewRequest?.status !== 'approved' && (
           <div style={styles.joinSection}>
             <h2 style={styles.joinTitle}>{crewRequest ? 'Your Outing Request' : 'Join This Outing'}</h2>
             {!crewRequest && !isArchived && (

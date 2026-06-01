@@ -39,6 +39,22 @@ export default function HomePage() {
         if (skipperError) throw skipperError;
 
         const skipperById = Object.fromEntries((skippers || []).map((skipper) => [skipper.id, skipper]));
+        const outingIds = (data || []).map((outing) => outing.id);
+        let approvedCountsByOutingId = {};
+        if (outingIds.length > 0) {
+          const { data: approvedCounts, error: approvedCountsError } = await supabase
+            .rpc('outing_approved_counts', { p_outing_ids: outingIds });
+
+          if (approvedCountsError) {
+            console.warn('Could not load approved crew counts:', approvedCountsError.message);
+          } else {
+            approvedCountsByOutingId = (approvedCounts || []).reduce((counts, row) => {
+              counts[row.outing_id] = row.approved_count || 0;
+              return counts;
+            }, {});
+          }
+        }
+
         let pendingByOutingId = {};
         if (profile?.user_type === 'owner') {
           const yourOutingIds = (data || [])
@@ -65,6 +81,7 @@ export default function HomePage() {
           ...outing,
           skipper: skipperById[outing.skipper_id] || null,
           pendingCrewRequestCount: pendingByOutingId[outing.id] || 0,
+          approvedCrewCount: approvedCountsByOutingId[outing.id] || 0,
         })));
       } catch (err) {
         setError(err.message);
@@ -231,9 +248,9 @@ export default function HomePage() {
 }
 
 function OutingCard({ outing, isYours, isPast = false }) {
-  const totalSpots = outing.boats?.capacity || 0;
-  const availableSpots = outing.capacity_available || 0;
-  const filledSpots = totalSpots - availableSpots;
+  const crewCapacity = outing.capacity_available || 0;
+  const approvedCrewCount = outing.approvedCrewCount || 0;
+  const availableSpots = Math.max(crewCapacity - approvedCrewCount, 0);
 
   return (
     <Link
@@ -284,7 +301,7 @@ function OutingCard({ outing, isYours, isPast = false }) {
         {/* Condensed info line */}
         <div style={{fontSize: '0.9rem', color: '#64748b', marginBottom: '8px', fontWeight: 600, lineHeight: '1.35'}}>
           <div>📅 {formatLocalDate(outing.outing_date, { weekday: 'short', month: 'short', day: 'numeric' })} at {outing.outing_time}</div>
-          <div>🚢 {outing.boats?.name} ({outing.boats?.size_ft}ft) • 👤 {outing.skipper?.full_name || 'TBD'} • {filledSpots}/{totalSpots} crew</div>
+          <div>🚢 {outing.boats?.name} ({outing.boats?.size_ft}ft) • 👤 {outing.skipper?.full_name || 'TBD'} • {approvedCrewCount}/{crewCapacity} crew approved</div>
         </div>
 
         {/* Description - condensed */}

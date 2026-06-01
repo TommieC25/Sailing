@@ -91,6 +91,7 @@ export default function OutingDetailPage() {
   const [crewRequest, setCrewRequest] = useState(null);
   const [crewRequests, setCrewRequests] = useState([]);
   const [approvedCrew, setApprovedCrew] = useState([]);
+  const [approvedCrewCount, setApprovedCrewCount] = useState(0);
   const [messages, setMessages] = useState([]);
   const [messageText, setMessageText] = useState('');
   const [sendingMessage, setSendingMessage] = useState(false);
@@ -122,10 +123,9 @@ export default function OutingDetailPage() {
 
   const canApproveRequest = (requestId) => {
     const crewLimit = Number(outing?.capacity_available || 0);
-    const approvedCount = crewRequests.filter((request) => (
-      request.status === 'approved' && request.id !== requestId
-    )).length;
-    return crewLimit < 1 || approvedCount < crewLimit;
+    const request = crewRequests.find((item) => item.id === requestId);
+    if (request?.status === 'approved') return true;
+    return crewLimit < 1 || approvedCrewCount < crewLimit;
   };
 
   useEffect(() => {
@@ -216,6 +216,16 @@ export default function OutingDetailPage() {
           .eq('status', 'approved');
 
         if (approvedError) throw approvedError;
+
+        const { data: approvedCounts, error: approvedCountsError } = await supabase
+          .rpc('outing_approved_counts', { p_outing_ids: [id] });
+
+        if (approvedCountsError) {
+          console.warn('Could not load approved crew count:', approvedCountsError.message);
+          setApprovedCrewCount((approved || []).length);
+        } else {
+          setApprovedCrewCount(approvedCounts?.[0]?.approved_count || 0);
+        }
 
         const approvedCrewIds = [...new Set((approved || []).map((request) => request.crew_id).filter(Boolean))];
         const { data: approvedProfiles, error: approvedProfilesError } = approvedCrewIds.length
@@ -328,6 +338,9 @@ export default function OutingDetailPage() {
           if (prev.some((req) => req.id === requestId)) return prev;
           return [...prev, { ...approvedRequest, ...payload }];
         });
+      }
+      if (approvedRequest?.status !== 'approved') {
+        setApprovedCrewCount((current) => current + 1);
       }
       refreshRequestNotifications();
     } catch (err) {
@@ -477,6 +490,8 @@ export default function OutingDetailPage() {
     boat.size_ft ? `${boat.size_ft}'` : null,
     boat.mooring_location || null,
   ].filter(Boolean);
+  const crewCapacity = Number(outing.capacity_available || 0);
+  const crewSpotsRemaining = Math.max(crewCapacity - approvedCrewCount, 0);
   const renderSkipperRequest = (req) => (
     <div key={req.id} style={requestCardStyle(req.status)}>
       {req.crew?.photo_url ? (
@@ -577,7 +592,9 @@ export default function OutingDetailPage() {
 
           <div>
             <p style={styles.detailLabel}>👥 Crew Spots Available</p>
-            <p style={styles.detailValue}>{outing.capacity_available} spot{outing.capacity_available !== 1 ? 's' : ''} available</p>
+            <p style={styles.detailValue}>
+              {crewSpotsRemaining} of {crewCapacity} spot{crewCapacity !== 1 ? 's' : ''} available
+            </p>
           </div>
         </div>
 

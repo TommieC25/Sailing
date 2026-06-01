@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../utils/supabaseClient';
 import { formatPhoneNumber, phoneDigits } from '../../utils/phoneFormat';
@@ -28,6 +28,7 @@ const styles = {
 
 export default function SignupForm() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, signUp, signOut } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
@@ -51,6 +52,7 @@ export default function SignupForm() {
     }
   });
   const [loading, setLoading] = useState(false);
+  const showSignupDebug = searchParams.get('signupDebug') === '1';
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -264,9 +266,11 @@ export default function SignupForm() {
             </div>
           )}
 
-          <div style={{background: '#f8fafc', border: '2px solid #94a3b8', color: '#334155', fontSize: '0.95rem', padding: '0.85rem 1rem', borderRadius: '12px', marginBottom: '1.5rem', fontWeight: 700, lineHeight: 1.4}}>
-            Signup status: {signupDebug || 'Ready. Tap Create Account after filling the form.'}
-          </div>
+          {showSignupDebug && (
+            <div style={{background: '#f8fafc', border: '2px solid #94a3b8', color: '#334155', fontSize: '0.95rem', padding: '0.85rem 1rem', borderRadius: '12px', marginBottom: '1.5rem', fontWeight: 700, lineHeight: 1.4}}>
+              Signup status: {signupDebug || 'Ready. Tap Create Account after filling the form.'}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} style={styles.form} autoComplete="on" noValidate>
             <div style={styles.fieldGroup}>

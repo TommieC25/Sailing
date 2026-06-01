@@ -1,5 +1,5 @@
 -- Lock outing group chat to skippers and approved crew.
--- Approved crew can only see messages from their approval time forward.
+-- Approved crew can see the full chat history for that outing.
 
 alter table public.event_chat enable row level security;
 
@@ -22,7 +22,6 @@ using (
     where request.outing_id = event_chat.outing_id
       and request.crew_id = auth.uid()
       and request.status = 'approved'
-      and event_chat.created_at >= coalesce(request.responded_at, request.requested_at)
   )
 );
 

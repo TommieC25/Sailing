@@ -234,20 +234,12 @@ export default function OutingDetailPage() {
           || currentUserRequest?.status === 'approved'
         );
 
-        let chatQuery = canViewChat
-          ? supabase
+        const { data: msgs, error: msgsError } = canViewChat
+          ? await supabase
               .from('event_chat')
               .select('*')
               .eq('outing_id', id)
               .order('created_at', { ascending: true })
-          : null;
-
-        if (chatQuery && currentUserRequest?.status === 'approved') {
-          chatQuery = chatQuery.gte('created_at', currentUserRequest.responded_at || currentUserRequest.requested_at);
-        }
-
-        const { data: msgs, error: msgsError } = chatQuery
-          ? await chatQuery
           : { data: [], error: null };
 
         if (msgsError) throw msgsError;

@@ -24,7 +24,7 @@ const styles = {
   bottomText: { color: '#ffffff', textAlign: 'center', fontSize: '1rem', fontWeight: 600, marginTop: '2rem', textShadow: '0 1px 3px rgba(0,0,0,0.4)' },
 };
 
-const resetSuccessMessage = 'If such a user account exists, a password reset link has been sent. Please check your email.';
+const resetSuccessMessage = 'Password reset request submitted. Please check your email.';
 
 export default function ForgotPasswordPage() {
   const navigate = useNavigate();
@@ -80,12 +80,14 @@ export default function ForgotPasswordPage() {
         <div style={styles.header}>
           <img src="/Sailing/Club Logo.jpg" alt="CGSC Logo" style={styles.logo} />
           <h1 style={styles.title}>Reset Password</h1>
-          <p style={styles.subtitle}>We'll send you a link to reset it</p>
+          <p style={styles.subtitle}>If such a user account exists, we'll send a reset link</p>
         </div>
 
         <div style={styles.card}>
           <h2 style={styles.cardTitle}>Forgot Password?</h2>
-          <p style={styles.cardSubtitle}>Enter your email and we'll send you a password reset link</p>
+          <p style={styles.cardSubtitle}>
+            Enter the email you think is associated with your account. If such a user account exists, we'll send a password reset link.
+          </p>
 
           {error && <div style={styles.errorBox}>{error}</div>}
           {success && <div style={styles.successBox}>{success}</div>}

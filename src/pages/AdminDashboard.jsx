@@ -5,6 +5,7 @@ import { supabase } from '../utils/supabaseClient';
 import { isPastLocalDate, todayLocalDateString } from '../utils/dateUtils';
 import { shouldSendCourtesyStatus, statusCourtesyMessage } from '../utils/statusMessages';
 import { attachBugScreenshotUrls } from '../utils/bugScreenshots';
+import { ANNOUNCEMENT_AUDIENCES, announcementAudienceLabel } from '../utils/announcements';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -28,9 +29,11 @@ const AdminDashboard = () => {
   const [error, setError] = useState(null);
   const [newAnnouncementTitle, setNewAnnouncementTitle] = useState('');
   const [newAnnouncementMessage, setNewAnnouncementMessage] = useState('');
+  const [newAnnouncementAudience, setNewAnnouncementAudience] = useState('all');
   const [editingAnnouncementId, setEditingAnnouncementId] = useState(null);
   const [editingAnnouncementTitle, setEditingAnnouncementTitle] = useState('');
   const [editingAnnouncementMessage, setEditingAnnouncementMessage] = useState('');
+  const [editingAnnouncementAudience, setEditingAnnouncementAudience] = useState('all');
 
   const outingsBySkipperId = outings.reduce((grouped, outing) => {
     if (!outing.skipper_id) return grouped;
@@ -172,6 +175,7 @@ const AdminDashboard = () => {
           admin_id: user.id,
           title: newAnnouncementTitle,
           message: newAnnouncementMessage,
+          audience: newAnnouncementAudience,
         },
       ]);
 
@@ -179,7 +183,9 @@ const AdminDashboard = () => {
 
       setNewAnnouncementTitle('');
       setNewAnnouncementMessage('');
+      setNewAnnouncementAudience('all');
       await loadDashboardData();
+      window.dispatchEvent(new Event('sailing:announcements-updated'));
     } catch (err) {
       setError(err.message);
     }
@@ -189,12 +195,14 @@ const AdminDashboard = () => {
     setEditingAnnouncementId(announcement.id);
     setEditingAnnouncementTitle(announcement.title || '');
     setEditingAnnouncementMessage(announcement.message || '');
+    setEditingAnnouncementAudience(announcement.audience || 'all');
   };
 
   const cancelEditingAnnouncement = () => {
     setEditingAnnouncementId(null);
     setEditingAnnouncementTitle('');
     setEditingAnnouncementMessage('');
+    setEditingAnnouncementAudience('all');
   };
 
   const handleUpdateAnnouncement = async (e) => {
@@ -207,6 +215,7 @@ const AdminDashboard = () => {
         .update({
           title: editingAnnouncementTitle,
           message: editingAnnouncementMessage,
+          audience: editingAnnouncementAudience,
         })
         .eq('id', editingAnnouncementId);
 
@@ -214,7 +223,7 @@ const AdminDashboard = () => {
 
       setAnnouncements((current) => current.map((announcement) => (
         announcement.id === editingAnnouncementId
-          ? { ...announcement, title: editingAnnouncementTitle, message: editingAnnouncementMessage }
+          ? { ...announcement, title: editingAnnouncementTitle, message: editingAnnouncementMessage, audience: editingAnnouncementAudience }
           : announcement
       )));
       cancelEditingAnnouncement();
@@ -917,6 +926,18 @@ const AdminDashboard = () => {
                   />
                 </div>
                 <div>
+                  <label style={{ fontWeight: 700, marginBottom: '5px', display: 'block' }}>Audience</label>
+                  <select
+                    value={newAnnouncementAudience}
+                    onChange={(e) => setNewAnnouncementAudience(e.target.value)}
+                    style={{ width: '100%', padding: '9px 10px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.95rem', fontWeight: 800, background: '#ffffff' }}
+                  >
+                    {ANNOUNCEMENT_AUDIENCES.map((audience) => (
+                      <option key={audience.value} value={audience.value}>{audience.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
                   <label style={{ fontWeight: 700, marginBottom: '5px', display: 'block' }}>Message</label>
                   <textarea
                     value={newAnnouncementMessage}
@@ -967,6 +988,15 @@ const AdminDashboard = () => {
                         rows={4}
                         style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '1rem', fontFamily: 'inherit', resize: 'vertical' }}
                       />
+                      <select
+                        value={editingAnnouncementAudience}
+                        onChange={(e) => setEditingAnnouncementAudience(e.target.value)}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.95rem', fontWeight: 800, background: '#ffffff' }}
+                      >
+                        {ANNOUNCEMENT_AUDIENCES.map((audience) => (
+                          <option key={audience.value} value={audience.value}>{audience.label}</option>
+                        ))}
+                      </select>
                       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                         <button
                           type="submit"
@@ -997,7 +1027,9 @@ const AdminDashboard = () => {
                         </button>
                       </div>
                       <p style={{ margin: '6px 0', color: '#666', lineHeight: '1.42', whiteSpace: 'pre-wrap' }}>{ann.message}</p>
-                      <p style={{ margin: '6px 0 0', fontSize: '0.82rem', color: '#999' }}>Posted {new Date(ann.created_at).toLocaleDateString()}</p>
+                      <p style={{ margin: '6px 0 0', fontSize: '0.82rem', color: '#999' }}>
+                        Posted {new Date(ann.created_at).toLocaleDateString()} • Audience: {announcementAudienceLabel(ann.audience)}
+                      </p>
                     </>
                   )}
                 </div>

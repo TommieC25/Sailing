@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../utils/supabaseClient';
 import { todayLocalDateString } from '../../utils/dateUtils';
+import { canViewAnnouncement } from '../../utils/announcements';
 
 const NAV_BG = 'linear-gradient(135deg, #0c2340 0%, #0369a1 100%)';
 const APP_MAX_WIDTH = '1100px';
@@ -39,12 +40,14 @@ export default function Layout({ children }) {
         // Get all announcements
         const { data: announcements } = await supabase
           .from('announcements')
-          .select('id');
+          .select('id, audience');
 
         if (!announcements) {
           setUnreadAnnouncementCount(0);
           return;
         }
+
+        const visibleAnnouncements = announcements.filter((announcement) => canViewAnnouncement(announcement, profile));
 
         // Get viewed announcements for this user
         const { data: viewed } = await supabase
@@ -53,7 +56,7 @@ export default function Layout({ children }) {
           .eq('user_id', user.id);
 
         const viewedIds = new Set(viewed?.map((v) => v.announcement_id) || []);
-        const unreadCount = announcements.filter((a) => !viewedIds.has(a.id)).length;
+        const unreadCount = visibleAnnouncements.filter((a) => !viewedIds.has(a.id)).length;
         setUnreadAnnouncementCount(unreadCount);
       } catch (err) {
         console.error('Error fetching unread announcements:', err);
@@ -61,7 +64,10 @@ export default function Layout({ children }) {
     };
 
     fetchUnreadCount();
-  }, [user]);
+    window.addEventListener('sailing:announcements-updated', fetchUnreadCount);
+
+    return () => window.removeEventListener('sailing:announcements-updated', fetchUnreadCount);
+  }, [user, profile]);
 
   useEffect(() => {
     if (!user) return;

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
+import { announcementAudienceLabel, canViewAnnouncement } from '../utils/announcements';
 
 const styles = {
   container: { maxWidth: '700px', margin: '0 auto' },
@@ -26,7 +27,7 @@ const styles = {
 
 export default function AnnouncementsFeed() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [announcements, setAnnouncements] = useState([]);
   const [viewedAnnouncements, setViewedAnnouncements] = useState(new Set());
   const [loading, setLoading] = useState(true);
@@ -42,7 +43,8 @@ export default function AnnouncementsFeed() {
           .order('created_at', { ascending: false });
 
         if (announcementsError) throw announcementsError;
-        setAnnouncements(allAnnouncements || []);
+        const visibleAnnouncements = (allAnnouncements || []).filter((announcement) => canViewAnnouncement(announcement, profile));
+        setAnnouncements(visibleAnnouncements);
 
         const { data: views, error: viewsError } = await supabase
           .from('announcement_views')
@@ -54,8 +56,8 @@ export default function AnnouncementsFeed() {
         setViewedAnnouncements(new Set(viewedIds));
 
         // Mark all as viewed for this user
-        if (allAnnouncements && allAnnouncements.length > 0) {
-          const unviewedIds = allAnnouncements
+        if (visibleAnnouncements.length > 0) {
+          const unviewedIds = visibleAnnouncements
             .filter((a) => !views?.some((v) => v.announcement_id === a.id))
             .map((a) => a.id);
 
@@ -77,7 +79,7 @@ export default function AnnouncementsFeed() {
     };
 
     fetchAnnouncements();
-  }, [user]);
+  }, [user, profile]);
 
   if (loading) {
     return (
@@ -134,7 +136,9 @@ export default function AnnouncementsFeed() {
                   {isNew && <span style={{ color: '#06b6d4', marginRight: '8px' }}>●</span>}
                   {announcement.title}
                 </h3>
-                <p style={styles.announcementMeta}>📍 CGSC Admin • {dateStr} at {timeStr}</p>
+                <p style={styles.announcementMeta}>
+                  📍 CGSC Admin • {announcementAudienceLabel(announcement.audience)} • {dateStr} at {timeStr}
+                </p>
                 <p style={styles.announcementMessage}>{announcement.message}</p>
               </div>
             );

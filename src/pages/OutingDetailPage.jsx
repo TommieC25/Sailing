@@ -73,6 +73,7 @@ const styles = {
   chatMessageOwn: { background: '#06b6d4', color: '#ffffff', alignSelf: 'flex-end' },
   chatMessageOther: { background: '#e5e7eb', color: '#1f2937' },
   chatMessageAuthor: { fontSize: '0.75rem', fontWeight: 600, marginBottom: '4px', opacity: 0.8 },
+  chatAuthorButton: { background: 'none', border: 'none', padding: 0, color: 'inherit', font: 'inherit', fontWeight: 900, cursor: 'pointer', textAlign: 'left', textDecoration: 'underline' },
   chatMessageText: { fontSize: '0.95rem', lineHeight: '1.4', whiteSpace: 'pre-wrap' },
   chatInput: { display: 'flex', gap: '8px' },
   chatTextarea: { flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '0.95rem', fontFamily: 'inherit', resize: 'vertical', minHeight: '48px' },
@@ -669,7 +670,19 @@ export default function OutingDetailPage() {
                         }}
                       >
                         {msg.user_id !== user?.id && (
-                          <div style={styles.chatMessageAuthor}>{msg.user?.full_name}</div>
+                          <div style={styles.chatMessageAuthor}>
+                            {msg.user_id ? (
+                              <button
+                                type="button"
+                                onClick={() => navigate(`/profile/${msg.user_id}?returnTo=${encodeURIComponent(`/outing/${id}`)}`)}
+                                style={styles.chatAuthorButton}
+                              >
+                                {msg.user?.full_name || 'Member'}
+                              </button>
+                            ) : (
+                              msg.user?.full_name || 'Member'
+                            )}
+                          </div>
                         )}
                         <div style={styles.chatMessageText}>{msg.message}</div>
                         <div style={{fontSize: '0.7rem', opacity: 0.6, marginTop: '4px'}}>

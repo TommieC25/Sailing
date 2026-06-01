@@ -30,6 +30,7 @@ const styles = {
   itemMeta: { fontSize: '0.8rem', color: '#64748b', fontWeight: 600, margin: '0 0 7px' },
   itemContent: { fontSize: '0.92rem', color: '#475569', lineHeight: '1.42', margin: '0 0 10px', whiteSpace: 'pre-wrap' },
   itemUser: { fontSize: '0.88rem', color: '#334155', margin: 0, fontWeight: 700, lineHeight: 1.3 },
+  submitterButton: { background: 'none', border: 'none', padding: 0, color: '#0369a1', fontSize: '0.88rem', fontWeight: 900, cursor: 'pointer', textAlign: 'left' },
   itemUserSub: { display: 'block', fontSize: '0.78rem', color: '#64748b', fontWeight: 600 },
   statusSelect: { padding: '7px 9px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 600, background: '#ffffff', cursor: 'pointer' },
   actionButton: { padding: '7px 9px', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 900, cursor: 'pointer', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a' },
@@ -304,10 +305,20 @@ export default function AdminInboxPage() {
     const submitterDetail = [item.submitter?.email, item.submitter?.user_type].filter(Boolean).join(' • ');
 
     return (
-      <p style={styles.itemUser}>
-        From: {submitterName}
+      <div style={styles.itemUser}>
+        From: {item.user_id ? (
+          <button
+            type="button"
+            onClick={() => navigate(`/profile/${item.user_id}?returnTo=${encodeURIComponent(`/admin/inbox?tab=${activeTab}`)}`)}
+            style={styles.submitterButton}
+          >
+            {submitterName}
+          </button>
+        ) : (
+          submitterName
+        )}
         <span style={styles.itemUserSub}>{submitterDetail || `User ID: ${item.user_id}`}</span>
-      </p>
+      </div>
     );
   };
 

@@ -18,6 +18,7 @@ const styles = {
   textarea: { width: '100%', padding: '10px 12px', border: '2px solid #dbeafe', borderRadius: '8px', fontSize: '0.95rem', fontWeight: 500, color: '#1e293b', fontFamily: 'inherit', minHeight: '88px', resize: 'vertical', background: '#ffffff' },
   fileInput: { padding: '10px 12px', border: '2px dashed #dbeafe', borderRadius: '8px', fontSize: '0.92rem', color: '#1e293b', cursor: 'pointer', background: '#f0f9ff' },
   attachedFile: { background: '#f0fdf4', border: '2px solid #bbf7d0', color: '#166534', borderRadius: '8px', padding: '10px', fontSize: '0.9rem', fontWeight: 800, lineHeight: 1.35 },
+  inlineProfileButton: { background: 'none', border: 'none', padding: 0, color: '#0369a1', font: 'inherit', fontWeight: 900, cursor: 'pointer', textAlign: 'left' },
   buttons: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', paddingBottom: '4px' },
   submitButton: { padding: '11px', borderRadius: '8px', fontWeight: 900, fontSize: '1rem', color: '#ffffff', border: 'none', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.08)', transition: 'all 0.2s' },
   cancelButton: { padding: '11px', borderRadius: '8px', fontWeight: 900, fontSize: '1rem', background: '#e5e7eb', color: '#1e293b', border: 'none', cursor: 'pointer', transition: 'all 0.2s' },
@@ -434,7 +435,17 @@ export default function BugReportPage() {
                 {(report.replies || []).map((reply) => (
                   <div key={reply.id} style={styles.replyCard}>
                     <p style={{ margin: '0 0 4px 0', color: '#0c2340', fontWeight: 900 }}>
-                      {reply.sender?.full_name || 'Admin'} replied {new Date(reply.created_at).toLocaleString()}
+                      {reply.sender_id ? (
+                        <button
+                          type="button"
+                          onClick={() => navigate(`/profile/${reply.sender_id}?returnTo=${encodeURIComponent('/bug-report')}`)}
+                          style={styles.inlineProfileButton}
+                        >
+                          {reply.sender?.full_name || 'Admin'}
+                        </button>
+                      ) : (
+                        reply.sender?.full_name || 'Admin'
+                      )} replied {new Date(reply.created_at).toLocaleString()}
                     </p>
                     <p style={{ margin: 0, color: '#334155', lineHeight: 1.45, whiteSpace: 'pre-wrap' }}>{reply.message}</p>
                   </div>

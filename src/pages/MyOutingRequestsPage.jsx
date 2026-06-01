@@ -18,6 +18,7 @@ const styles = {
   message: { margin: 0, color: '#334155', lineHeight: 1.4, whiteSpace: 'pre-wrap' },
   actions: { display: 'flex', gap: '8px', flexWrap: 'wrap' },
   button: { border: 'none', borderRadius: '8px', padding: '9px 12px', fontWeight: 900, cursor: 'pointer', fontSize: '0.9rem' },
+  inlineLink: { background: 'none', border: 'none', padding: 0, color: '#0369a1', font: 'inherit', fontWeight: 900, cursor: 'pointer', textAlign: 'left' },
   linkBtn: { background: '#0369a1', color: '#ffffff' },
   waitlistBtn: { background: '#f59e0b', color: '#111827' },
   success: { background: '#dcfce7', border: '1px solid #86efac', color: '#166534', borderRadius: '8px', padding: '10px 12px', fontWeight: 700 },
@@ -170,7 +171,19 @@ export default function MyOutingRequestsPage() {
                 <div style={styles.meta}>
                   <span>📅 {request.outings?.outing_date ? formatLocalDate(request.outings.outing_date, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) : 'Date unavailable'}</span>
                   <span>⏱️ {request.outings?.outing_time || 'Time unavailable'}</span>
-                  <span>⛵ {request.skipper?.full_name || 'Skipper unavailable'}</span>
+                  <span>
+                    ⛵ {request.skipper?.id ? (
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/profile/${request.skipper.id}?returnTo=${encodeURIComponent('/my-outing-requests')}`)}
+                        style={styles.inlineLink}
+                      >
+                        {request.skipper.full_name || 'Skipper profile'}
+                      </button>
+                    ) : (
+                      'Skipper unavailable'
+                    )}
+                  </span>
                 </div>
 
                 <p style={styles.message}>{requestMessage(request)}</p>

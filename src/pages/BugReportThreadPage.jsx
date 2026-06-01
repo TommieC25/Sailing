@@ -18,6 +18,7 @@ const styles = {
   ownBubble: { background: '#0369a1', color: '#ffffff', marginLeft: 'auto', borderColor: '#0369a1' },
   otherBubble: { background: '#ffffff', color: '#1e293b', marginRight: 'auto' },
   messageAuthor: { fontSize: '0.75rem', fontWeight: 900, margin: '0 0 4px', opacity: 0.8 },
+  authorButton: { background: 'none', border: 'none', padding: 0, color: 'inherit', font: 'inherit', fontWeight: 900, cursor: 'pointer', textAlign: 'left', textDecoration: 'underline' },
   messageText: { fontSize: '0.93rem', lineHeight: 1.38, whiteSpace: 'pre-wrap', margin: 0 },
   composer: { display: 'grid', gap: '8px' },
   textarea: { width: '100%', minHeight: '72px', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '10px', fontSize: '0.95rem', fontFamily: 'inherit', resize: 'vertical' },
@@ -205,7 +206,17 @@ export default function BugReportThreadPage() {
           <div>
             <h1 style={styles.title}>{report.title}</h1>
             <p style={styles.meta}>
-              From {submitterName} · {new Date(report.created_at).toLocaleString()}
+              From {report.user_id ? (
+                <button
+                  type="button"
+                  onClick={() => navigate(`/profile/${report.user_id}?returnTo=${encodeURIComponent(`/bug-report/${report.id}`)}`)}
+                  style={{ ...styles.authorButton, color: '#0369a1' }}
+                >
+                  {submitterName}
+                </button>
+              ) : (
+                submitterName
+              )} · {new Date(report.created_at).toLocaleString()}
             </p>
           </div>
           <span style={{ ...styles.badge, ...statusStyle(report.status) }}>{report.status}</span>
@@ -241,7 +252,17 @@ export default function BugReportThreadPage() {
             <div key={message.id} style={{ ...styles.messageRow, justifyContent: isOwn ? 'flex-end' : 'flex-start' }}>
               <div style={{ ...styles.messageBubble, ...(isOwn ? styles.ownBubble : styles.otherBubble) }}>
                 <p style={styles.messageAuthor}>
-                  {message.isOriginal ? 'Original report' : authorName} · {new Date(message.created_at).toLocaleString()}
+                  {message.isOriginal ? 'Original report' : (
+                    message.sender_id ? (
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/profile/${message.sender_id}?returnTo=${encodeURIComponent(`/bug-report/${report.id}`)}`)}
+                        style={styles.authorButton}
+                      >
+                        {authorName}
+                      </button>
+                    ) : authorName
+                  )} · {new Date(message.created_at).toLocaleString()}
                 </p>
                 <p style={styles.messageText}>{message.message}</p>
               </div>

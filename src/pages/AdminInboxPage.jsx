@@ -331,6 +331,7 @@ export default function AdminInboxPage() {
 
   const renderMessage = (item) => {
     const isLinkedItem = requestedItemId === item.id;
+    const openContactThread = () => navigate(`/messages/${item.user_id}?contactMessage=${item.id}&returnTo=${encodeURIComponent('/admin/inbox?tab=messages')}`);
 
     return (
       <div
@@ -342,7 +343,14 @@ export default function AdminInboxPage() {
         }}
       >
         <div style={styles.itemHeader}>
-          <h3 style={styles.itemTitle}>📧 {item.subject}</h3>
+          <button
+            type="button"
+            onClick={openContactThread}
+            disabled={!item.user_id}
+            style={{ ...styles.itemTitle, color: item.user_id ? '#0369a1' : '#1e293b', background: 'none', border: 'none', padding: 0, cursor: item.user_id ? 'pointer' : 'default', textAlign: 'left' }}
+          >
+            📧 {item.subject}
+          </button>
         </div>
         <p style={styles.itemMeta}>
           {new Date(item.created_at).toLocaleDateString()} at {new Date(item.created_at).toLocaleTimeString()}
@@ -353,11 +361,11 @@ export default function AdminInboxPage() {
           <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
             <button
               type="button"
-              onClick={() => navigate(`/messages/${item.user_id}?contactMessage=${item.id}&returnTo=${encodeURIComponent('/admin/inbox?tab=messages')}`)}
+              onClick={openContactThread}
               disabled={!item.user_id || updating === item.id}
               style={{ ...styles.actionButton, ...styles.primaryButton, opacity: !item.user_id || updating === item.id ? 0.6 : 1 }}
             >
-              Reply
+              Read / Reply
             </button>
             <button
               type="button"

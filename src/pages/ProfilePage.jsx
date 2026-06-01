@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
+import { formatPhoneNumber, phoneDigits } from '../utils/phoneFormat';
 
 const styles = {
   container: { maxWidth: '820px', margin: '0 auto' },
@@ -106,7 +107,7 @@ export default function ProfilePage() {
         gender: profile.gender || '',
         bio: profile.bio || '',
         sailing_experience: profile.sailing_experience || '',
-        phone: profile.phone_number || profile.phone || '',
+        phone: formatPhoneNumber(profile.phone_number || profile.phone || ''),
         user_type: profile.user_type || '',
       });
     }
@@ -148,16 +149,7 @@ export default function ProfilePage() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name === 'phone') {
-      const digits = value.replace(/\D/g, '').slice(0, 10);
-      let formatted = digits;
-      if (digits.length > 6) {
-        formatted = `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
-      } else if (digits.length > 3) {
-        formatted = `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
-      } else if (digits.length > 0) {
-        formatted = `(${digits}`;
-      }
-      setFormData((prev) => ({ ...prev, phone: formatted }));
+      setFormData((prev) => ({ ...prev, phone: formatPhoneNumber(value) }));
       return;
     }
 
@@ -288,8 +280,8 @@ export default function ProfilePage() {
       return;
     }
 
-    const phoneDigits = formData.phone.replace(/\D/g, '');
-    if (phoneDigits.length !== 10) {
+    const normalizedPhone = phoneDigits(formData.phone);
+    if (normalizedPhone.length !== 10) {
       setMessage('Please enter a valid 10-digit phone number');
       return;
     }
@@ -307,8 +299,8 @@ export default function ProfilePage() {
         gender: formData.gender,
         bio: formData.bio,
         sailing_experience: formData.sailing_experience,
-        phone: formData.phone,
-        phone_number: phoneDigits,
+        phone: formatPhoneNumber(normalizedPhone),
+        phone_number: normalizedPhone,
         user_type: formData.user_type,
       };
 
@@ -412,7 +404,7 @@ export default function ProfilePage() {
               {(profile?.phone_number || profile?.phone) && (
                 <div style={styles.contactCol}>
                   <div style={styles.label}>Phone</div>
-                  <div style={styles.value}>{profile.phone || profile.phone_number}</div>
+                  <div style={styles.value}>{formatPhoneNumber(profile.phone || profile.phone_number)}</div>
                 </div>
               )}
             </div>
@@ -534,7 +526,7 @@ export default function ProfilePage() {
 
               <div style={styles.field}>
                 <div style={styles.label}>Phone</div>
-                <input type="tel" name="phone" value={formData.phone} onChange={handleChange} style={styles.input} />
+                <input type="tel" name="phone" value={formData.phone} onChange={handleChange} placeholder="305.555.1212" style={styles.input} />
               </div>
 
               <div style={styles.field}>

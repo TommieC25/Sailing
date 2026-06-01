@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../utils/supabaseClient';
+import { formatPhoneNumber, phoneDigits } from '../../utils/phoneFormat';
 
 const styles = {
   container: { minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(to bottom right, #0c3880, #0369a1, #06b6d4)', paddingLeft: '1rem', paddingRight: '1rem', paddingTop: '2rem', paddingBottom: '2rem' },
@@ -69,16 +70,7 @@ export default function SignupForm() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name === 'phone') {
-      const digits = value.replace(/\D/g, '').slice(0, 10);
-      let formatted = digits;
-      if (digits.length > 6) {
-        formatted = `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
-      } else if (digits.length > 3) {
-        formatted = `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
-      } else if (digits.length > 0) {
-        formatted = `(${digits}`;
-      }
-      setFormData((prev) => ({ ...prev, phone: formatted }));
+      setFormData((prev) => ({ ...prev, phone: formatPhoneNumber(value) }));
       return;
     }
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -159,8 +151,8 @@ export default function SignupForm() {
       fail('Please select your experience level');
       return;
     }
-    const phoneDigits = formData.phone.replace(/\D/g, '');
-    if (phoneDigits.length !== 10) {
+    const normalizedPhone = phoneDigits(formData.phone);
+    if (normalizedPhone.length !== 10) {
       fail('Please enter a valid 10-digit phone number');
       return;
     }
@@ -203,7 +195,7 @@ export default function SignupForm() {
 
       await signUp(formData.email.trim(), formData.password, {
         full_name: formData.fullName,
-        phone_number: phoneDigits,
+        phone_number: normalizedPhone,
         gender: formData.gender,
         user_type: formData.userType,
         sailing_experience: formData.sailingExperience,
@@ -302,7 +294,7 @@ export default function SignupForm() {
                 onChange={handleChange}
                 autoComplete="tel"
                 required
-                placeholder="(555) 123-4567"
+                placeholder="305.555.1212"
                 style={styles.input}
               />
             </div>

@@ -735,10 +735,12 @@ export default function OutingDetailPage() {
 
         {!isSkipper && (
           <div style={styles.joinSection}>
-            <h2 style={styles.joinTitle}>Join This Outing</h2>
-            <p style={styles.joinNote}>
-              Please note: Availability is not guaranteed, subject to Skipper approval and available crew space. You’ll be notified of the status of your request.
-            </p>
+            <h2 style={styles.joinTitle}>{crewRequest ? 'Your Outing Request' : 'Join This Outing'}</h2>
+            {!crewRequest && !isArchived && (
+              <p style={styles.joinNote}>
+                Please note: Availability is not guaranteed, subject to Skipper approval and available crew space. You’ll be notified of the status of your request.
+              </p>
+            )}
 
             {isArchived ? (
               <div style={{ ...styles.infoBox, background: '#f1f5f9', border: '1px solid #cbd5e1', color: '#475569' }}>

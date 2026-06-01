@@ -3,6 +3,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
 import { shouldSendCourtesyStatus, statusCourtesyMessage } from '../utils/statusMessages';
+import { getBugScreenshotUrl } from '../utils/bugScreenshots';
 
 const styles = {
   container: { maxWidth: '760px', margin: '0 auto' },
@@ -45,6 +46,7 @@ export default function BugReportThreadPage() {
   const [submitter, setSubmitter] = useState(null);
   const [replies, setReplies] = useState([]);
   const [draft, setDraft] = useState('');
+  const [screenshotUrl, setScreenshotUrl] = useState(null);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
@@ -66,6 +68,7 @@ export default function BugReportThreadPage() {
         if (reportError) throw reportError;
         if (!reportData) throw new Error('Bug report not found');
         setReport(reportData);
+        setScreenshotUrl(await getBugScreenshotUrl(supabase, reportData.screenshot_url));
         if (isAdmin) {
           setDraft((current) => current || 'Please tell me more... ');
         }
@@ -256,10 +259,10 @@ export default function BugReportThreadPage() {
           </select>
         )}
 
-        {report.screenshot_url && (
-          <a href={report.screenshot_url} target="_blank" rel="noopener noreferrer" style={{ color: '#0369a1', fontWeight: 900, display: 'block', marginTop: '14px' }}>
+        {screenshotUrl && (
+          <a href={screenshotUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#0369a1', fontWeight: 900, display: 'block', marginTop: '14px' }}>
             Open screenshot
-            <img src={report.screenshot_url} alt="Bug report screenshot" style={styles.screenshot} />
+            <img src={screenshotUrl} alt="Bug report screenshot" style={styles.screenshot} />
           </a>
         )}
       </div>

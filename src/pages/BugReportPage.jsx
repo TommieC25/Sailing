@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
 import { statusCourtesyMessage } from '../utils/statusMessages';
+import { BUG_SCREENSHOT_BUCKET, attachBugScreenshotUrls } from '../utils/bugScreenshots';
 
 const styles = {
   container: { maxWidth: '600px', margin: '0 auto' },
@@ -83,6 +84,8 @@ export default function BugReportPage() {
           }
         }
 
+        const reportsWithScreenshots = await attachBugScreenshotUrls(supabase, reports || []);
+
         const replySenderIds = [...new Set((replies || []).map((reply) => reply.sender_id).filter(Boolean))];
         const { data: senders, error: sendersError } = replySenderIds.length
           ? await supabase
@@ -103,7 +106,7 @@ export default function BugReportPage() {
           return byReport;
         }, {});
 
-        setMyReports((reports || []).map((report) => ({
+        setMyReports(reportsWithScreenshots.map((report) => ({
           ...report,
           replies: repliesByReportId[report.id] || [],
         })));
@@ -201,15 +204,15 @@ export default function BugReportPage() {
 
     try {
       setLoading(true);
-      let screenshotUrl = null;
+      let screenshotRef = null;
       if (screenshot) {
         setStatusMessage('Uploading screenshot...');
         const rawExt = screenshot.name.split('.').pop() || 'png';
         const fileExt = rawExt.toLowerCase().replace(/[^a-z0-9]/g, '') || 'png';
-        const filePath = `bug-reports/${user.id}/${Date.now()}.${fileExt}`;
+        const filePath = `${user.id}/${Date.now()}.${fileExt}`;
 
         const { error: uploadError } = await supabase.storage
-          .from('profiles')
+          .from(BUG_SCREENSHOT_BUCKET)
           .upload(filePath, screenshot, {
             cacheControl: '3600',
             contentType: screenshot.type || undefined,
@@ -217,9 +220,7 @@ export default function BugReportPage() {
           });
 
         if (uploadError) throw uploadError;
-
-        const { data } = supabase.storage.from('profiles').getPublicUrl(filePath);
-        screenshotUrl = data.publicUrl;
+        screenshotRef = filePath;
       }
       setStatusMessage('Submitting bug report...');
 
@@ -230,7 +231,7 @@ export default function BugReportPage() {
             user_id: user.id,
             title: formData.title,
             description: formData.description,
-            screenshot_url: screenshotUrl,
+            screenshot_url: screenshotRef,
           },
         ])
         .select('id')
@@ -434,8 +435,8 @@ export default function BugReportPage() {
                   Submitted {new Date(report.created_at).toLocaleString()}
                 </p>
                 <p style={{ color: '#475569', margin: 0, lineHeight: 1.38, fontSize: '0.92rem', whiteSpace: 'pre-wrap' }}>{report.description}</p>
-                {report.screenshot_url && (
-                  <a href={report.screenshot_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', marginTop: '10px', color: '#0369a1', fontWeight: 900 }}>
+                {report.screenshot_display_url && (
+                  <a href={report.screenshot_display_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', marginTop: '10px', color: '#0369a1', fontWeight: 900 }}>
                     View screenshot
                   </a>
                 )}

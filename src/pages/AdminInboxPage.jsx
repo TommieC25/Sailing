@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
 import { shouldSendCourtesyStatus, statusCourtesyMessage } from '../utils/statusMessages';
+import { attachBugScreenshotUrls } from '../utils/bugScreenshots';
 
 const styles = {
   container: { maxWidth: '900px', margin: '0 auto' },
@@ -160,7 +161,9 @@ export default function AdminInboxPage() {
         }
 
         setMessages(messagesWithUsers.filter((message) => message.status !== 'archived'));
-        setBugReports(bugsWithUsers.map((bug) => ({
+        const bugsWithScreenshots = await attachBugScreenshotUrls(supabase, bugsWithUsers);
+
+        setBugReports(bugsWithScreenshots.map((bug) => ({
           ...bug,
           replies: repliesByBugId[bug.id] || [],
         })));
@@ -465,9 +468,9 @@ export default function AdminInboxPage() {
           {new Date(item.created_at).toLocaleDateString()} at {new Date(item.created_at).toLocaleTimeString()}
         </p>
         <p style={styles.itemContent}>{item.description}</p>
-        {item.screenshot_url && (
+        {item.screenshot_display_url && (
           <p style={{ fontSize: '0.875rem', marginBottom: '12px' }}>
-            <a href={item.screenshot_url} target="_blank" rel="noopener noreferrer" style={{ color: '#0369a1', fontWeight: 600 }}>
+            <a href={item.screenshot_display_url} target="_blank" rel="noopener noreferrer" style={{ color: '#0369a1', fontWeight: 600 }}>
               📷 View Screenshot
             </a>
           </p>

@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
 import { isPastLocalDate, todayLocalDateString } from '../utils/dateUtils';
 import { shouldSendCourtesyStatus, statusCourtesyMessage } from '../utils/statusMessages';
+import { attachBugScreenshotUrls } from '../utils/bugScreenshots';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -119,7 +120,7 @@ const AdminDashboard = () => {
         attachSubmitters(msgsData.data || []),
       ]);
 
-      setBugReports(bugsWithSubmitters);
+      setBugReports(await attachBugScreenshotUrls(supabase, bugsWithSubmitters));
       setFeatureRequests(featuresWithSubmitters);
       setContactMessages(messagesWithSubmitters);
       setAnnouncements(announcementsData.data || []);
@@ -530,8 +531,8 @@ const AdminDashboard = () => {
                   <div style={{ marginTop: '8px', padding: '10px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
                     <p style={{ margin: '0 0 8px', color: '#0f172a', fontWeight: 900 }}>Full {config.tableLabel}</p>
                     <p style={{ margin: 0, color: '#334155', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{feedbackBody(type, item)}</p>
-                    {type === 'bugs' && item.screenshot_url && (
-                      <a href={item.screenshot_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', marginTop: '12px', color: '#0369a1', fontWeight: 900 }}>
+                    {type === 'bugs' && item.screenshot_display_url && (
+                      <a href={item.screenshot_display_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', marginTop: '12px', color: '#0369a1', fontWeight: 900 }}>
                         View screenshot
                       </a>
                     )}

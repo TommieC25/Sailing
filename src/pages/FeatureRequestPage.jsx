@@ -21,6 +21,7 @@ const styles = {
   requestList: { display: 'grid', gap: '10px', marginTop: '14px' },
   requestCard: { background: '#ffffff', borderRadius: '10px', border: '1px solid #e5e7eb', boxShadow: '0 1px 2px rgba(0,0,0,0.06)', padding: '12px' },
   statusBadge: { borderRadius: '999px', padding: '4px 8px', fontSize: '0.75rem', fontWeight: 900 },
+  unreadBadge: { borderRadius: '999px', padding: '4px 8px', fontSize: '0.75rem', fontWeight: 900, background: '#ef4444', color: '#ffffff' },
   openButton: { display: 'block', marginTop: '8px', background: '#e0f2fe', color: '#0369a1', border: '1px solid #0369a1', borderRadius: '8px', padding: '8px 10px', fontWeight: 900, cursor: 'pointer' },
 };
 
@@ -62,7 +63,28 @@ export default function FeatureRequestPage() {
           .order('created_at', { ascending: false });
 
         if (requestsError) throw requestsError;
-        setMyRequests(data || []);
+
+        const requestIds = (data || []).map((request) => request.id);
+        let unreadByRequestId = {};
+        if (requestIds.length > 0) {
+          const { data: unreadReplies, error: unreadError } = await supabase
+            .from('feature_request_replies')
+            .select('feature_request_id')
+            .in('feature_request_id', requestIds)
+            .is('read_at', null)
+            .neq('sender_id', user.id);
+
+          if (unreadError) throw unreadError;
+          unreadByRequestId = (unreadReplies || []).reduce((counts, reply) => {
+            counts[reply.feature_request_id] = (counts[reply.feature_request_id] || 0) + 1;
+            return counts;
+          }, {});
+        }
+
+        setMyRequests((data || []).map((request) => ({
+          ...request,
+          unreadReplyCount: unreadByRequestId[request.id] || 0,
+        })));
       } catch (err) {
         setError(err.message || 'Could not load feature requests');
       } finally {
@@ -192,9 +214,16 @@ export default function FeatureRequestPage() {
                   >
                     {request.title}
                   </button>
-                  <span style={{ ...styles.statusBadge, ...statusColors(request.status) }}>
-                    {statusLabel(request.status)}
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                    {request.unreadReplyCount > 0 && (
+                      <span style={styles.unreadBadge}>
+                        {request.unreadReplyCount} new
+                      </span>
+                    )}
+                    <span style={{ ...styles.statusBadge, ...statusColors(request.status) }}>
+                      {statusLabel(request.status)}
+                    </span>
+                  </div>
                 </div>
                 <p style={{ color: '#64748b', fontSize: '0.82rem', fontWeight: 600, margin: '0 0 6px 0' }}>
                   Submitted {new Date(request.created_at).toLocaleString()}

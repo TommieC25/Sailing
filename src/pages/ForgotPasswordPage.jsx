@@ -24,6 +24,8 @@ const styles = {
   bottomText: { color: '#ffffff', textAlign: 'center', fontSize: '1rem', fontWeight: 600, marginTop: '2rem', textShadow: '0 1px 3px rgba(0,0,0,0.4)' },
 };
 
+const resetSuccessMessage = 'If such a user account exists, a password reset link has been sent. Please check your email.';
+
 export default function ForgotPasswordPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
@@ -36,7 +38,9 @@ export default function ForgotPasswordPage() {
     setError('');
     setSuccess('');
 
-    if (!email.trim()) {
+    const normalizedEmail = email.trim();
+
+    if (!normalizedEmail) {
       setError('Email is required');
       return;
     }
@@ -44,13 +48,23 @@ export default function ForgotPasswordPage() {
     try {
       setLoading(true);
 
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+      const { data: emailExists, error: lookupError } = await supabase
+        .rpc('auth_email_exists', { p_email: normalizedEmail });
+
+      if (lookupError) {
+        console.warn('Could not verify account before password reset:', lookupError.message);
+      } else if (!emailExists) {
+        setError('No such user account exists. Please sign up.');
+        return;
+      }
+
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
         redirectTo: `${window.location.origin}/Sailing/reset-password`,
       });
 
       if (resetError) throw resetError;
 
-      setSuccess('Password reset link sent! Check your email.');
+      setSuccess(resetSuccessMessage);
       setEmail('');
       setTimeout(() => navigate('/login'), 3000);
     } catch (err) {
@@ -108,6 +122,18 @@ export default function ForgotPasswordPage() {
             <p style={{ margin: '0 0 12px 0', color: '#64748b', fontSize: '0.875rem' }}>
               Remember your password?
             </p>
+            {error === 'No such user account exists. Please sign up.' && (
+              <p style={{ margin: '0 0 12px 0' }}>
+                <Link
+                  to="/signup"
+                  style={styles.footerLink}
+                  onMouseEnter={(e) => (e.target.style.textDecoration = 'underline')}
+                  onMouseLeave={(e) => (e.target.style.textDecoration = 'none')}
+                >
+                  Create Account →
+                </Link>
+              </p>
+            )}
             <Link
               to="/login"
               style={styles.footerLink}

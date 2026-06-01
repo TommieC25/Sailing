@@ -11,12 +11,14 @@ const styles = {
   headerTitle: { fontSize: '1.45rem', fontWeight: 900, color: '#ffffff', margin: '0 0 4px 0' },
   headerStats: { color: '#e0f2fe', fontSize: '0.9rem', fontWeight: 600, margin: 0 },
   attentionPill: { display: 'inline-flex', alignItems: 'center', gap: '5px', marginTop: '8px', padding: '4px 9px', borderRadius: '999px', background: '#ef4444', color: '#ffffff', fontSize: '0.78rem', fontWeight: 900 },
+  attentionBadge: { display: 'inline-flex', alignItems: 'center', padding: '3px 8px', borderRadius: '999px', background: '#ef4444', color: '#ffffff', fontSize: '0.72rem', fontWeight: 900, whiteSpace: 'nowrap' },
   errorBox: { background: '#fee2e2', border: '2px solid #dc2626', color: '#991b1b', fontSize: '0.95rem', padding: '12px', borderRadius: '8px', marginBottom: '12px', fontWeight: 700 },
   successBox: { background: '#f0fdf4', border: '2px solid #16a34a', color: '#166534', fontSize: '0.95rem', padding: '12px', borderRadius: '8px', marginBottom: '12px', fontWeight: 700 },
   tabs: { display: 'flex', gap: '6px', marginBottom: '12px', borderBottom: '2px solid #e5e7eb', overflowX: 'auto' },
   tab: { display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 10px', background: 'none', border: 'none', fontSize: '0.98rem', fontWeight: 700, color: '#64748b', cursor: 'pointer', borderBottom: '3px solid transparent', transition: 'all 0.2s' },
   tabActive: { color: '#0369a1', borderBottomColor: '#0369a1' },
   tabCount: { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: '22px', padding: '1px 7px', borderRadius: '999px', background: '#e2e8f0', color: '#475569', fontSize: '0.78rem', fontWeight: 900 },
+  tabAttentionCount: { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: '18px', height: '18px', padding: '0 5px', borderRadius: '999px', background: '#ef4444', color: '#ffffff', fontSize: '0.7rem', fontWeight: 900 },
   items: { display: 'grid', gap: '9px' },
   item: { background: '#ffffff', borderRadius: '10px', boxShadow: '0 1px 2px rgba(0,0,0,0.06)', border: '1px solid #e5e7eb', padding: '12px', borderLeft: '4px solid #0369a1' },
   itemNew: { background: '#f0f9ff', borderLeftColor: '#06b6d4' },
@@ -339,6 +341,14 @@ export default function AdminInboxPage() {
           : styles.itemInProgress
   );
 
+  const messageNeedsAttention = (message) => message.status === 'open';
+  const bugNeedsAttention = (bug) => bug.status === 'open';
+  const featureNeedsAttention = (feature) => ['pending', 'in_development'].includes(featureStatusValue(feature.status));
+
+  const renderAttentionBadge = (show) => (
+    show ? <span style={styles.attentionBadge}>Needs attention</span> : null
+  );
+
   const renderSubmitter = (item) => {
     const submitterName = item.submitter?.full_name || 'Unknown member';
     const submitterDetail = [item.submitter?.email, item.submitter?.user_type].filter(Boolean).join(' • ');
@@ -364,6 +374,7 @@ export default function AdminInboxPage() {
   const renderMessage = (item) => {
     const isLinkedItem = requestedItemId === item.id;
     const openContactThread = () => navigate(`/messages/${item.user_id}?contactMessage=${item.id}&returnTo=${encodeURIComponent('/admin/inbox?tab=messages')}`);
+    const needsAttention = messageNeedsAttention(item);
 
     return (
       <div
@@ -371,6 +382,7 @@ export default function AdminInboxPage() {
         id={`inbox-item-${item.id}`}
         style={{
           ...styles.item,
+          ...(needsAttention ? styles.itemOpen : {}),
           ...(isLinkedItem ? { boxShadow: '0 0 0 3px #0284c7, 0 8px 20px rgba(2,132,199,0.18)' } : {}),
         }}
       >
@@ -383,6 +395,7 @@ export default function AdminInboxPage() {
           >
             📧 {item.subject}
           </button>
+          {renderAttentionBadge(needsAttention)}
         </div>
         <p style={styles.itemMeta}>
           {new Date(item.created_at).toLocaleDateString()} at {new Date(item.created_at).toLocaleTimeString()}
@@ -423,6 +436,7 @@ export default function AdminInboxPage() {
 
   const renderBugReport = (item) => {
     const isLinkedItem = requestedItemId === item.id;
+    const needsAttention = bugNeedsAttention(item);
 
     return (
       <div
@@ -442,7 +456,10 @@ export default function AdminInboxPage() {
           >
             🐛 {item.title}
           </button>
-          <span style={statusBadgeStyle(item.status)}>{statusLabel(item.status)}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+            {renderAttentionBadge(needsAttention)}
+            <span style={statusBadgeStyle(item.status)}>{statusLabel(item.status)}</span>
+          </div>
         </div>
         <p style={styles.itemMeta}>
           {new Date(item.created_at).toLocaleDateString()} at {new Date(item.created_at).toLocaleTimeString()}
@@ -482,6 +499,7 @@ export default function AdminInboxPage() {
   const renderFeatureRequest = (item) => {
     const isLinkedItem = requestedItemId === item.id;
     const featureStatus = featureStatusValue(item.status);
+    const needsAttention = featureNeedsAttention(item);
 
     return (
       <div
@@ -501,7 +519,10 @@ export default function AdminInboxPage() {
           >
             ⭐ {item.title}
           </button>
-          <span style={statusBadgeStyle(featureStatus)}>{statusLabel(featureStatus)}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+            {renderAttentionBadge(needsAttention)}
+            <span style={statusBadgeStyle(featureStatus)}>{statusLabel(featureStatus)}</span>
+          </div>
         </div>
         <p style={styles.itemMeta}>
           {new Date(item.created_at).toLocaleDateString()} at {new Date(item.created_at).toLocaleTimeString()}
@@ -531,14 +552,15 @@ export default function AdminInboxPage() {
     );
   };
 
+  const messageAttentionCount = messages.filter(messageNeedsAttention).length;
+  const bugAttentionCount = bugReports.filter(bugNeedsAttention).length;
+  const featureAttentionCount = featureRequests.filter(featureNeedsAttention).length;
   const tabs = [
-    { key: 'messages', label: '📧 Messages', count: messages.length },
-    { key: 'bugs', label: '🐛 Bug Reports', count: bugReports.length },
-    { key: 'features', label: '⭐ Feature Requests', count: featureRequests.length },
+    { key: 'messages', label: '📧 Messages', count: messages.length, attentionCount: messageAttentionCount },
+    { key: 'bugs', label: '🐛 Bug Reports', count: bugReports.length, attentionCount: bugAttentionCount },
+    { key: 'features', label: '⭐ Feature Requests', count: featureRequests.length, attentionCount: featureAttentionCount },
   ];
-  const attentionCount = messages.filter((message) => message.status === 'open').length
-    + bugReports.filter((bug) => bug.status === 'open').length
-    + featureRequests.filter((feature) => ['pending', 'in_development'].includes(featureStatusValue(feature.status))).length;
+  const attentionCount = messageAttentionCount + bugAttentionCount + featureAttentionCount;
 
   const currentData = {
     messages: messages,
@@ -566,7 +588,11 @@ export default function AdminInboxPage() {
         </p>
         {attentionCount > 0 && (
           <span style={styles.attentionPill}>
-            {attentionCount} need attention
+            {attentionCount} need attention: {[
+              messageAttentionCount ? `${messageAttentionCount} message${messageAttentionCount === 1 ? '' : 's'}` : null,
+              bugAttentionCount ? `${bugAttentionCount} bug${bugAttentionCount === 1 ? '' : 's'}` : null,
+              featureAttentionCount ? `${featureAttentionCount} feature${featureAttentionCount === 1 ? '' : 's'}` : null,
+            ].filter(Boolean).join(' • ')}
           </span>
         )}
       </div>
@@ -587,6 +613,9 @@ export default function AdminInboxPage() {
           >
             <span>{tab.label}</span>
             <span style={styles.tabCount} title="Total in this tab">{tab.count}</span>
+            {tab.attentionCount > 0 && (
+              <span style={styles.tabAttentionCount} title="Needs attention">{tab.attentionCount}</span>
+            )}
           </button>
         ))}
       </div>

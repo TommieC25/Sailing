@@ -4,23 +4,28 @@ import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
 
 const styles = {
-  container: { maxWidth: '800px', margin: '0 auto' },
-  card: { background: '#ffffff', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', padding: '32px', border: '1px solid #e5e7eb' },
-  title: { fontSize: '2rem', fontWeight: 900, color: '#1e293b', marginBottom: '2rem', margin: '0 0 2rem 0' },
-  photo: { width: '160px', height: '160px', borderRadius: '50%', objectFit: 'cover', border: '4px solid #dbeafe' },
-  photoSection: { marginBottom: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2rem' },
-  photoPlaceholder: { width: '160px', height: '160px', borderRadius: '50%', background: '#f0f9ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3rem', border: '4px solid #bfdbfe', flexShrink: 0 },
-  button: { background: '#06b6d4', color: '#ffffff', padding: '12px 24px', borderRadius: '8px', border: 'none', fontWeight: 900, cursor: 'pointer', fontSize: '1rem', transition: 'all 0.2s' },
-  label: { fontSize: '1rem', fontWeight: 700, color: '#1e293b', marginBottom: '8px', display: 'block' },
-  value: { fontSize: '1.125rem', fontWeight: 600, color: '#1e293b', marginBottom: '1.5rem' },
-  input: { width: '100%', padding: '12px 16px', fontSize: '1rem', border: '2px solid #dbeafe', borderRadius: '8px', fontFamily: 'inherit', marginBottom: '1.5rem', color: '#1e293b', background: '#ffffff' },
-  select: { width: '100%', padding: '12px 16px', fontSize: '1rem', border: '2px solid #dbeafe', borderRadius: '8px', fontFamily: 'inherit', marginBottom: '1.5rem', color: '#1e293b', background: '#ffffff' },
-  textarea: { width: '100%', padding: '12px 16px', fontSize: '1rem', border: '2px solid #dbeafe', borderRadius: '8px', fontFamily: 'inherit', marginBottom: '1.5rem', minHeight: '100px', color: '#1e293b', background: '#ffffff', resize: 'vertical' },
-  section: { marginBottom: '2rem' },
-  sectionTitle: { fontSize: '1.25rem', fontWeight: 900, color: '#1e293b', marginBottom: '1.5rem', margin: '0 0 1.5rem 0', paddingBottom: '12px', borderBottom: '2px solid #e0f2fe' },
-  boat: { background: '#f0f9ff', border: '2px solid #bfdbfe', borderRadius: '8px', padding: '16px', marginBottom: '1rem' },
-  topContact: { display: 'block', marginBottom: '2rem' },
-  contactCol: { marginBottom: '1.5rem' },
+  container: { maxWidth: '820px', margin: '0 auto' },
+  card: { background: '#ffffff', borderRadius: '10px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', padding: '14px', border: '1px solid #e5e7eb' },
+  title: { fontSize: '1.45rem', fontWeight: 900, color: '#1e293b', margin: '0 0 10px 0' },
+  photo: { width: '96px', height: '96px', borderRadius: '50%', objectFit: 'cover', border: '3px solid #dbeafe' },
+  photoSection: { marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '12px', flexWrap: 'wrap' },
+  photoPlaceholder: { width: '96px', height: '96px', borderRadius: '50%', background: '#f0f9ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', border: '3px solid #bfdbfe', flexShrink: 0 },
+  button: { background: '#06b6d4', color: '#ffffff', padding: '9px 12px', borderRadius: '8px', border: 'none', fontWeight: 900, cursor: 'pointer', fontSize: '0.95rem', transition: 'all 0.2s' },
+  label: { fontSize: '0.82rem', fontWeight: 800, color: '#64748b', marginBottom: '3px', display: 'block' },
+  value: { fontSize: '0.98rem', fontWeight: 700, color: '#1e293b', margin: 0, lineHeight: 1.35, overflowWrap: 'anywhere' },
+  input: { width: '100%', padding: '9px 10px', fontSize: '0.95rem', border: '1px solid #bfdbfe', borderRadius: '8px', fontFamily: 'inherit', color: '#1e293b', background: '#ffffff' },
+  select: { width: '100%', padding: '9px 10px', fontSize: '0.95rem', border: '1px solid #bfdbfe', borderRadius: '8px', fontFamily: 'inherit', color: '#1e293b', background: '#ffffff' },
+  textarea: { width: '100%', padding: '9px 10px', fontSize: '0.95rem', border: '1px solid #bfdbfe', borderRadius: '8px', fontFamily: 'inherit', minHeight: '78px', color: '#1e293b', background: '#ffffff', resize: 'vertical' },
+  section: { marginBottom: '12px' },
+  sectionTitle: { fontSize: '1.05rem', fontWeight: 900, color: '#1e293b', margin: '0 0 8px 0', paddingBottom: '6px', borderBottom: '1px solid #e0f2fe' },
+  boat: { background: '#f0f9ff', border: '1px solid #bfdbfe', borderRadius: '8px', padding: '10px 12px', marginBottom: '8px' },
+  topContact: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '8px', marginBottom: '10px' },
+  contactCol: { background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '8px 10px' },
+  factsGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '8px', marginBottom: '10px' },
+  factBox: { background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '8px 10px', minWidth: 0 },
+  bioBox: { background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '9px 10px', marginBottom: '10px' },
+  formGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '10px' },
+  field: { display: 'grid', gap: '4px', minWidth: 0 },
 };
 
 export default function ProfilePage() {
@@ -344,7 +349,7 @@ export default function ProfilePage() {
           <button
             type="button"
             onClick={() => navigate(returnTo)}
-            style={{...styles.button, background: '#0c2340', marginBottom: '1.5rem'}}
+            style={{...styles.button, background: '#0c2340', marginBottom: '10px'}}
           >
             Back to Previous
           </button>
@@ -355,14 +360,14 @@ export default function ProfilePage() {
           <button
             type="button"
             onClick={() => navigate(`/messages/${profileId}`)}
-            style={{...styles.button, width: '100%', marginBottom: '1.5rem'}}
+            style={{...styles.button, width: '100%', marginBottom: '10px'}}
           >
             Message {displayProfile?.full_name || 'Member'}
           </button>
         )}
 
         {message && (
-          <div style={{marginBottom: '1.5rem', padding: '16px', borderRadius: '8px', fontSize: '1rem', fontWeight: 600, background: message.includes('Error') ? '#fee2e2' : '#f0fdf4', color: message.includes('Error') ? '#991b1b' : '#166534', border: message.includes('Error') ? '2px solid #dc2626' : '2px solid #16a34a'}}>
+          <div style={{marginBottom: '10px', padding: '10px 12px', borderRadius: '8px', fontSize: '0.95rem', fontWeight: 700, background: message.includes('Error') ? '#fee2e2' : '#f0fdf4', color: message.includes('Error') ? '#991b1b' : '#166534', border: message.includes('Error') ? '1px solid #dc2626' : '1px solid #16a34a'}}>
             {message}
           </div>
         )}
@@ -374,6 +379,12 @@ export default function ProfilePage() {
             ) : (
               <div style={styles.photoPlaceholder}>📷</div>
             )}
+          </div>
+          <div style={{minWidth: 0, flex: 1}}>
+            <p style={{...styles.value, fontSize: '1.08rem'}}>{displayProfile?.full_name || 'Name not set'}</p>
+            <p style={{fontSize: '0.88rem', color: '#64748b', fontWeight: 700, margin: '3px 0 0 0', textTransform: 'capitalize'}}>
+              {[displayProfile?.user_type, displayProfile?.sailing_experience].filter(Boolean).join(' · ') || 'Profile details not set'}
+            </p>
           </div>
           {!isViewingOther && (
             <label>
@@ -406,24 +417,24 @@ export default function ProfilePage() {
               )}
             </div>
 
-            <div style={styles.section}>
-              <div style={styles.label}>Full Name</div>
-              <div style={styles.value}>{profile?.full_name || 'Not set'}</div>
+            <div style={styles.factsGrid}>
+              <div style={styles.factBox}>
+                <div style={styles.label}>Full Name</div>
+                <div style={styles.value}>{profile?.full_name || 'Not set'}</div>
+              </div>
+              <div style={styles.factBox}>
+                <div style={styles.label}>Sailing Experience</div>
+                <div style={styles.value}>{profile?.sailing_experience ? profile.sailing_experience.charAt(0).toUpperCase() + profile.sailing_experience.slice(1) : 'Not set'}</div>
+              </div>
+              <div style={styles.factBox}>
+                <div style={styles.label}>Account Type</div>
+                <div style={styles.value}>{profile?.user_type ? profile.user_type.charAt(0).toUpperCase() + profile.user_type.slice(1) : 'Not set'}</div>
+              </div>
             </div>
 
-            <div style={styles.section}>
+            <div style={styles.bioBox}>
               <div style={styles.label}>Bio</div>
               <div style={styles.value}>{profile?.bio || 'No bio added'}</div>
-            </div>
-
-            <div style={styles.section}>
-              <div style={styles.label}>Sailing Experience</div>
-              <div style={styles.value}>{profile?.sailing_experience ? profile.sailing_experience.charAt(0).toUpperCase() + profile.sailing_experience.slice(1) : 'Not set'}</div>
-            </div>
-
-            <div style={styles.section}>
-              <div style={styles.label}>Account Type</div>
-              <div style={styles.value}>{profile?.user_type ? profile.user_type.charAt(0).toUpperCase() + profile.user_type.slice(1) : 'Not set'}</div>
             </div>
 
             {profile?.user_type === 'owner' && boats.length > 0 && (
@@ -431,44 +442,44 @@ export default function ProfilePage() {
                 <div style={styles.sectionTitle}>Your Boat</div>
                 {boats.map((boat) => (
                   <div key={boat.id} style={styles.boat}>
-                    <div style={{fontSize: '1.25rem', fontWeight: 900, color: '#0c2340', marginBottom: '8px'}}>{boat.name}</div>
-                    <div style={{fontSize: '1rem', color: '#64748b', marginBottom: '1rem', fontWeight: 600}}>{[boat.brand, boat.model, boat.color].filter(Boolean).join(' / ')}</div>
-                    <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', fontSize: '1rem', color: '#475569'}}>
-                      <div>Size: {boat.size_ft}ft</div>
-                      <div>Capacity: {boat.capacity}</div>
-                      {boat.mooring_location && (
-                        <div style={{gridColumn: '1/-1'}}>Location: {boat.mooring_location}</div>
-                      )}
+                    <div style={{fontSize: '1rem', fontWeight: 900, color: '#0c2340', marginBottom: '4px'}}>{boat.name}</div>
+                    <div style={{fontSize: '0.9rem', color: '#475569', fontWeight: 700}}>
+                      {[
+                        [boat.brand, boat.model, boat.color].filter(Boolean).join(' / '),
+                        boat.size_ft ? `${boat.size_ft}ft` : null,
+                        boat.capacity ? `${boat.capacity} people` : null,
+                        boat.mooring_location,
+                      ].filter(Boolean).join(' · ')}
                     </div>
                   </div>
                 ))}
               </div>
             )}
 
-            <button onClick={() => setEditMode(true)} style={{...styles.button, marginTop: '2rem', fontSize: '1.125rem', padding: '12px 24px'}}>
+            <button onClick={() => setEditMode(true)} style={{...styles.button, marginTop: '4px'}}>
               Edit Profile
             </button>
           </>
         ) : isViewingOther ? (
           <>
-            <div style={styles.section}>
-              <div style={styles.label}>Full Name</div>
-              <div style={styles.value}>{displayProfile?.full_name || 'Not set'}</div>
+            <div style={styles.factsGrid}>
+              <div style={styles.factBox}>
+                <div style={styles.label}>Full Name</div>
+                <div style={styles.value}>{displayProfile?.full_name || 'Not set'}</div>
+              </div>
+              <div style={styles.factBox}>
+                <div style={styles.label}>Gender</div>
+                <div style={styles.value}>{displayProfile?.gender || 'Not set'}</div>
+              </div>
+              <div style={styles.factBox}>
+                <div style={styles.label}>Sailing Experience</div>
+                <div style={styles.value}>{displayProfile?.sailing_experience ? displayProfile.sailing_experience.charAt(0).toUpperCase() + displayProfile.sailing_experience.slice(1) : 'Not set'}</div>
+              </div>
             </div>
 
-            <div style={styles.section}>
-              <div style={styles.label}>Gender</div>
-              <div style={styles.value}>{displayProfile?.gender || 'Not set'}</div>
-            </div>
-
-            <div style={styles.section}>
+            <div style={styles.bioBox}>
               <div style={styles.label}>Bio</div>
               <div style={styles.value}>{displayProfile?.bio || 'No bio added'}</div>
-            </div>
-
-            <div style={styles.section}>
-              <div style={styles.label}>Sailing Experience</div>
-              <div style={styles.value}>{displayProfile?.sailing_experience ? displayProfile.sailing_experience.charAt(0).toUpperCase() + displayProfile.sailing_experience.slice(1) : 'Not set'}</div>
             </div>
 
             {displayProfile?.user_type === 'owner' && displayBoats.length > 0 && (
@@ -476,14 +487,14 @@ export default function ProfilePage() {
                 <div style={styles.sectionTitle}>Boat</div>
                 {displayBoats.map((boat) => (
                   <div key={boat.id} style={styles.boat}>
-                    <div style={{fontSize: '1.25rem', fontWeight: 900, color: '#0c2340', marginBottom: '8px'}}>{boat.name}</div>
-                    <div style={{fontSize: '1rem', color: '#64748b', marginBottom: '1rem', fontWeight: 600}}>{[boat.brand, boat.model, boat.color].filter(Boolean).join(' / ')}</div>
-                    <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', fontSize: '1rem', color: '#475569'}}>
-                      <div>Size: {boat.size_ft}ft</div>
-                      <div>Capacity: {boat.capacity}</div>
-                      {boat.mooring_location && (
-                        <div style={{gridColumn: '1/-1'}}>Location: {boat.mooring_location}</div>
-                      )}
+                    <div style={{fontSize: '1rem', fontWeight: 900, color: '#0c2340', marginBottom: '4px'}}>{boat.name}</div>
+                    <div style={{fontSize: '0.9rem', color: '#475569', fontWeight: 700}}>
+                      {[
+                        [boat.brand, boat.model, boat.color].filter(Boolean).join(' / '),
+                        boat.size_ft ? `${boat.size_ft}ft` : null,
+                        boat.capacity ? `${boat.capacity} people` : null,
+                        boat.mooring_location,
+                      ].filter(Boolean).join(' · ')}
                     </div>
                   </div>
                 ))}
@@ -493,14 +504,15 @@ export default function ProfilePage() {
         ) : (
           <form onSubmit={handleSubmit}>
             <div style={styles.section}>
-              <div style={{fontSize: '1.25rem', fontWeight: 900, color: '#1e293b', marginBottom: '1.5rem', paddingBottom: '12px', borderBottom: '2px solid #e0f2fe'}}>Profile Information</div>
+              <div style={styles.sectionTitle}>Profile Information</div>
 
-              <div>
+              <div style={styles.formGrid}>
+              <div style={styles.field}>
                 <div style={styles.label}>Full Name *</div>
                 <input type="text" name="full_name" value={formData.full_name} onChange={handleChange} style={styles.input} />
               </div>
 
-              <div>
+              <div style={styles.field}>
                 <div style={styles.label}>Gender *</div>
                 <select name="gender" value={formData.gender} onChange={handleChange} style={styles.select}>
                   <option value="">Select gender</option>
@@ -511,12 +523,7 @@ export default function ProfilePage() {
                 </select>
               </div>
 
-              <div>
-                <div style={styles.label}>Bio</div>
-                <textarea name="bio" value={formData.bio} onChange={handleChange} style={styles.textarea} placeholder="Tell other sailors about yourself..." />
-              </div>
-
-              <div>
+              <div style={styles.field}>
                 <div style={styles.label}>Sailing Experience *</div>
                 <select name="sailing_experience" value={formData.sailing_experience} onChange={handleChange} style={styles.select}>
                   <option value="beginner">Beginner</option>
@@ -525,58 +532,64 @@ export default function ProfilePage() {
                 </select>
               </div>
 
-              <div>
+              <div style={styles.field}>
                 <div style={styles.label}>Phone</div>
                 <input type="tel" name="phone" value={formData.phone} onChange={handleChange} style={styles.input} />
               </div>
 
-              <div>
+              <div style={styles.field}>
                 <div style={styles.label}>Account Type</div>
                 <select name="user_type" value={formData.user_type} onChange={handleChange} style={styles.select}>
                   <option value="crew">Crew Member</option>
                   <option value="owner">Boat Owner / Skipper</option>
                 </select>
               </div>
+              </div>
+
+              <div style={{...styles.field, marginTop: '10px'}}>
+                <div style={styles.label}>Bio</div>
+                <textarea name="bio" value={formData.bio} onChange={handleChange} style={styles.textarea} placeholder="Tell other sailors about yourself..." />
+              </div>
             </div>
 
             {formData.user_type === 'owner' && (
               <div style={styles.section}>
-                <div style={{fontSize: '1.25rem', fontWeight: 900, color: '#1e293b', marginBottom: '1.5rem', paddingBottom: '12px', borderBottom: '2px solid #e0f2fe'}}>Boat Information</div>
+                <div style={styles.sectionTitle}>Boat Information</div>
 
-                <div>
+                <div style={styles.formGrid}>
+                <div style={styles.field}>
                   <div style={styles.label}>Boat Name</div>
                   <input type="text" name="name" value={boatData.name} onChange={handleBoatChange} style={styles.input} />
                 </div>
 
-                <div>
+                <div style={styles.field}>
                   <div style={styles.label}>Brand / Model / Color</div>
                   <input type="text" name="brand_model_color" value={boatData.brand_model_color} onChange={handleBoatChange} style={styles.input} placeholder="e.g., Tartan / 33 / blue" />
                 </div>
 
-                <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem'}}>
-                  <div>
+                  <div style={styles.field}>
                     <div style={styles.label}>Size (ft)</div>
-                    <input type="number" name="size_ft" value={boatData.size_ft} onChange={handleBoatChange} style={{...styles.input, marginBottom: 0}} />
+                    <input type="number" name="size_ft" value={boatData.size_ft} onChange={handleBoatChange} style={styles.input} />
                   </div>
 
-                  <div>
+                  <div style={styles.field}>
                     <div style={styles.label}>Capacity</div>
-                    <input type="number" name="capacity" value={boatData.capacity} onChange={handleBoatChange} style={{...styles.input, marginBottom: 0}} />
+                    <input type="number" name="capacity" value={boatData.capacity} onChange={handleBoatChange} style={styles.input} />
                   </div>
-                </div>
 
-                <div style={{marginTop: '1.5rem'}}>
+                <div style={styles.field}>
                   <div style={styles.label}>Location (Club Mooring / Marina & Slip)</div>
                   <input type="text" name="mooring_location" value={boatData.mooring_location} onChange={handleBoatChange} style={styles.input} />
+                </div>
                 </div>
               </div>
             )}
 
-            <div style={{display: 'flex', gap: '1rem', marginTop: '2rem'}}>
-              <button type="submit" disabled={saving} style={{...styles.button, flex: 1, fontSize: '1.125rem', padding: '12px', opacity: saving ? 0.6 : 1}}>
+            <div style={{display: 'flex', gap: '8px', marginTop: '12px'}}>
+              <button type="submit" disabled={saving} style={{...styles.button, flex: 1, opacity: saving ? 0.6 : 1}}>
                 {saving ? 'Saving...' : 'Save Changes'}
               </button>
-              <button type="button" onClick={() => setEditMode(false)} style={{flex: 1, fontSize: '1.125rem', padding: '12px', background: '#e5e7eb', color: '#1e293b', border: 'none', borderRadius: '8px', fontWeight: 900, cursor: 'pointer', transition: 'all 0.2s'}}>
+              <button type="button" onClick={() => setEditMode(false)} style={{...styles.button, flex: 1, background: '#e5e7eb', color: '#1e293b'}}>
                 Cancel
               </button>
             </div>

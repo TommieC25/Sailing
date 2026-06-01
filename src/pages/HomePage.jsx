@@ -97,11 +97,16 @@ export default function HomePage() {
     if (dateCompare !== 0) return dateCompare;
     return (b.outing_time || '').localeCompare(a.outing_time || '');
   });
+  const isSkipper = profile?.user_type === 'owner';
+  const isAdmin = profile?.role === 'admin';
   const upcomingOutings = sortUpcoming(outings.filter((o) => !isPastLocalDate(o.outing_date)));
-  const pastOutings = sortPast(outings.filter((o) => isPastLocalDate(o.outing_date)));
+  const pastOutings = sortPast(outings.filter((o) => {
+    if (!isPastLocalDate(o.outing_date)) return false;
+    if (isAdmin) return true;
+    return isSkipper && o.skipper_id === user?.id;
+  }));
   const yourOutings = upcomingOutings.filter((o) => o.skipper_id === user?.id);
   const otherOutings = upcomingOutings.filter((o) => o.skipper_id !== user?.id);
-  const isSkipper = profile?.user_type === 'owner';
 
   return (
     <div style={{marginLeft: '-10px', marginRight: '-10px', marginTop: '-16px'}}>

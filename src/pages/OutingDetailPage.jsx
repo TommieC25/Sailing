@@ -445,6 +445,11 @@ export default function OutingDetailPage() {
         ? styles.statusWaitlisted
         : styles.statusDeclined),
   });
+  const boatFacts = [
+    boat.name || 'Boat details unavailable',
+    boat.size_ft ? `${boat.size_ft}'` : null,
+    boat.mooring_location || null,
+  ].filter(Boolean);
   const renderSkipperRequest = (req) => (
     <div key={req.id} style={requestCardStyle(req.status)}>
       {req.crew?.photo_url ? (
@@ -550,26 +555,10 @@ export default function OutingDetailPage() {
         </div>
 
         {/* Boat Information */}
-        <div style={{background: '#f0f9ff', border: '2px solid #bfdbfe', borderRadius: '8px', padding: '12px 14px', marginBottom: '12px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '10px 14px'}}>
-          <p style={{fontSize: '1.05rem', fontWeight: 900, color: '#0c2340', margin: 0, paddingBottom: '7px', borderBottom: '2px solid #e0f2fe', gridColumn: '1 / -1'}}>🚢 Boat</p>
-          <div>
-            <p style={styles.detailLabel}>Name</p>
-            <p style={styles.detailValue}>{boat.name || 'Boat details unavailable'}</p>
-          </div>
-          <div>
-            <p style={styles.detailLabel}>Size</p>
-            <p style={styles.detailValue}>{boat.size_ft ? `${boat.size_ft} ft` : 'Not listed'}</p>
-          </div>
-          <div>
-            <p style={styles.detailLabel}>Total Capacity</p>
-            <p style={styles.detailValue}>{boat.capacity ? `${boat.capacity} people` : 'Not listed'}</p>
-          </div>
-          {boat.mooring_location && (
-            <div>
-              <p style={styles.detailLabel}>Mooring Location</p>
-              <p style={styles.detailValue}>{boat.mooring_location}</p>
-            </div>
-          )}
+        <div style={{background: '#f0f9ff', border: '1px solid #bfdbfe', borderRadius: '8px', padding: '9px 12px', marginBottom: '12px'}}>
+          <p style={{fontSize: '1rem', fontWeight: 900, color: '#0c2340', margin: 0}}>
+            🚢 {boatFacts.join(' / ')}
+          </p>
         </div>
 
         {/* Skipper */}

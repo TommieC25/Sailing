@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
@@ -31,7 +31,7 @@ export default function DirectMessageThreadPage() {
   const { memberId } = useParams();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const contactMessageId = searchParams.get('contactMessage');
   const returnTo = searchParams.get('returnTo') || '/messages';
   const [member, setMember] = useState(null);
@@ -41,6 +41,19 @@ export default function DirectMessageThreadPage() {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
+
+  const clearContactMessageAttention = useCallback(async () => {
+    if (!contactMessageId || profile?.role !== 'admin') return;
+
+    const { error: contactError } = await supabase
+      .from('contact_messages')
+      .update({ status: 'read' })
+      .eq('id', contactMessageId)
+      .eq('status', 'open');
+
+    if (contactError) throw contactError;
+    window.dispatchEvent(new Event('sailing:admin-inbox-updated'));
+  }, [contactMessageId, profile?.role]);
 
   useEffect(() => {
     if (!user || !memberId) return;
@@ -63,13 +76,16 @@ export default function DirectMessageThreadPage() {
         if (contactMessageId) {
           const { data: contactData, error: contactError } = await supabase
             .from('contact_messages')
-            .select('id, subject, message, created_at, user_id')
+            .select('id, subject, message, created_at, user_id, status')
             .eq('id', contactMessageId)
             .maybeSingle();
 
           if (contactError) throw contactError;
           if (!contactData) throw new Error('Message thread not found');
           setContactMessage(contactData);
+          if (contactData.status === 'open') {
+            await clearContactMessageAttention();
+          }
         } else {
           setContactMessage(null);
         }
@@ -108,7 +124,7 @@ export default function DirectMessageThreadPage() {
     };
 
     fetchThread();
-  }, [user, memberId, contactMessageId]);
+  }, [user, memberId, contactMessageId, clearContactMessageAttention]);
 
   const sendMessage = async (e) => {
     e.preventDefault();
@@ -133,6 +149,7 @@ export default function DirectMessageThreadPage() {
       if (sendError) throw sendError;
       setMessages((current) => [...current, data]);
       setDraft('');
+      await clearContactMessageAttention();
       window.dispatchEvent(new Event('sailing:direct-messages-updated'));
     } catch (err) {
       setError(err.message || 'Could not send message');

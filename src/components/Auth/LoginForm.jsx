@@ -47,6 +47,7 @@ export default function LoginForm() {
     }
   };
   const [authDebug, setAuthDebug] = useState(readAuthDebug);
+  const showAuthDebug = searchParams.get('authDebug') === '1';
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -190,7 +191,7 @@ export default function LoginForm() {
               Password reset successfully. Sign in with your new password.
             </div>
           )}
-          {authDebug && (
+          {showAuthDebug && authDebug && (
             <div style={{background: 'rgba(255,255,255,0.92)', color: '#1f2937', padding: '0.85rem', borderRadius: '0.75rem', marginBottom: '1rem', fontWeight: 700, fontSize: '0.95rem'}}>
               Auth diagnostic: {authDebug}
             </div>

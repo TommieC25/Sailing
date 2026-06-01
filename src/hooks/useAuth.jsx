@@ -158,7 +158,6 @@ export function AuthProvider({ children }) {
 
   const signIn = async (email, password) => {
     try {
-      setLoading(true);
       setUser(null);
       setProfile(null);
       await supabase.auth.signOut({ scope: 'local' }).catch(() => undefined);
@@ -203,8 +202,6 @@ export function AuthProvider({ children }) {
       clearStoredSupabaseSession();
       setError(err.message);
       throw err;
-    } finally {
-      setLoading(false);
     }
   };
 

@@ -353,7 +353,7 @@ export default function AdminInboxPage() {
           <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
             <button
               type="button"
-              onClick={() => navigate(`/messages/${item.user_id}`)}
+              onClick={() => navigate(`/messages/${item.user_id}?contactMessage=${item.id}&returnTo=${encodeURIComponent('/admin/inbox?tab=messages')}`)}
               disabled={!item.user_id || updating === item.id}
               style={{ ...styles.actionButton, ...styles.primaryButton, opacity: !item.user_id || updating === item.id ? 0.6 : 1 }}
             >

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
 
@@ -7,6 +7,9 @@ const styles = {
   container: { maxWidth: '760px', margin: '0 auto' },
   backButton: { background: '#e0f2fe', border: '2px solid #0369a1', color: '#0369a1', fontWeight: 900, fontSize: '0.95rem', marginBottom: '10px', cursor: 'pointer', padding: '9px 12px', borderRadius: '8px' },
   header: { background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '10px 12px', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '10px' },
+  contextCard: { background: '#f8fafc', border: '1px solid #cbd5e1', borderLeft: '4px solid #0369a1', borderRadius: '10px', padding: '10px 12px', marginBottom: '10px' },
+  contextTitle: { color: '#0f172a', fontSize: '0.98rem', fontWeight: 900, margin: '0 0 4px' },
+  contextBody: { color: '#475569', fontSize: '0.88rem', fontWeight: 650, lineHeight: 1.35, margin: 0, whiteSpace: 'pre-wrap' },
   avatar: { width: '38px', height: '38px', borderRadius: '50%', objectFit: 'cover', background: '#e0f2fe', flexShrink: 0 },
   avatarPlaceholder: { width: '38px', height: '38px', borderRadius: '50%', background: '#e0f2fe', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', flexShrink: 0 },
   title: { color: '#0f172a', fontSize: '1.15rem', fontWeight: 900, margin: 0 },
@@ -27,8 +30,12 @@ const styles = {
 export default function DirectMessageThreadPage() {
   const { memberId } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
+  const contactMessageId = searchParams.get('contactMessage');
+  const returnTo = searchParams.get('returnTo') || '/messages';
   const [member, setMember] = useState(null);
+  const [contactMessage, setContactMessage] = useState(null);
   const [messages, setMessages] = useState([]);
   const [draft, setDraft] = useState('');
   const [loading, setLoading] = useState(true);
@@ -53,11 +60,31 @@ export default function DirectMessageThreadPage() {
         if (!memberData || memberData.id === user.id) throw new Error('Member not found');
         setMember(memberData);
 
-        const { data: messageData, error: messagesError } = await supabase
+        if (contactMessageId) {
+          const { data: contactData, error: contactError } = await supabase
+            .from('contact_messages')
+            .select('id, subject, message, created_at, user_id')
+            .eq('id', contactMessageId)
+            .maybeSingle();
+
+          if (contactError) throw contactError;
+          if (!contactData) throw new Error('Message thread not found');
+          setContactMessage(contactData);
+        } else {
+          setContactMessage(null);
+        }
+
+        let messagesQuery = supabase
           .from('direct_messages')
           .select('*')
           .or(`and(sender_id.eq.${user.id},recipient_id.eq.${memberId}),and(sender_id.eq.${memberId},recipient_id.eq.${user.id})`)
           .order('created_at', { ascending: true });
+
+        messagesQuery = contactMessageId
+          ? messagesQuery.eq('contact_message_id', contactMessageId)
+          : messagesQuery.is('contact_message_id', null);
+
+        const { data: messageData, error: messagesError } = await messagesQuery;
 
         if (messagesError) throw messagesError;
         setMessages(messageData || []);
@@ -81,7 +108,7 @@ export default function DirectMessageThreadPage() {
     };
 
     fetchThread();
-  }, [user, memberId]);
+  }, [user, memberId, contactMessageId]);
 
   const sendMessage = async (e) => {
     e.preventDefault();
@@ -98,6 +125,7 @@ export default function DirectMessageThreadPage() {
           sender_id: user.id,
           recipient_id: member.id,
           body,
+          contact_message_id: contactMessageId || null,
         })
         .select()
         .single();
@@ -123,12 +151,12 @@ export default function DirectMessageThreadPage() {
 
   return (
     <div style={styles.container}>
-      <button type="button" onClick={() => navigate('/messages')} style={styles.backButton}>
-        Back to Messages
+      <button type="button" onClick={() => navigate(returnTo)} style={styles.backButton}>
+        Back
       </button>
 
       {member && (
-        <button type="button" onClick={() => navigate(`/profile/${member.id}?returnTo=${encodeURIComponent(`/messages/${member.id}`)}`)} style={styles.header}>
+        <button type="button" onClick={() => navigate(`/profile/${member.id}?returnTo=${encodeURIComponent(`/messages/${member.id}${contactMessageId ? `?contactMessage=${contactMessageId}` : ''}`)}`)} style={styles.header}>
           {member.photo_url ? (
             <img src={member.photo_url} alt={member.full_name} style={styles.avatar} />
           ) : (
@@ -139,6 +167,16 @@ export default function DirectMessageThreadPage() {
             <p style={styles.subtitle}>{[member.user_type, member.sailing_experience].filter(Boolean).join(' · ') || 'Member profile'}</p>
           </div>
         </button>
+      )}
+
+      {contactMessage && (
+        <div style={styles.contextCard}>
+          <p style={styles.contextTitle}>Replying to: {contactMessage.subject}</p>
+          <p style={styles.contextBody}>{contactMessage.message}</p>
+          <p style={{ ...styles.contextBody, marginTop: '6px', color: '#64748b', fontSize: '0.78rem' }}>
+            Received {new Date(contactMessage.created_at).toLocaleString()}
+          </p>
+        </div>
       )}
 
       {error && <div style={styles.error}>{error}</div>}

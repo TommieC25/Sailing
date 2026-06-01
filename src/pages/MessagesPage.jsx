@@ -59,22 +59,36 @@ export default function MessagesPage() {
 
         if (messagesError) throw messagesError;
 
-        const byMember = {};
+        const contactIds = [...new Set((messageData || []).map((message) => message.contact_message_id).filter(Boolean))];
+        const { data: contactData, error: contactError } = contactIds.length
+          ? await supabase
+              .from('contact_messages')
+              .select('id, subject, message')
+              .in('id', contactIds)
+          : { data: [], error: null };
+
+        if (contactError) throw contactError;
+
+        const contactById = Object.fromEntries((contactData || []).map((contact) => [contact.id, contact]));
+        const byConversation = {};
         for (const message of messageData || []) {
           const otherId = message.sender_id === user.id ? message.recipient_id : message.sender_id;
-          if (!byMember[otherId]) {
-            byMember[otherId] = {
+          const conversationKey = message.contact_message_id ? `${otherId}:${message.contact_message_id}` : `${otherId}:general`;
+          if (!byConversation[conversationKey]) {
+            byConversation[conversationKey] = {
+              key: conversationKey,
               member: profileById[otherId] || { id: otherId, full_name: 'Member' },
+              contact: message.contact_message_id ? contactById[message.contact_message_id] || null : null,
               latest: message,
               unread: 0,
             };
           }
           if (message.recipient_id === user.id && !message.read_at) {
-            byMember[otherId].unread += 1;
+            byConversation[conversationKey].unread += 1;
           }
         }
 
-        setConversations(Object.values(byMember).sort((a, b) => new Date(b.latest.created_at) - new Date(a.latest.created_at)));
+        setConversations(Object.values(byConversation).sort((a, b) => new Date(b.latest.created_at) - new Date(a.latest.created_at)));
       } catch (err) {
         setError(err.message || 'Could not load messages');
       } finally {
@@ -85,8 +99,8 @@ export default function MessagesPage() {
     fetchMessages();
   }, [user]);
 
-  const openThread = (memberId) => {
-    navigate(`/messages/${memberId}`);
+  const openThread = (memberId, contactMessageId = null) => {
+    navigate(`/messages/${memberId}${contactMessageId ? `?contactMessage=${contactMessageId}` : ''}`);
   };
 
   return (
@@ -112,7 +126,7 @@ export default function MessagesPage() {
           ) : (
             <div style={styles.list}>
               {conversations.map((conversation) => (
-                <button key={conversation.member.id} type="button" onClick={() => openThread(conversation.member.id)} style={styles.cardButton}>
+                <button key={conversation.key} type="button" onClick={() => openThread(conversation.member.id, conversation.latest.contact_message_id)} style={styles.cardButton}>
                   <div style={styles.row}>
                     {conversation.member.photo_url ? (
                       <img src={conversation.member.photo_url} alt={conversation.member.full_name} style={styles.avatar} />
@@ -120,8 +134,9 @@ export default function MessagesPage() {
                       <div style={styles.avatarPlaceholder}>👤</div>
                     )}
                     <div style={{ minWidth: 0 }}>
-                      <p style={styles.name}>{conversation.member.full_name || 'Member'}</p>
+                      <p style={styles.name}>{conversation.contact?.subject || conversation.member.full_name || 'Member'}</p>
                       <p style={styles.preview}>
+                        {conversation.contact ? `${conversation.member.full_name || 'Member'} · ` : ''}
                         {conversation.latest.sender_id === user.id ? 'You: ' : ''}{conversation.latest.body}
                       </p>
                     </div>

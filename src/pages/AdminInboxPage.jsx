@@ -18,7 +18,9 @@ const styles = {
   item: { background: '#ffffff', borderRadius: '10px', boxShadow: '0 1px 2px rgba(0,0,0,0.06)', border: '1px solid #e5e7eb', padding: '12px', borderLeft: '4px solid #0369a1' },
   itemNew: { background: '#f0f9ff', borderLeftColor: '#06b6d4' },
   itemOpen: { borderLeftColor: '#fbbf24' },
+  itemInProgress: { borderLeftColor: '#3b82f6' },
   itemResolved: { borderLeftColor: '#16a34a', opacity: 0.7 },
+  itemArchived: { borderLeftColor: '#94a3b8', opacity: 0.78 },
   itemHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '7px', gap: '10px' },
   itemTitle: { fontSize: '1.05rem', fontWeight: 900, color: '#1e293b', margin: 0 },
   itemBadge: { fontSize: '0.78rem', fontWeight: 700, padding: '3px 7px', borderRadius: '6px' },
@@ -30,6 +32,9 @@ const styles = {
   itemUser: { fontSize: '0.88rem', color: '#334155', margin: 0, fontWeight: 700, lineHeight: 1.3 },
   itemUserSub: { display: 'block', fontSize: '0.78rem', color: '#64748b', fontWeight: 600 },
   statusSelect: { padding: '7px 9px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 600, background: '#ffffff', cursor: 'pointer' },
+  actionButton: { padding: '7px 9px', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 900, cursor: 'pointer', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a' },
+  primaryButton: { borderColor: '#0369a1', background: '#0369a1', color: '#ffffff' },
+  dangerButton: { borderColor: '#dc2626', background: '#dc2626', color: '#ffffff' },
   emptyBox: { background: '#ffffff', borderRadius: '10px', border: '1px solid #e5e7eb', padding: '24px 16px', textAlign: 'center' },
   emptyIcon: { fontSize: '2rem', marginBottom: '8px' },
   emptyText: { fontSize: '1rem', color: '#64748b', fontWeight: 600, margin: 0 },
@@ -147,7 +152,7 @@ export default function AdminInboxPage() {
           window.dispatchEvent(new Event('sailing:bug-replies-updated'));
         }
 
-        setMessages(messagesWithUsers);
+        setMessages(messagesWithUsers.filter((message) => message.status !== 'archived'));
         setBugReports(bugsWithUsers.map((bug) => ({
           ...bug,
           replies: repliesByBugId[bug.id] || [],
@@ -189,6 +194,44 @@ export default function AdminInboxPage() {
     }
   };
 
+  const archiveMessage = async (id) => {
+    try {
+      setUpdating(id);
+      const { error } = await supabase
+        .from('contact_messages')
+        .update({ status: 'archived' })
+        .eq('id', id);
+
+      if (error) throw error;
+      setMessages((current) => current.filter((message) => message.id !== id));
+      window.dispatchEvent(new Event('sailing:admin-inbox-updated'));
+    } catch (err) {
+      console.error('Error archiving message:', err);
+    } finally {
+      setUpdating(null);
+    }
+  };
+
+  const deleteMessage = async (id) => {
+    if (!window.confirm('Delete this message? This cannot be undone.')) return;
+
+    try {
+      setUpdating(id);
+      const { error } = await supabase
+        .from('contact_messages')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      setMessages((current) => current.filter((message) => message.id !== id));
+      window.dispatchEvent(new Event('sailing:admin-inbox-updated'));
+    } catch (err) {
+      console.error('Error deleting message:', err);
+    } finally {
+      setUpdating(null);
+    }
+  };
+
   if (loading) {
     return (
       <div style={styles.container}>
@@ -218,12 +261,58 @@ export default function AdminInboxPage() {
     );
   }
 
-  const renderItem = (item, table, icon) => {
-    const isMessage = table === 'contact_messages';
-    const isBug = table === 'bug_reports';
-    const isLinkedItem = requestedItemId === item.id;
+  const statusLabel = (status) => {
+    const labels = {
+      open: 'Open',
+      pending: 'Pending',
+      in_progress: 'In Progress',
+      in_development: 'In Development',
+      resolved: 'Resolved',
+      implemented: 'Implemented',
+    };
+    return labels[status] || status?.replace(/_/g, ' ') || 'Pending';
+  };
+
+  const statusBadgeStyle = (status) => ({
+    ...styles.itemBadge,
+    ...(status === 'open' || status === 'pending'
+      ? styles.badgeOpen
+      : status === 'resolved' || status === 'implemented'
+        ? styles.badgeResolved
+        : styles.badgeInProgress),
+  });
+
+  const featureStatusValue = (status) => {
+    if (status === 'open') return 'pending';
+    if (status === 'in_progress') return 'in_development';
+    if (status === 'resolved') return 'implemented';
+    return status || 'pending';
+  };
+
+  const itemStatusStyle = (status) => (
+    status === 'open' || status === 'pending'
+      ? styles.itemOpen
+      : status === 'resolved' || status === 'implemented'
+        ? styles.itemResolved
+        : status === 'archived'
+          ? styles.itemArchived
+          : styles.itemInProgress
+  );
+
+  const renderSubmitter = (item) => {
     const submitterName = item.submitter?.full_name || 'Unknown member';
     const submitterDetail = [item.submitter?.email, item.submitter?.user_type].filter(Boolean).join(' • ');
+
+    return (
+      <p style={styles.itemUser}>
+        From: {submitterName}
+        <span style={styles.itemUserSub}>{submitterDetail || `User ID: ${item.user_id}`}</span>
+      </p>
+    );
+  };
+
+  const renderMessage = (item) => {
+    const isLinkedItem = requestedItemId === item.id;
 
     return (
       <div
@@ -231,84 +320,141 @@ export default function AdminInboxPage() {
         id={`inbox-item-${item.id}`}
         style={{
           ...styles.item,
-          ...(item.status === 'open' ? styles.itemOpen : item.status === 'resolved' ? styles.itemResolved : styles.itemInProgress),
           ...(isLinkedItem ? { boxShadow: '0 0 0 3px #0284c7, 0 8px 20px rgba(2,132,199,0.18)' } : {}),
         }}
       >
         <div style={styles.itemHeader}>
-          {isBug ? (
-            <button
-              type="button"
-              onClick={() => navigate(`/bug-report/${item.id}?returnTo=${encodeURIComponent('/admin/inbox?tab=bugs')}`)}
-              style={{ ...styles.itemTitle, color: '#0369a1', background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left' }}
-            >
-              {icon} {item.title}
-            </button>
-          ) : (
-            <h3 style={styles.itemTitle}>
-              {icon} {isMessage ? item.subject : item.title}
-            </h3>
-          )}
-          <span
-            style={{
-              ...styles.itemBadge,
-              ...(item.status === 'open'
-                ? styles.badgeOpen
-                : item.status === 'resolved'
-                ? styles.badgeResolved
-                : styles.badgeInProgress),
-            }}
-          >
-            {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
-          </span>
+          <h3 style={styles.itemTitle}>📧 {item.subject}</h3>
         </div>
         <p style={styles.itemMeta}>
           {new Date(item.created_at).toLocaleDateString()} at {new Date(item.created_at).toLocaleTimeString()}
         </p>
-        <p style={styles.itemContent}>{isMessage ? item.message : isBug ? item.description : item.description}</p>
-        {isBug && item.screenshot_url && (
+        <p style={styles.itemContent}>{item.message}</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          {renderSubmitter(item)}
+          <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              onClick={() => navigate(`/messages/${item.user_id}`)}
+              disabled={!item.user_id || updating === item.id}
+              style={{ ...styles.actionButton, ...styles.primaryButton, opacity: !item.user_id || updating === item.id ? 0.6 : 1 }}
+            >
+              Reply
+            </button>
+            <button
+              type="button"
+              onClick={() => archiveMessage(item.id)}
+              disabled={updating === item.id}
+              style={{ ...styles.actionButton, opacity: updating === item.id ? 0.6 : 1 }}
+            >
+              Archive
+            </button>
+            <button
+              type="button"
+              onClick={() => deleteMessage(item.id)}
+              disabled={updating === item.id}
+              style={{ ...styles.actionButton, ...styles.dangerButton, opacity: updating === item.id ? 0.6 : 1 }}
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderBugReport = (item) => {
+    const isLinkedItem = requestedItemId === item.id;
+
+    return (
+      <div
+        key={item.id}
+        id={`inbox-item-${item.id}`}
+        style={{
+          ...styles.item,
+          ...itemStatusStyle(item.status),
+          ...(isLinkedItem ? { boxShadow: '0 0 0 3px #0284c7, 0 8px 20px rgba(2,132,199,0.18)' } : {}),
+        }}
+      >
+        <div style={styles.itemHeader}>
+          <button
+            type="button"
+            onClick={() => navigate(`/bug-report/${item.id}?returnTo=${encodeURIComponent('/admin/inbox?tab=bugs')}`)}
+            style={{ ...styles.itemTitle, color: '#0369a1', background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left' }}
+          >
+            🐛 {item.title}
+          </button>
+          <span style={statusBadgeStyle(item.status)}>{statusLabel(item.status)}</span>
+        </div>
+        <p style={styles.itemMeta}>
+          {new Date(item.created_at).toLocaleDateString()} at {new Date(item.created_at).toLocaleTimeString()}
+        </p>
+        <p style={styles.itemContent}>{item.description}</p>
+        {item.screenshot_url && (
           <p style={{ fontSize: '0.875rem', marginBottom: '12px' }}>
             <a href={item.screenshot_url} target="_blank" rel="noopener noreferrer" style={{ color: '#0369a1', fontWeight: 600 }}>
               📷 View Screenshot
             </a>
           </p>
         )}
-        {isBug && (
-          <button
-            type="button"
-            onClick={() => navigate(`/bug-report/${item.id}?returnTo=${encodeURIComponent('/admin/inbox?tab=bugs')}`)}
-            style={{ width: '100%', padding: '9px 12px', border: 'none', borderRadius: '8px', background: '#0369a1', color: '#ffffff', fontSize: '0.92rem', fontWeight: 900, cursor: 'pointer', marginBottom: '10px' }}
-          >
-            Open full conversation
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={() => navigate(`/bug-report/${item.id}?returnTo=${encodeURIComponent('/admin/inbox?tab=bugs')}`)}
+          style={{ width: '100%', padding: '9px 12px', border: 'none', borderRadius: '8px', background: '#0369a1', color: '#ffffff', fontSize: '0.92rem', fontWeight: 900, cursor: 'pointer', marginBottom: '10px' }}
+        >
+          Open full conversation
+        </button>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-          <p style={styles.itemUser}>
-            From: {submitterName}
-            <span style={styles.itemUserSub}>{submitterDetail || `User ID: ${item.user_id}`}</span>
-          </p>
-          <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
-            {item.status !== 'resolved' && (
-              <button
-                type="button"
-                onClick={() => updateStatus(table, item.id, 'resolved')}
-                disabled={updating === item.id}
-                style={{ padding: '7px 9px', border: '1px solid #16a34a', borderRadius: '6px', background: '#16a34a', color: '#ffffff', fontSize: '0.82rem', fontWeight: 900, cursor: updating === item.id ? 'wait' : 'pointer', opacity: updating === item.id ? 0.6 : 1 }}
-              >
-                Dismiss as resolved
-              </button>
-            )}
-            <select
-              value={item.status}
-              onChange={(e) => updateStatus(table, item.id, e.target.value)}
-              disabled={updating === item.id}
-              style={styles.statusSelect}
-            >
-              <option value="open">Open</option>
-              <option value="in_progress">In Progress</option>
-              <option value="resolved">Resolved</option>
-            </select>
-          </div>
+          {renderSubmitter(item)}
+          <select
+            value={item.status}
+            onChange={(e) => updateStatus('bug_reports', item.id, e.target.value)}
+            disabled={updating === item.id}
+            style={styles.statusSelect}
+          >
+            <option value="open">Open</option>
+            <option value="in_progress">In Progress</option>
+            <option value="resolved">Resolved</option>
+          </select>
+        </div>
+      </div>
+    );
+  };
+
+  const renderFeatureRequest = (item) => {
+    const isLinkedItem = requestedItemId === item.id;
+    const featureStatus = featureStatusValue(item.status);
+
+    return (
+      <div
+        key={item.id}
+        id={`inbox-item-${item.id}`}
+        style={{
+          ...styles.item,
+          ...itemStatusStyle(featureStatus),
+          ...(isLinkedItem ? { boxShadow: '0 0 0 3px #0284c7, 0 8px 20px rgba(2,132,199,0.18)' } : {}),
+        }}
+      >
+        <div style={styles.itemHeader}>
+          <h3 style={styles.itemTitle}>⭐ {item.title}</h3>
+          <span style={statusBadgeStyle(featureStatus)}>{statusLabel(featureStatus)}</span>
+        </div>
+        <p style={styles.itemMeta}>
+          {new Date(item.created_at).toLocaleDateString()} at {new Date(item.created_at).toLocaleTimeString()}
+        </p>
+        <p style={styles.itemContent}>{item.description}</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          {renderSubmitter(item)}
+          <select
+            value={featureStatus}
+            onChange={(e) => updateStatus('feature_requests', item.id, e.target.value)}
+            disabled={updating === item.id}
+            style={styles.statusSelect}
+          >
+            <option value="pending">Pending</option>
+            <option value="in_development">In Development</option>
+            <option value="implemented">Implemented</option>
+          </select>
         </div>
       </div>
     );
@@ -374,9 +520,9 @@ export default function AdminInboxPage() {
         </div>
       ) : (
         <div style={styles.items}>
-          {activeTab === 'messages' && messages.map((msg) => renderItem(msg, 'contact_messages', '📧', 'message'))}
-          {activeTab === 'bugs' && bugReports.map((bug) => renderItem(bug, 'bug_reports', '🐛', 'bug'))}
-          {activeTab === 'features' && featureRequests.map((feature) => renderItem(feature, 'feature_requests', '⭐', 'feature'))}
+          {activeTab === 'messages' && messages.map(renderMessage)}
+          {activeTab === 'bugs' && bugReports.map(renderBugReport)}
+          {activeTab === 'features' && featureRequests.map(renderFeatureRequest)}
         </div>
       )}
     </div>

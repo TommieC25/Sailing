@@ -1,6 +1,6 @@
 const statusText = {
   bug_reports: {
-    open: 'open',
+    open: 'pending',
     in_progress: 'in progress',
     resolved: 'resolved',
   },

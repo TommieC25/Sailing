@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
+import { statusCourtesyMessage } from '../utils/statusMessages';
 
 const styles = {
   container: { maxWidth: '600px', margin: '0 auto' },
@@ -222,7 +223,7 @@ export default function BugReportPage() {
       }
       setStatusMessage('Submitting bug report...');
 
-      const { error: insertError } = await supabase
+      const { data: newReport, error: insertError } = await supabase
         .from('bug_reports')
         .insert([
           {
@@ -231,9 +232,22 @@ export default function BugReportPage() {
             description: formData.description,
             screenshot_url: screenshotUrl,
           },
-        ]);
+        ])
+        .select('id')
+        .single();
 
       if (insertError) throw insertError;
+
+      const { error: acknowledgmentError } = await supabase
+        .from('bug_report_replies')
+        .insert({
+          bug_report_id: newReport.id,
+          sender_id: user.id,
+          message: statusCourtesyMessage('bug_reports', 'open'),
+          read_at: new Date().toISOString(),
+        });
+
+      if (acknowledgmentError) throw acknowledgmentError;
 
       setSuccess(true);
       setFormData({ title: '', description: '' });

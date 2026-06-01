@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
+import { shouldSendCourtesyStatus, statusCourtesyMessage } from '../utils/statusMessages';
 
 const styles = {
   container: { maxWidth: '760px', margin: '0 auto' },
@@ -38,16 +39,6 @@ const statusStyle = (status) => {
   if (status === 'implemented') return { background: '#dcfce7', color: '#166534' };
   if (status === 'in_development') return { background: '#dbeafe', color: '#1e40af' };
   return { background: '#fef3c7', color: '#92400e' };
-};
-
-const statusMessage = (status, title) => {
-  if (status === 'in_development') {
-    return `Your feature request "${title}" is now in development. We'll follow up here as progress continues.`;
-  }
-  if (status === 'implemented') {
-    return `Your feature request "${title}" has been implemented. Thank you for helping improve the app.`;
-  }
-  return null;
 };
 
 export default function FeatureRequestThreadPage() {
@@ -183,9 +174,8 @@ export default function FeatureRequestThreadPage() {
     if (statusError) throw statusError;
     setRequest((current) => ({ ...current, status }));
 
-    const automaticMessage = statusMessage(status, request.title);
-    if (automaticMessage && previousStatus !== status) {
-      await addReply(automaticMessage);
+    if (previousStatus !== status && shouldSendCourtesyStatus('feature_requests', status)) {
+      await addReply(statusCourtesyMessage('feature_requests', status));
     }
 
     window.dispatchEvent(new Event('sailing:admin-inbox-updated'));

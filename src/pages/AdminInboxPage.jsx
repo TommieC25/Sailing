@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
+import { shouldSendCourtesyStatus, statusCourtesyMessage } from '../utils/statusMessages';
 
 const styles = {
   container: { maxWidth: '900px', margin: '0 auto' },
@@ -170,16 +171,6 @@ export default function AdminInboxPage() {
     fetchData();
   }, [user, isAdmin]);
 
-  const featureStatusMessage = (status, title) => {
-    if (status === 'in_development') {
-      return `Your feature request "${title}" is now in development. We'll follow up here as progress continues.`;
-    }
-    if (status === 'implemented') {
-      return `Your feature request "${title}" has been implemented. Thank you for helping improve the app.`;
-    }
-    return null;
-  };
-
   const updateStatus = async (table, id, status, item = null) => {
     try {
       setUpdating(id);
@@ -192,19 +183,31 @@ export default function AdminInboxPage() {
 
       if (error) throw error;
 
-      if (table === 'feature_requests' && previousStatus !== status) {
-        const automaticMessage = featureStatusMessage(status, item?.title || 'this feature request');
-        if (automaticMessage) {
+      if (previousStatus !== status) {
+        if (table === 'feature_requests' && shouldSendCourtesyStatus('feature_requests', status)) {
           const { error: replyError } = await supabase
             .from('feature_request_replies')
             .insert({
               feature_request_id: id,
               sender_id: user.id,
-              message: automaticMessage,
+              message: statusCourtesyMessage('feature_requests', status),
             });
 
           if (replyError) throw replyError;
           window.dispatchEvent(new Event('sailing:feature-replies-updated'));
+        }
+
+        if (table === 'bug_reports' && shouldSendCourtesyStatus('bug_reports', status)) {
+          const { error: replyError } = await supabase
+            .from('bug_report_replies')
+            .insert({
+              bug_report_id: id,
+              sender_id: user.id,
+              message: statusCourtesyMessage('bug_reports', status),
+            });
+
+          if (replyError) throw replyError;
+          window.dispatchEvent(new Event('sailing:bug-replies-updated'));
         }
       }
 
@@ -461,7 +464,7 @@ export default function AdminInboxPage() {
           {renderSubmitter(item)}
           <select
             value={item.status}
-            onChange={(e) => updateStatus('bug_reports', item.id, e.target.value)}
+            onChange={(e) => updateStatus('bug_reports', item.id, e.target.value, item)}
             disabled={updating === item.id}
             style={styles.statusSelect}
           >

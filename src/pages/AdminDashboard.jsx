@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
 import { isPastLocalDate, todayLocalDateString } from '../utils/dateUtils';
+import { shouldSendCourtesyStatus, statusCourtesyMessage } from '../utils/statusMessages';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -222,28 +223,31 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleUpdateBugReport = async (id, newStatus) => {
+  const handleUpdateBugReport = async (id, newStatus, item = null) => {
     try {
+      const previousStatus = item?.status;
       const { error } = await supabase
         .from('bug_reports')
         .update({ status: newStatus })
         .eq('id', id);
 
       if (error) throw error;
+      if (previousStatus !== newStatus && shouldSendCourtesyStatus('bug_reports', newStatus)) {
+        const { error: replyError } = await supabase
+          .from('bug_report_replies')
+          .insert({
+            bug_report_id: id,
+            sender_id: user.id,
+            message: statusCourtesyMessage('bug_reports', newStatus),
+          });
+
+        if (replyError) throw replyError;
+        window.dispatchEvent(new Event('sailing:bug-replies-updated'));
+      }
       await loadDashboardData();
     } catch (err) {
       setError(err.message);
     }
-  };
-
-  const featureStatusMessage = (status, title) => {
-    if (status === 'in_development') {
-      return `Your feature request "${title}" is now in development. We'll follow up here as progress continues.`;
-    }
-    if (status === 'implemented') {
-      return `Your feature request "${title}" has been implemented. Thank you for helping improve the app.`;
-    }
-    return null;
   };
 
   const handleUpdateFeatureRequest = async (id, newStatus, item = null) => {
@@ -255,20 +259,17 @@ const AdminDashboard = () => {
         .eq('id', id);
 
       if (error) throw error;
-      if (previousStatus !== newStatus) {
-        const automaticMessage = featureStatusMessage(newStatus, item?.title || 'this feature request');
-        if (automaticMessage) {
-          const { error: replyError } = await supabase
-            .from('feature_request_replies')
-            .insert({
-              feature_request_id: id,
-              sender_id: user.id,
-              message: automaticMessage,
-            });
+      if (previousStatus !== newStatus && shouldSendCourtesyStatus('feature_requests', newStatus)) {
+        const { error: replyError } = await supabase
+          .from('feature_request_replies')
+          .insert({
+            feature_request_id: id,
+            sender_id: user.id,
+            message: statusCourtesyMessage('feature_requests', newStatus),
+          });
 
-          if (replyError) throw replyError;
-          window.dispatchEvent(new Event('sailing:feature-replies-updated'));
-        }
+        if (replyError) throw replyError;
+        window.dispatchEvent(new Event('sailing:feature-replies-updated'));
       }
       await loadDashboardData();
     } catch (err) {

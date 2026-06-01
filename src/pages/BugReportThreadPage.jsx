@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
+import { shouldSendCourtesyStatus, statusCourtesyMessage } from '../utils/statusMessages';
 
 const styles = {
   container: { maxWidth: '760px', margin: '0 auto' },
@@ -163,6 +164,7 @@ export default function BugReportThreadPage() {
 
   const updateStatus = async (status) => {
     if (!isAdmin || !report) return;
+    const previousStatus = report.status;
 
     const { error: statusError } = await supabase
       .from('bug_reports')
@@ -171,6 +173,26 @@ export default function BugReportThreadPage() {
 
     if (statusError) throw statusError;
     setReport((current) => ({ ...current, status }));
+
+    if (previousStatus !== status && shouldSendCourtesyStatus('bug_reports', status)) {
+      const { data, error: replyError } = await supabase
+        .from('bug_report_replies')
+        .insert({
+          bug_report_id: report.id,
+          sender_id: user.id,
+          message: statusCourtesyMessage('bug_reports', status),
+        })
+        .select()
+        .single();
+
+      if (replyError) throw replyError;
+      setReplies((current) => [
+        ...current,
+        { ...data, sender: { id: user.id, full_name: profile?.full_name || 'You' } },
+      ]);
+      window.dispatchEvent(new Event('sailing:bug-replies-updated'));
+    }
+
     window.dispatchEvent(new Event('sailing:admin-inbox-updated'));
   };
 

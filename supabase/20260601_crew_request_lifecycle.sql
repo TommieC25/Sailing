@@ -8,7 +8,7 @@ alter table public.crew_requests
   add column if not exists skipper_response_note text;
 
 update public.crew_requests
-set status_changed_at = coalesce(responded_at, requested_at, created_at, now())
+set status_changed_at = coalesce(responded_at, requested_at, now())
 where status_changed_at is null;
 
 create index if not exists crew_requests_member_status_idx
@@ -47,6 +47,24 @@ as $$
 declare
   updated_request public.crew_requests;
 begin
+  select *
+  into updated_request
+  from public.crew_requests
+  where id = p_request_id
+    and crew_id = auth.uid();
+
+  if updated_request.id is null then
+    raise exception 'Could not find this outing request for your account';
+  end if;
+
+  if updated_request.status = 'waitlisted' then
+    return updated_request;
+  end if;
+
+  if updated_request.status <> 'declined' then
+    raise exception 'Only declined outing requests can be added to the waitlist';
+  end if;
+
   update public.crew_requests
   set status = 'waitlisted',
       waitlisted_at = now(),
@@ -54,12 +72,7 @@ begin
       status_seen_at = null
   where id = p_request_id
     and crew_id = auth.uid()
-    and status = 'declined'
   returning * into updated_request;
-
-  if updated_request.id is null then
-    raise exception 'Could not join waitlist for this request';
-  end if;
 
   return updated_request;
 end;

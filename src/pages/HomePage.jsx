@@ -170,16 +170,24 @@ export default function HomePage() {
         )}
 
         {!loading && isSkipper && yourOutings.length === 0 && (
-          <div style={{background: '#ffffff', border: '2px solid #dbeafe', borderRadius: '10px', padding: '20px', textAlign: 'center', marginBottom: '20px'}}>
-            <p style={{fontSize: '2rem', margin: '0 0 10px 0'}}>🚢</p>
-            <p style={{fontSize: '1.25rem', fontWeight: 900, color: '#1e293b', margin: '0 0 6px 0'}}>No outings posted yet</p>
-            <p style={{fontSize: '1rem', color: '#64748b', margin: '0 0 16px 0'}}>Post your first outing to find crew and get sailing!</p>
+          <div style={{marginBottom: '20px'}}>
+            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '10px', gap: '10px'}}>
+              <h2 style={{fontSize: '1.25rem', fontWeight: 900, color: '#1e293b', margin: 0}}>
+                📋 Your Outings
+              </h2>
+              <Link to="/create-outing" style={{fontSize: '1rem', fontWeight: 900, color: '#0369a1', textDecoration: 'none'}}>+ New</Link>
+            </div>
+            <div style={{background: '#ffffff', border: '2px solid #dbeafe', borderRadius: '10px', padding: '20px', textAlign: 'center'}}>
+              <p style={{fontSize: '2rem', margin: '0 0 10px 0'}}>🚢</p>
+              <p style={{fontSize: '1.25rem', fontWeight: 900, color: '#1e293b', margin: '0 0 6px 0'}}>You have not posted any outings yet</p>
+              <p style={{fontSize: '1rem', color: '#64748b', margin: '0 0 16px 0'}}>Post your first outing to find crew and get sailing!</p>
             <Link
               to="/create-outing"
               style={{display: 'inline-block', background: '#06b6d4', color: '#ffffff', padding: '11px 18px', borderRadius: '8px', fontWeight: 900, fontSize: '1rem', textDecoration: 'none'}}
             >
               + Post Outing
             </Link>
+            </div>
           </div>
         )}
 

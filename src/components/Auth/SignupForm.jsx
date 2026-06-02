@@ -190,15 +190,41 @@ export default function SignupForm() {
     try {
       setLoading(true);
       const normalizedEmail = formData.email.trim();
-      const { data: existingAccount, error: accountLookupError } = await supabase.rpc('auth_email_exists', {
+
+      const { data: accountStatus, error: accountStatusError } = await supabase.rpc('auth_account_status', {
         p_email: normalizedEmail,
       });
 
-      if (accountLookupError) {
-        console.warn('Could not check existing account before signup:', accountLookupError.message);
-      } else if (existingAccount) {
-        fail('An account with this email already exists. Please sign in instead.');
-        return;
+      if (!accountStatusError) {
+        if (accountStatus === 'unconfirmed') {
+          try {
+            sessionStorage.setItem('signupEmail', normalizedEmail);
+            sessionStorage.setItem(SIGNUP_SUCCESS_EMAIL_KEY, normalizedEmail);
+            sessionStorage.setItem(SIGNUP_SUCCESS_AT_KEY, String(Date.now()));
+          } catch {
+            // Browsers can block sessionStorage in private modes.
+          }
+          setSignupCompleteEmail(normalizedEmail);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          return;
+        }
+
+        if (accountStatus === 'confirmed') {
+          fail('An account with this email already exists. Please sign in instead.');
+          return;
+        }
+      } else {
+        console.warn('Could not check account status before signup:', accountStatusError.message);
+        const { data: existingAccount, error: accountLookupError } = await supabase.rpc('auth_email_exists', {
+          p_email: normalizedEmail,
+        });
+
+        if (accountLookupError) {
+          console.warn('Could not check existing account before signup:', accountLookupError.message);
+        } else if (existingAccount) {
+          fail('An account with this email already exists. Please sign in instead.');
+          return;
+        }
       }
 
       noteSignupStep('Starting profile photo upload');

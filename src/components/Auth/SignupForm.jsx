@@ -353,7 +353,6 @@ export default function SignupForm() {
                 <option value="">Select gender</option>
                 <option value="M">Male</option>
                 <option value="F">Female</option>
-                <option value="Other">Other</option>
                 <option value="Prefer not to say">Prefer not to say</option>
               </select>
             </div>

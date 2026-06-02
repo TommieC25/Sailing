@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../utils/supabaseClient';
 import { formatPhoneNumber, phoneDigits } from '../../utils/phoneFormat';
@@ -27,7 +27,6 @@ const styles = {
 };
 
 export default function SignupForm() {
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user, signUp, signOut } = useAuth();
   const [formData, setFormData] = useState({
@@ -52,6 +51,7 @@ export default function SignupForm() {
     }
   });
   const [loading, setLoading] = useState(false);
+  const [signupCompleteEmail, setSignupCompleteEmail] = useState('');
   const showSignupDebug = searchParams.get('signupDebug') === '1';
 
   useEffect(() => {
@@ -172,6 +172,18 @@ export default function SignupForm() {
 
     try {
       setLoading(true);
+      const normalizedEmail = formData.email.trim();
+      const { data: existingAccount, error: accountLookupError } = await supabase.rpc('auth_email_exists', {
+        p_email: normalizedEmail,
+      });
+
+      if (accountLookupError) {
+        console.warn('Could not check existing account before signup:', accountLookupError.message);
+      } else if (existingAccount) {
+        fail('An account with this email already exists. Please sign in instead.');
+        return;
+      }
+
       noteSignupStep('Starting profile photo upload');
       setStatusMessage('Uploading profile photo...');
 
@@ -195,7 +207,7 @@ export default function SignupForm() {
       noteSignupStep('Calling Supabase signup');
       setStatusMessage('Creating account and sending confirmation email...');
 
-      await signUp(formData.email.trim(), formData.password, {
+      await signUp(normalizedEmail, formData.password, {
         full_name: formData.fullName,
         phone_number: normalizedPhone,
         gender: formData.gender,
@@ -211,16 +223,13 @@ export default function SignupForm() {
       // Stash email in sessionStorage as fallback in case Safari drops
       // the React Router state on a soft refresh.
       try {
-        sessionStorage.setItem('signupEmail', formData.email.trim());
+        sessionStorage.setItem('signupEmail', normalizedEmail);
       } catch {
         // Browsers can block sessionStorage in private modes.
       }
 
-      // Pass email via URL query so it survives reloads — state alone is
-      // unreliable in Safari after the password-manager prompt fires.
-      navigate(`/signup-success?email=${encodeURIComponent(formData.email.trim())}`, {
-        state: { email: formData.email.trim() },
-      });
+      setSignupCompleteEmail(normalizedEmail);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
       noteSignupStep(`Error: ${err.message || 'Failed to sign up'}`);
       fail(friendlyError(err));
@@ -229,6 +238,34 @@ export default function SignupForm() {
       setLoading(false);
     }
   };
+
+  if (signupCompleteEmail) {
+    return (
+      <div style={styles.container}>
+        <div style={styles.innerContainer}>
+          <div style={styles.header}>
+            <img src="/Sailing/Club Logo.jpg" alt="CGSC Logo" style={styles.logo} />
+            <h1 style={styles.title}>Check Your Email</h1>
+            <p style={styles.subtitle}>One more step before you sail</p>
+          </div>
+
+          <div style={styles.card}>
+            <h2 style={styles.cardTitle}>Confirm your account</h2>
+            <p style={{ color: '#1e3a8a', fontSize: '1.2rem', fontWeight: 700, lineHeight: 1.5, margin: '0 0 1rem 0' }}>
+              We sent a confirmation link to <strong>{signupCompleteEmail}</strong>.
+            </p>
+            <p style={{ color: '#475569', fontSize: '1rem', fontWeight: 600, lineHeight: 1.5, margin: '0 0 1.5rem 0' }}>
+              Click the link in that email to verify your account, then return here and sign in.
+              Check spam or junk if you do not see it.
+            </p>
+            <Link to="/login" style={styles.signInLink}>Go to Sign In →</Link>
+          </div>
+
+          <p style={styles.bottomText}>Coconut Grove Sailing Club • Miami, FL</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={styles.container}>

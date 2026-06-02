@@ -270,7 +270,7 @@ export default function Layout({ children }) {
                 style={{height: '40px', width: 'auto', borderRadius: '4px', flexShrink: 0, display: 'block'}}
               />
               <span style={{color: '#ffffff', fontSize: '1.2rem', fontWeight: 900, letterSpacing: '-0.02em', textShadow: '0 1px 6px rgba(0,0,0,0.6)', whiteSpace: 'nowrap', flexShrink: 1}}>
-                CGSC Sailing
+                SailAway with CGSC
               </span>
             </Link>
 

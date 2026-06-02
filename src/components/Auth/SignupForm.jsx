@@ -4,6 +4,10 @@ import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../utils/supabaseClient';
 import { formatPhoneNumber, phoneDigits } from '../../utils/phoneFormat';
 
+const SIGNUP_SUCCESS_EMAIL_KEY = 'signupSuccessEmail';
+const SIGNUP_SUCCESS_AT_KEY = 'signupSuccessAt';
+const SIGNUP_SUCCESS_TTL_MS = 30 * 60 * 1000;
+
 const styles = {
   container: { minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(to bottom right, #0c3880, #0369a1, #06b6d4)', paddingLeft: '1rem', paddingRight: '1rem', paddingTop: '2rem', paddingBottom: '2rem' },
   innerContainer: { flex: 1, display: 'flex', flexDirection: 'column', maxWidth: '448px', margin: '0 auto', width: '100%', justifyContent: 'center' },
@@ -51,7 +55,20 @@ export default function SignupForm() {
     }
   });
   const [loading, setLoading] = useState(false);
-  const [signupCompleteEmail, setSignupCompleteEmail] = useState('');
+  const [signupCompleteEmail, setSignupCompleteEmail] = useState(() => {
+    try {
+      const email = sessionStorage.getItem(SIGNUP_SUCCESS_EMAIL_KEY);
+      const timestamp = Number(sessionStorage.getItem(SIGNUP_SUCCESS_AT_KEY) || 0);
+      if (email && timestamp && Date.now() - timestamp < SIGNUP_SUCCESS_TTL_MS) {
+        return email;
+      }
+      sessionStorage.removeItem(SIGNUP_SUCCESS_EMAIL_KEY);
+      sessionStorage.removeItem(SIGNUP_SUCCESS_AT_KEY);
+    } catch {
+      // Browsers can block sessionStorage in private modes.
+    }
+    return '';
+  });
   const showSignupDebug = searchParams.get('signupDebug') === '1';
 
   useEffect(() => {
@@ -224,6 +241,8 @@ export default function SignupForm() {
       // the React Router state on a soft refresh.
       try {
         sessionStorage.setItem('signupEmail', normalizedEmail);
+        sessionStorage.setItem(SIGNUP_SUCCESS_EMAIL_KEY, normalizedEmail);
+        sessionStorage.setItem(SIGNUP_SUCCESS_AT_KEY, String(Date.now()));
       } catch {
         // Browsers can block sessionStorage in private modes.
       }

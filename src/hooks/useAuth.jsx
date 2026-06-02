@@ -113,7 +113,6 @@ export function AuthProvider({ children }) {
 
   const signUp = async (email, password, userProfile) => {
     try {
-      setLoading(true);
       const redirectUrl = `${window.location.origin}/Sailing/email-confirmed`;
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
@@ -141,8 +140,6 @@ export function AuthProvider({ children }) {
     } catch (err) {
       setError(err.message);
       throw err;
-    } finally {
-      setLoading(false);
     }
   };
 

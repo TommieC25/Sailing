@@ -127,8 +127,8 @@ export function AuthProvider({ children }) {
       if (signUpError) throw signUpError;
 
       // Supabase anti-enumeration: duplicate emails return success with
-      // an empty identities array. Detect and surface to the user.
-      if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+      // either no new user or an empty identities array. Detect and surface it.
+      if (!data.user || (Array.isArray(data.user.identities) && data.user.identities.length === 0)) {
         const err = new Error('An account with this email already exists. Please sign in instead.');
         err.code = 'email_exists';
         throw err;

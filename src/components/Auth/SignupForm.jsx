@@ -32,7 +32,7 @@ const styles = {
 
 export default function SignupForm() {
   const [searchParams] = useSearchParams();
-  const { user, signUp, signOut } = useAuth();
+  const { signUp } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -86,6 +86,18 @@ export default function SignupForm() {
     }
   };
 
+  const showCheckEmailFor = (email) => {
+    try {
+      sessionStorage.setItem('signupEmail', email);
+      sessionStorage.setItem(SIGNUP_SUCCESS_EMAIL_KEY, email);
+      sessionStorage.setItem(SIGNUP_SUCCESS_AT_KEY, String(Date.now()));
+    } catch {
+      // Browsers can block sessionStorage in private modes.
+    }
+    setSignupCompleteEmail(email);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name === 'phone') {
@@ -118,12 +130,6 @@ export default function SignupForm() {
       password,
       confirmPassword: password,
     }));
-  };
-
-  const handleSignOut = async () => {
-    setError('');
-    setStatusMessage('');
-    await signOut();
   };
 
   const handleSubmit = async (e) => {
@@ -197,15 +203,7 @@ export default function SignupForm() {
 
       if (!accountStatusError) {
         if (accountStatus === 'unconfirmed') {
-          try {
-            sessionStorage.setItem('signupEmail', normalizedEmail);
-            sessionStorage.setItem(SIGNUP_SUCCESS_EMAIL_KEY, normalizedEmail);
-            sessionStorage.setItem(SIGNUP_SUCCESS_AT_KEY, String(Date.now()));
-          } catch {
-            // Browsers can block sessionStorage in private modes.
-          }
-          setSignupCompleteEmail(normalizedEmail);
-          window.scrollTo({ top: 0, behavior: 'smooth' });
+          showCheckEmailFor(normalizedEmail);
           return;
         }
 
@@ -277,6 +275,17 @@ export default function SignupForm() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
       noteSignupStep(`Error: ${err.message || 'Failed to sign up'}`);
+      if (err?.code === 'email_exists') {
+        const normalizedEmail = formData.email.trim();
+        const { data: accountStatus } = await supabase.rpc('auth_account_status', {
+          p_email: normalizedEmail,
+        });
+
+        if (accountStatus === 'unconfirmed') {
+          showCheckEmailFor(normalizedEmail);
+          return;
+        }
+      }
       fail(friendlyError(err));
     } finally {
       setStatusMessage('');
@@ -328,19 +337,6 @@ export default function SignupForm() {
           <h2 style={styles.cardTitle}>Create Account</h2>
 
           {error && <div style={styles.errorBox}>{error}</div>}
-
-          {user && (
-            <div style={{background: '#fef3c7', border: '2px solid #f59e0b', color: '#78350f', borderRadius: '12px', padding: '16px', marginBottom: '1.5rem', fontSize: '1rem', fontWeight: 800, lineHeight: 1.4}}>
-              You are already signed in. Sign out before creating a different account.
-              <button
-                type="button"
-                onClick={handleSignOut}
-                style={{display: 'block', marginTop: '12px', background: '#0c2340', color: '#ffffff', border: 'none', padding: '10px 14px', borderRadius: '8px', fontWeight: 900, cursor: 'pointer'}}
-              >
-                Sign Out
-              </button>
-            </div>
-          )}
 
           {statusMessage && (
             <div style={{background: '#dbeafe', border: '2px solid #2563eb', color: '#1e3a8a', fontSize: '1.125rem', padding: '1rem 1.25rem', borderRadius: '12px', marginBottom: '1.5rem', fontWeight: 800}}>

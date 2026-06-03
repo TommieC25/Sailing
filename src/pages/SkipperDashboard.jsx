@@ -53,7 +53,7 @@ const styles = {
 
 export default function SkipperDashboard() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user, profile, loading: authLoading } = useAuth();
   const [outings, setOutings] = useState([]);
   const [expandedOutings, setExpandedOutings] = useState({});
@@ -90,6 +90,28 @@ export default function SkipperDashboard() {
       request.status === 'approved' && request.id !== requestId
     )).length;
     return crewLimit < 1 || approvedCount < crewLimit;
+  };
+
+  const requestPendingExists = (items) => items.some((outing) => (
+    !isPastLocalDate(outing.outing_date)
+    && outing.crew_requests.some((request) => request.status === 'pending')
+  ));
+
+  const updateRequestStatusLocally = (outingId, requestId, payload) => {
+    setOutings((prev) => {
+      const nextOutings = prev.map((outing) => outing.id !== outingId ? outing : {
+        ...outing,
+        crew_requests: outing.crew_requests.map((request) =>
+          request.id === requestId ? { ...request, ...payload } : request
+        ),
+      });
+
+      if (searchParams.get('show') === 'pending' && !requestPendingExists(nextOutings)) {
+        setSearchParams({}, { replace: true });
+      }
+
+      return nextOutings;
+    });
   };
 
   useEffect(() => {
@@ -176,12 +198,7 @@ export default function SkipperDashboard() {
         .update(payload)
         .eq('id', requestId);
       if (error) throw error;
-      setOutings((prev) => prev.map((o) => o.id !== outingId ? o : {
-        ...o,
-        crew_requests: o.crew_requests.map((r) =>
-          r.id === requestId ? { ...r, ...payload } : r
-        ),
-      }));
+      updateRequestStatusLocally(outingId, requestId, payload);
       refreshNotificationCounts();
     } catch (err) {
       setError(err.message);
@@ -202,12 +219,7 @@ export default function SkipperDashboard() {
         .update(payload)
         .eq('id', requestId);
       if (error) throw error;
-      setOutings((prev) => prev.map((o) => o.id !== outingId ? o : {
-        ...o,
-        crew_requests: o.crew_requests.map((r) =>
-          r.id === requestId ? { ...r, ...payload } : r
-        ),
-      }));
+      updateRequestStatusLocally(outingId, requestId, payload);
       refreshNotificationCounts();
     } catch (err) {
       setError(err.message);

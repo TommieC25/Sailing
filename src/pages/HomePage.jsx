@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
@@ -12,10 +12,8 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
+  const fetchOutings = useCallback(async () => {
     if (!user) return;
-
-    const fetchOutings = async () => {
       try {
         const { data, error: err } = await supabase
           .from('outings')
@@ -88,10 +86,24 @@ export default function HomePage() {
       } finally {
         setLoading(false);
       }
-    };
-
-    fetchOutings();
   }, [user, profile]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const initialFetch = window.setTimeout(fetchOutings, 0);
+
+    window.addEventListener('sailing:crew-requests-updated', fetchOutings);
+    window.addEventListener('focus', fetchOutings);
+    window.addEventListener('pageshow', fetchOutings);
+
+    return () => {
+      window.removeEventListener('sailing:crew-requests-updated', fetchOutings);
+      window.removeEventListener('focus', fetchOutings);
+      window.removeEventListener('pageshow', fetchOutings);
+      window.clearTimeout(initialFetch);
+    };
+  }, [user, fetchOutings]);
 
   if (authLoading) {
     return (

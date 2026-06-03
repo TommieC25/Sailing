@@ -20,6 +20,9 @@ export default function Layout({ children }) {
   const [unreadDirectMessageCount, setUnreadDirectMessageCount] = useState(0);
   const [unreadOutingRequestStatusCount, setUnreadOutingRequestStatusCount] = useState(0);
   const [pendingCrewRequestCount, setPendingCrewRequestCount] = useState(0);
+  const [isNarrowHeader, setIsNarrowHeader] = useState(() => (
+    typeof window !== 'undefined' ? window.innerWidth < 430 : false
+  ));
   const isAdmin = profile?.role === 'admin';
   const isSkipper = profile?.user_type === 'owner';
   const unreadInboxCount = isAdmin ? unreadInboxCounts.messages + unreadInboxCounts.bugs + unreadInboxCounts.features : 0;
@@ -31,6 +34,13 @@ export default function Layout({ children }) {
       : unreadInboxCounts.features > 0
         ? '/admin/inbox?tab=features'
         : '/admin/inbox';
+
+  useEffect(() => {
+    const updateHeaderWidth = () => setIsNarrowHeader(window.innerWidth < 430);
+    updateHeaderWidth();
+    window.addEventListener('resize', updateHeaderWidth);
+    return () => window.removeEventListener('resize', updateHeaderWidth);
+  }, []);
 
   useEffect(() => {
     if (!user) return;
@@ -269,8 +279,8 @@ export default function Layout({ children }) {
                 alt="CGSC"
                 style={{height: '40px', width: 'auto', borderRadius: '4px', flexShrink: 0, display: 'block'}}
               />
-              <span style={{color: '#ffffff', fontSize: '1.2rem', fontWeight: 900, letterSpacing: '-0.02em', textShadow: '0 1px 6px rgba(0,0,0,0.6)', whiteSpace: 'nowrap', flexShrink: 1}}>
-                SailAway with CGSC
+              <span style={{color: '#ffffff', fontSize: isNarrowHeader ? '1.1rem' : '1.2rem', fontWeight: 900, textShadow: '0 1px 6px rgba(0,0,0,0.6)', whiteSpace: 'nowrap', flexShrink: 1, overflow: 'hidden', textOverflow: 'ellipsis'}}>
+                {isNarrowHeader ? 'SailAway' : 'SailAway with CGSC'}
               </span>
             </Link>
 

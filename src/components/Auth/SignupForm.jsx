@@ -32,7 +32,7 @@ const styles = {
 
 export default function SignupForm() {
   const [searchParams] = useSearchParams();
-  const { signUp, signIn } = useAuth();
+  const { signUp } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -126,39 +126,6 @@ export default function SignupForm() {
 
     const { data } = supabase.storage.from('profiles').getPublicUrl(filePath);
     return data.publicUrl;
-  };
-
-  const finishExistingAccountSignup = async (email) => {
-    noteSignupStep('Existing account found, trying submitted password');
-    setStatusMessage('Account found. Signing you in to finish setup...');
-
-    try {
-      await signIn(email, formData.password);
-    } catch {
-      throw new Error('An account with this email already exists. Please sign in, or use Forgot Password if you do not know the password.');
-    }
-
-    const { data: authData, error: userError } = await supabase.auth.getUser();
-    if (userError) throw userError;
-    const authUser = authData?.user;
-    if (!authUser) throw new Error('Sign in worked, but the account session was not available. Please sign in manually.');
-
-    const photoUrl = await uploadProfilePhoto();
-    const profilePayload = {
-      id: authUser.id,
-      email,
-      ...buildUserProfile(photoUrl),
-    };
-
-    const { error: profileError } = await supabase
-      .from('users')
-      .upsert(profilePayload, { onConflict: 'id' });
-
-    if (profileError) throw profileError;
-
-    noteSignupStep('Existing account setup repaired');
-    setStatusMessage('Account ready. Opening the app...');
-    window.location.assign(`${window.location.origin}/Sailing/`);
   };
 
   const handleChange = (e) => {
@@ -297,7 +264,7 @@ export default function SignupForm() {
         }
 
         if (accountStatus === 'confirmed') {
-          await finishExistingAccountSignup(normalizedEmail);
+          fail('An account with this email already exists. Please sign in, or use Forgot Password if you do not know the password.');
           return;
         }
       }

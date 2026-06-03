@@ -32,7 +32,7 @@ const styles = {
 
 export default function SignupForm() {
   const [searchParams] = useSearchParams();
-  const { signUp } = useAuth();
+  const { signUp, signIn } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -96,6 +96,69 @@ export default function SignupForm() {
     }
     setSignupCompleteEmail(email);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const buildUserProfile = (photoUrl) => ({
+    full_name: formData.fullName,
+    phone_number: phoneDigits(formData.phone),
+    gender: formData.gender,
+    user_type: formData.userType,
+    sailing_experience: formData.sailingExperience,
+    photo_url: photoUrl,
+  });
+
+  const uploadProfilePhoto = async () => {
+    if (!photoFile) return null;
+
+    noteSignupStep('Starting profile photo upload');
+    setStatusMessage('Uploading profile photo...');
+
+    const fileExt = photoFile.name.split('.').pop();
+    const fileName = `${Date.now()}.${fileExt}`;
+    const filePath = `profile-photos/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('profiles')
+      .upload(filePath, photoFile, { upsert: true });
+
+    if (uploadError) throw uploadError;
+    noteSignupStep('Profile photo uploaded');
+
+    const { data } = supabase.storage.from('profiles').getPublicUrl(filePath);
+    return data.publicUrl;
+  };
+
+  const finishExistingAccountSignup = async (email) => {
+    noteSignupStep('Existing account found, trying submitted password');
+    setStatusMessage('Account found. Signing you in to finish setup...');
+
+    try {
+      await signIn(email, formData.password);
+    } catch {
+      throw new Error('An account with this email already exists. Please sign in, or use Forgot Password if you do not know the password.');
+    }
+
+    const { data: authData, error: userError } = await supabase.auth.getUser();
+    if (userError) throw userError;
+    const authUser = authData?.user;
+    if (!authUser) throw new Error('Sign in worked, but the account session was not available. Please sign in manually.');
+
+    const photoUrl = await uploadProfilePhoto();
+    const profilePayload = {
+      id: authUser.id,
+      email,
+      ...buildUserProfile(photoUrl),
+    };
+
+    const { error: profileError } = await supabase
+      .from('users')
+      .upsert(profilePayload, { onConflict: 'id' });
+
+    if (profileError) throw profileError;
+
+    noteSignupStep('Existing account setup repaired');
+    setStatusMessage('Account ready. Opening the app...');
+    window.location.assign(`${window.location.origin}/Sailing/`);
   };
 
   const handleChange = (e) => {
@@ -208,7 +271,7 @@ export default function SignupForm() {
         }
 
         if (accountStatus === 'confirmed') {
-          fail('An account with this email already exists. Please sign in instead.');
+          await finishExistingAccountSignup(normalizedEmail);
           return;
         }
       } else {
@@ -220,42 +283,17 @@ export default function SignupForm() {
         if (accountLookupError) {
           console.warn('Could not check existing account before signup:', accountLookupError.message);
         } else if (existingAccount) {
-          fail('An account with this email already exists. Please sign in instead.');
+          await finishExistingAccountSignup(normalizedEmail);
           return;
         }
       }
 
-      noteSignupStep('Starting profile photo upload');
-      setStatusMessage('Uploading profile photo...');
-
-      let photoUrl = null;
-      if (photoFile) {
-        const fileExt = photoFile.name.split('.').pop();
-        const fileName = `${Date.now()}.${fileExt}`;
-        const filePath = `profile-photos/${fileName}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from('profiles')
-          .upload(filePath, photoFile, { upsert: true });
-
-        if (uploadError) throw uploadError;
-        noteSignupStep('Profile photo uploaded');
-
-        const { data } = supabase.storage.from('profiles').getPublicUrl(filePath);
-        photoUrl = data.publicUrl;
-      }
+      const photoUrl = await uploadProfilePhoto();
 
       noteSignupStep('Calling Supabase signup');
       setStatusMessage('Creating account and sending confirmation email...');
 
-      await signUp(normalizedEmail, formData.password, {
-        full_name: formData.fullName,
-        phone_number: normalizedPhone,
-        gender: formData.gender,
-        user_type: formData.userType,
-        sailing_experience: formData.sailingExperience,
-        photo_url: photoUrl,
-      });
+      await signUp(normalizedEmail, formData.password, buildUserProfile(photoUrl));
 
       // Ensure user is not auto-logged-in, so they MUST confirm email first.
       await supabase.auth.signOut().catch(() => undefined);
@@ -283,6 +321,11 @@ export default function SignupForm() {
 
         if (accountStatus === 'unconfirmed') {
           showCheckEmailFor(normalizedEmail);
+          return;
+        }
+
+        if (accountStatus === 'confirmed') {
+          await finishExistingAccountSignup(normalizedEmail);
           return;
         }
       }

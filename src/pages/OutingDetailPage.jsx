@@ -671,7 +671,7 @@ export default function OutingDetailPage() {
                         <button
                           type="button"
                           style={styles.messageBtn}
-                          onClick={() => navigate(`/messages/${req.crew_id}`)}
+                          onClick={() => navigate(`/messages/${req.crew_id}?returnTo=${encodeURIComponent(`/outing/${id}`)}`)}
                         >
                           Message
                         </button>

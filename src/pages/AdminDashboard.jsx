@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
 import { isPastLocalDate, todayLocalDateString } from '../utils/dateUtils';
@@ -9,8 +9,10 @@ import { ANNOUNCEMENT_AUDIENCES, announcementAudienceLabel } from '../utils/anno
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('overview');
+  const membersReturnTo = '/admin/dashboard?tab=members';
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'overview');
   const [inboxFilter, setInboxFilter] = useState('all');
   const [outingsFilter, setOutingsFilter] = useState('all');
   const [selectedFeedback, setSelectedFeedback] = useState(null);
@@ -52,6 +54,26 @@ const AdminDashboard = () => {
     if (dateCompare !== 0) return dateCompare;
     return (a.outing_time || '').localeCompare(b.outing_time || '');
   });
+
+  const memberOutingStyle = (outing) => {
+    const isPast = isPastLocalDate(outing.outing_date);
+    return {
+      background: isPast ? '#fee2e2' : '#dcfce7',
+      border: `1px solid ${isPast ? '#fca5a5' : '#86efac'}`,
+      color: isPast ? '#991b1b' : '#166534',
+      borderRadius: '6px',
+      padding: '5px 7px',
+      cursor: 'pointer',
+      fontWeight: 800,
+      textAlign: 'left',
+      width: '100%',
+    };
+  };
+
+  const memberOutingDate = (outing) => {
+    const dateText = outing.outing_date ? new Date(`${outing.outing_date}T12:00:00`).toLocaleDateString() : 'Date TBD';
+    return `${dateText}${isPastLocalDate(outing.outing_date) ? ' · Past' : ''}`;
+  };
 
   async function attachSubmitters(items) {
     const userIds = [...new Set(items.map((item) => item.user_id).filter(Boolean))];
@@ -357,6 +379,7 @@ const AdminDashboard = () => {
 
   const goToTab = (tab, options = {}) => {
     setActiveTab(tab);
+    navigate(`/admin/dashboard?tab=${encodeURIComponent(tab)}`, { replace: true });
     if (options.inboxFilter) setInboxFilter(options.inboxFilter);
     setOutingsFilter(tab === 'outings' ? (options.outingsFilter || 'all') : 'all');
     setSelectedFeedback(options.selectedFeedback || null);
@@ -680,7 +703,7 @@ const AdminDashboard = () => {
                     <th style={{ padding: '8px 10px', textAlign: 'left', fontWeight: 700 }}>Type</th>
                     <th style={{ padding: '8px 10px', textAlign: 'left', fontWeight: 700 }}>Outings</th>
                     <th style={{ padding: '8px 10px', textAlign: 'left', fontWeight: 700 }}>Joined</th>
-                    <th style={{ padding: '8px 10px', textAlign: 'left', fontWeight: 700 }}>Actions</th>
+                    <th style={{ padding: '8px 10px', textAlign: 'left', fontWeight: 700 }}>Message</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -689,7 +712,7 @@ const AdminDashboard = () => {
                     return (
                       <tr key={u.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
                         <td style={{ padding: '8px 10px' }}>
-                          <button onClick={() => navigate(`/profile/${u.id}?returnTo=${encodeURIComponent('/admin/dashboard')}`)} style={{ background: 'none', border: 'none', color: '#0369a1', cursor: 'pointer', fontWeight: 700 }}>
+                          <button onClick={() => navigate(`/profile/${u.id}?returnTo=${encodeURIComponent(membersReturnTo)}`)} style={{ background: 'none', border: 'none', color: '#0369a1', cursor: 'pointer', fontWeight: 700 }}>
                             {u.full_name || 'Unknown'}
                           </button>
                         </td>
@@ -708,10 +731,9 @@ const AdminDashboard = () => {
                                     key={outing.id}
                                     type="button"
                                     onClick={() => navigate(`/outing/${outing.id}`)}
-                                    style={{ background: 'none', border: 'none', padding: 0, color: '#0369a1', cursor: 'pointer', fontWeight: 700, textAlign: 'left' }}
+                                    style={memberOutingStyle(outing)}
                                   >
-                                    {outing.title}
-                                    {isPastLocalDate(outing.outing_date) ? ' · Past' : ''}
+                                    {outing.title} · {memberOutingDate(outing)}
                                   </button>
                                 ))}
                               </div>
@@ -724,11 +746,16 @@ const AdminDashboard = () => {
                         </td>
                         <td style={{ padding: '8px 10px', fontSize: '0.86rem', color: '#666' }}>{new Date(u.created_at).toLocaleDateString()}</td>
                         <td style={{ padding: '8px 10px', fontSize: '0.86rem' }}>
-                          <button onClick={() => navigate(`/profile/${u.id}?returnTo=${encodeURIComponent('/admin/dashboard')}`)} style={{ background: '#e0f2fe', color: '#0369a1', padding: '6px 12px', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 700, marginRight: '8px' }}>
-                            Details
-                          </button>
+                          {u.id !== user?.id && (
+                            <button onClick={() => navigate(`/messages/${u.id}?returnTo=${encodeURIComponent(membersReturnTo)}`)} style={{ background: '#0369a1', color: '#ffffff', padding: '6px 12px', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 700, marginRight: '8px' }}>
+                              Message
+                            </button>
+                          )}
+                          {u.id === user?.id && (
+                            <span style={{ color: '#94a3b8', fontWeight: 700 }}>—</span>
+                          )}
                           {u.role !== 'admin' && (
-                            <button onClick={() => handleMakeAdmin(u.id)} style={{ background: '#fbbf24', color: '#000', padding: '6px 12px', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}>
+                            <button onClick={() => handleMakeAdmin(u.id)} style={{ background: '#fbbf24', color: '#000', padding: '6px 12px', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 600, marginLeft: '8px' }}>
                               Make Admin
                             </button>
                           )}

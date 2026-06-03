@@ -6,6 +6,8 @@ import { supabase } from '../utils/supabaseClient';
 const styles = {
   container: { maxWidth: '760px', margin: '0 auto' },
   backButton: { background: '#e0f2fe', border: '2px solid #0369a1', color: '#0369a1', fontWeight: 900, fontSize: '0.95rem', marginBottom: '10px', cursor: 'pointer', padding: '9px 12px', borderRadius: '8px' },
+  topActions: { display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' },
+  messagesButton: { background: '#ffffff', border: '2px solid #0369a1', color: '#0369a1', fontWeight: 900, fontSize: '0.95rem', cursor: 'pointer', padding: '9px 12px', borderRadius: '8px' },
   header: { background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '10px 12px', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '10px' },
   contextCard: { background: '#f8fafc', border: '1px solid #cbd5e1', borderLeft: '4px solid #0369a1', borderRadius: '10px', padding: '10px 12px', marginBottom: '10px' },
   contextTitle: { color: '#0f172a', fontSize: '0.98rem', fontWeight: 900, margin: '0 0 4px' },
@@ -168,12 +170,19 @@ export default function DirectMessageThreadPage() {
 
   return (
     <div style={styles.container}>
-      <button type="button" onClick={() => navigate(returnTo)} style={styles.backButton}>
-        Back
-      </button>
+      <div style={styles.topActions}>
+        <button type="button" onClick={() => navigate(returnTo)} style={styles.backButton}>
+          Back
+        </button>
+        {returnTo !== '/messages' && (
+          <button type="button" onClick={() => navigate('/messages')} style={styles.messagesButton}>
+            Messages
+          </button>
+        )}
+      </div>
 
       {member && (
-        <button type="button" onClick={() => navigate(`/profile/${member.id}?returnTo=${encodeURIComponent(`/messages/${member.id}${contactMessageId ? `?contactMessage=${contactMessageId}` : ''}`)}`)} style={styles.header}>
+        <button type="button" onClick={() => navigate(`/profile/${member.id}?returnTo=${encodeURIComponent(returnTo)}`)} style={styles.header}>
           {member.photo_url ? (
             <img src={member.photo_url} alt={member.full_name} style={styles.avatar} />
           ) : (

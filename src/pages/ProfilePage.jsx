@@ -351,7 +351,10 @@ export default function ProfilePage() {
         {isViewingOther && (
           <button
             type="button"
-            onClick={() => navigate(`/messages/${profileId}`)}
+            onClick={() => {
+              const query = returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : '';
+              navigate(`/messages/${profileId}${query}`);
+            }}
             style={{...styles.button, width: '100%', marginBottom: '10px'}}
           >
             Message {displayProfile?.full_name || 'Member'}

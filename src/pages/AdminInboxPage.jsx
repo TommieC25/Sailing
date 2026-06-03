@@ -347,6 +347,13 @@ export default function AdminInboxPage() {
   const messageNeedsAttention = (message) => message.status === 'open';
   const bugNeedsAttention = (bug) => bug.status === 'open';
   const featureNeedsAttention = (feature) => ['pending', 'in_development'].includes(featureStatusValue(feature.status));
+  const newestFirst = (a, b) => new Date(b.created_at) - new Date(a.created_at);
+  const activeFirst = (items, needsAttention) => [...items].sort((a, b) => {
+    const aActive = needsAttention(a);
+    const bActive = needsAttention(b);
+    if (aActive !== bActive) return aActive ? -1 : 1;
+    return newestFirst(a, b);
+  });
 
   const renderAttentionBadge = (show) => (
     show ? <span style={styles.attentionBadge}>Needs attention</span> : null
@@ -566,9 +573,9 @@ export default function AdminInboxPage() {
   const attentionCount = messageAttentionCount + bugAttentionCount + featureAttentionCount;
 
   const currentData = {
-    messages: messages,
-    bugs: bugReports,
-    features: featureRequests,
+    messages: activeFirst(messages, messageNeedsAttention),
+    bugs: activeFirst(bugReports, bugNeedsAttention),
+    features: activeFirst(featureRequests, featureNeedsAttention),
   };
 
   const currentItems = currentData[activeTab];
@@ -634,9 +641,9 @@ export default function AdminInboxPage() {
         </div>
       ) : (
         <div style={styles.items}>
-          {activeTab === 'messages' && messages.map(renderMessage)}
-          {activeTab === 'bugs' && bugReports.map(renderBugReport)}
-          {activeTab === 'features' && featureRequests.map(renderFeatureRequest)}
+          {activeTab === 'messages' && currentItems.map(renderMessage)}
+          {activeTab === 'bugs' && currentItems.map(renderBugReport)}
+          {activeTab === 'features' && currentItems.map(renderFeatureRequest)}
         </div>
       )}
     </div>

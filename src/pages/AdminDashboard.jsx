@@ -75,6 +75,17 @@ const AdminDashboard = () => {
     return `${dateText}${isPastLocalDate(outing.outing_date) ? ' · Past' : ''}`;
   };
 
+  const outingCardStyle = (outing) => {
+    const isPast = isPastLocalDate(outing.outing_date);
+    return {
+      background: isPast ? '#fff1f2' : '#f0fdf4',
+      border: `1px solid ${isPast ? '#fda4af' : '#86efac'}`,
+      borderLeft: `5px solid ${isPast ? '#dc2626' : '#16a34a'}`,
+    };
+  };
+
+  const memberPhoneDigits = (member) => String(member.phone_number || member.phone || '').replace(/\D/g, '');
+
   async function attachSubmitters(items) {
     const userIds = [...new Set(items.map((item) => item.user_id).filter(Boolean))];
     if (userIds.length === 0) return items;
@@ -323,20 +334,6 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleMakeAdmin = async (userId) => {
-    try {
-      const { error } = await supabase
-        .from('users')
-        .update({ role: 'admin' })
-        .eq('id', userId);
-
-      if (error) throw error;
-      await loadDashboardData();
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
   const handleRemoveAdmin = async (userId) => {
     try {
       const { error } = await supabase
@@ -455,8 +452,8 @@ const AdminDashboard = () => {
     goToTab('activity');
   };
 
-  const renderDataCard = ({ key, title, meta, details, action, onTitleClick }) => (
-    <div key={key} style={{ background: '#ffffff', padding: '11px 12px', marginBottom: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+  const renderDataCard = ({ key, title, meta, details, action, onTitleClick, style }) => (
+    <div key={key} style={{ background: '#ffffff', padding: '11px 12px', marginBottom: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', ...style }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px', flexWrap: 'wrap' }}>
         <div style={{ minWidth: 0, flex: '1 1 240px' }}>
           {onTitleClick ? (
@@ -702,7 +699,7 @@ const AdminDashboard = () => {
                     <th style={{ padding: '8px 10px', textAlign: 'left', fontWeight: 700 }}>Email</th>
                     <th style={{ padding: '8px 10px', textAlign: 'left', fontWeight: 700 }}>Type</th>
                     <th style={{ padding: '8px 10px', textAlign: 'left', fontWeight: 700 }}>Outings</th>
-                    <th style={{ padding: '8px 10px', textAlign: 'left', fontWeight: 700 }}>Joined</th>
+                    <th style={{ padding: '8px 10px', textAlign: 'left', fontWeight: 700 }}>Phone</th>
                     <th style={{ padding: '8px 10px', textAlign: 'left', fontWeight: 700 }}>Message</th>
                   </tr>
                 </thead>
@@ -744,7 +741,15 @@ const AdminDashboard = () => {
                             <span style={{ color: '#94a3b8' }}>—</span>
                           )}
                         </td>
-                        <td style={{ padding: '8px 10px', fontSize: '0.86rem', color: '#666' }}>{new Date(u.created_at).toLocaleDateString()}</td>
+                        <td style={{ padding: '8px 10px', fontSize: '0.86rem' }}>
+                          {memberPhoneDigits(u) ? (
+                            <a href={`tel:${memberPhoneDigits(u)}`} style={{ color: '#0369a1', fontWeight: 800, textDecoration: 'none' }}>
+                              {u.phone || u.phone_number}
+                            </a>
+                          ) : (
+                            <span style={{ color: '#94a3b8', fontWeight: 700 }}>—</span>
+                          )}
+                        </td>
                         <td style={{ padding: '8px 10px', fontSize: '0.86rem' }}>
                           {u.id !== user?.id && (
                             <button onClick={() => navigate(`/messages/${u.id}?returnTo=${encodeURIComponent(membersReturnTo)}`)} style={{ background: '#0369a1', color: '#ffffff', padding: '6px 12px', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 700, marginRight: '8px' }}>
@@ -753,11 +758,6 @@ const AdminDashboard = () => {
                           )}
                           {u.id === user?.id && (
                             <span style={{ color: '#94a3b8', fontWeight: 700 }}>—</span>
-                          )}
-                          {u.role !== 'admin' && (
-                            <button onClick={() => handleMakeAdmin(u.id)} style={{ background: '#fbbf24', color: '#000', padding: '6px 12px', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 600, marginLeft: '8px' }}>
-                              Make Admin
-                            </button>
                           )}
                           {u.role === 'admin' && (
                             <span style={{ background: '#fef3c7', color: '#92400e', padding: '4px 8px', borderRadius: '4px', fontWeight: 700 }}>
@@ -849,6 +849,7 @@ const AdminDashboard = () => {
                   outing.location ? `Location: ${outing.location}` : null,
                   `${outing.capacity_available ?? 0} crew spots`,
                 ].filter(Boolean).join(' • '),
+                style: outingCardStyle(outing),
                 action: (
                   <div style={{display: 'flex', gap: '8px', flexWrap: 'wrap'}}>
                     {outing.skipper_id && (

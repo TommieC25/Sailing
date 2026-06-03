@@ -260,34 +260,6 @@ export default function SignupForm() {
       setLoading(true);
       const normalizedEmail = formData.email.trim();
 
-      const { data: accountStatus, error: accountStatusError } = await supabase.rpc('auth_account_status', {
-        p_email: normalizedEmail,
-      });
-
-      if (!accountStatusError) {
-        if (accountStatus === 'unconfirmed') {
-          showCheckEmailFor(normalizedEmail);
-          return;
-        }
-
-        if (accountStatus === 'confirmed') {
-          await finishExistingAccountSignup(normalizedEmail);
-          return;
-        }
-      } else {
-        console.warn('Could not check account status before signup:', accountStatusError.message);
-        const { data: existingAccount, error: accountLookupError } = await supabase.rpc('auth_email_exists', {
-          p_email: normalizedEmail,
-        });
-
-        if (accountLookupError) {
-          console.warn('Could not check existing account before signup:', accountLookupError.message);
-        } else if (existingAccount) {
-          await finishExistingAccountSignup(normalizedEmail);
-          return;
-        }
-      }
-
       const photoUrl = await uploadProfilePhoto();
 
       noteSignupStep('Calling Supabase signup');

@@ -160,7 +160,7 @@ export default function AdminInboxPage() {
           window.dispatchEvent(new Event('sailing:bug-replies-updated'));
         }
 
-        setMessages(messagesWithUsers.filter((message) => message.status !== 'archived'));
+        setMessages(messagesWithUsers.filter((message) => message.status === 'open'));
         const bugsWithScreenshots = await attachBugScreenshotUrls(supabase, bugsWithUsers);
 
         setBugReports(bugsWithScreenshots.map((bug) => ({

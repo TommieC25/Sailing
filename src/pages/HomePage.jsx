@@ -268,9 +268,12 @@ export default function HomePage() {
 }
 
 function OutingCard({ outing, isYours, isPast = false }) {
-  const crewCapacity = outing.capacity_available || 0;
+  const crewCapacity = Number(outing.capacity_available || 0);
   const approvedCrewCount = outing.approvedCrewCount || 0;
   const availableSpots = Math.max(crewCapacity - approvedCrewCount, 0);
+  const availabilityText = crewCapacity > 0
+    ? `${availableSpots}/${crewCapacity} spots available${availableSpots === 0 ? ' · Full' : ''}`
+    : `${approvedCrewCount} crew confirmed`;
 
   return (
     <Link
@@ -321,7 +324,7 @@ function OutingCard({ outing, isYours, isPast = false }) {
         {/* Condensed info line */}
         <div style={{fontSize: '0.9rem', color: '#64748b', marginBottom: '8px', fontWeight: 600, lineHeight: '1.35'}}>
           <div>📅 {formatLocalDate(outing.outing_date, { weekday: 'short', month: 'short', day: 'numeric' })} at {outing.outing_time}</div>
-          <div>🚢 {outing.boats?.name} ({outing.boats?.size_ft}ft) • 👤 {outing.skipper?.full_name || 'TBD'} • {approvedCrewCount}/{crewCapacity} crew approved</div>
+          <div>🚢 {outing.boats?.name} ({outing.boats?.size_ft}ft) • 👤 {outing.skipper?.full_name || 'TBD'} • {availabilityText}</div>
         </div>
 
         {/* Description - condensed */}

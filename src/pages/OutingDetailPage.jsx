@@ -318,11 +318,15 @@ export default function OutingDetailPage() {
     try {
       setActionLoading((prev) => ({ ...prev, [requestId]: true }));
       setError('');
-      if (!canApproveRequest(requestId)) {
-        throw new Error('This outing is already full. Decline the request or keep the member waitlisted until space opens.');
+      const isCapacityOverride = !canApproveRequest(requestId);
+      if (isCapacityOverride && !window.confirm('This outing is already full. Approve this member anyway and exceed the listed crew capacity?')) {
+        return;
       }
       const { data, error } = await supabase
-        .rpc('approve_crew_request', { p_request_id: requestId });
+        .rpc('approve_crew_request', {
+          p_request_id: requestId,
+          p_override_capacity: isCapacityOverride,
+        });
 
       if (error) throw error;
       const approvedRequest = crewRequests.find((req) => req.id === requestId);
@@ -495,7 +499,7 @@ export default function OutingDetailPage() {
   const crewSpotsRemaining = Math.max(crewCapacity - approvedCrewCount, 0);
   const outingIsFull = crewCapacity > 0 && crewSpotsRemaining === 0;
   const crewStatusText = crewCapacity > 0
-    ? `${approvedCrewCount} of ${crewCapacity} crew confirmed${outingIsFull ? ' • Full' : ` • ${crewSpotsRemaining} spot${crewSpotsRemaining === 1 ? '' : 's'} available`}`
+    ? `${crewSpotsRemaining} of ${crewCapacity} spots available${outingIsFull ? ' • Full' : ''}`
     : `${approvedCrewCount} crew confirmed`;
   const renderSkipperRequest = (req) => (
     <div key={req.id} style={requestCardStyle(req.status)}>
@@ -523,13 +527,13 @@ export default function OutingDetailPage() {
           return (
           <button
             onClick={() => handleApproveRequest(req.id)}
-            disabled={actionLoading[req.id] || !canApprove}
-            title={!canApprove ? 'This outing is full. Decline the request or keep the member waiting until space opens.' : undefined}
-            style={{ ...styles.approveBtn, opacity: actionLoading[req.id] || !canApprove ? 0.55 : 1, cursor: actionLoading[req.id] || !canApprove ? 'not-allowed' : 'pointer' }}
-            onMouseEnter={(e) => !actionLoading[req.id] && canApprove && (e.target.style.background = '#15803d')}
-            onMouseLeave={(e) => (e.target.style.background = '#16a34a')}
+            disabled={actionLoading[req.id]}
+            title={!canApprove ? 'This outing is full. Approving will exceed listed capacity.' : undefined}
+            style={{ ...styles.approveBtn, background: !canApprove ? '#f59e0b' : styles.approveBtn.background, color: !canApprove ? '#111827' : styles.approveBtn.color, opacity: actionLoading[req.id] ? 0.55 : 1, cursor: actionLoading[req.id] ? 'not-allowed' : 'pointer' }}
+            onMouseEnter={(e) => !actionLoading[req.id] && (e.target.style.background = !canApprove ? '#d97706' : '#15803d')}
+            onMouseLeave={(e) => (e.target.style.background = !canApprove ? '#f59e0b' : '#16a34a')}
           >
-            {!canApprove ? 'Outing Full' : req.status === 'waitlisted' ? '✓ Approve from Waitlist' : '✓ Approve'}
+            {!canApprove ? 'Approve Anyway' : req.status === 'waitlisted' ? '✓ Approve from Waitlist' : '✓ Approve'}
           </button>
           );
         })()}

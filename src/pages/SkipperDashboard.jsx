@@ -189,11 +189,15 @@ export default function SkipperDashboard() {
       setActionLoading((prev) => ({ ...prev, [requestId]: true }));
       setError('');
       const outing = outings.find((item) => item.id === outingId);
-      if (!canApproveRequest(outing, requestId)) {
-        throw new Error('This outing is already full. Decline the request or keep the member waitlisted until space opens.');
+      const isCapacityOverride = !canApproveRequest(outing, requestId);
+      if (isCapacityOverride && !window.confirm('This outing is already full. Approve this member anyway and exceed the listed crew capacity?')) {
+        return;
       }
       const { data, error } = await supabase
-        .rpc('approve_crew_request', { p_request_id: requestId });
+        .rpc('approve_crew_request', {
+          p_request_id: requestId,
+          p_override_capacity: isCapacityOverride,
+        });
       if (error) throw error;
       const updatedRequest = Array.isArray(data) ? data[0] : data;
       updateRequestStatusLocally(outingId, requestId, updatedRequest);
@@ -328,6 +332,8 @@ export default function SkipperDashboard() {
             const waitlisted = outing.crew_requests.filter((r) => r.status === 'waitlisted');
             const declined = outing.crew_requests.filter((r) => r.status === 'declined');
             const isArchived = isPastLocalDate(outing.outing_date);
+            const crewLimit = Number(outing.capacity_available || 0);
+            const spotsRemaining = crewLimit > 0 ? Math.max(crewLimit - approved.length, 0) : null;
 
             return (
               <div key={outing.id} style={styles.outingCard}>
@@ -345,7 +351,10 @@ export default function SkipperDashboard() {
                     <p style={styles.outingDetails}>
                       📅 {formatLocalDate(outing.outing_date, { weekday: 'short', month: 'short', day: 'numeric' })} · {outing.outing_time}
                     </p>
-                    <p style={styles.outingDetails}>🚢 {outing.boats?.name}</p>
+                    <p style={styles.outingDetails}>
+                      🚢 {outing.boats?.name}
+                      {crewLimit > 0 ? ` · ${spotsRemaining} of ${crewLimit} spots available${spotsRemaining === 0 ? ' · Full' : ''}` : ''}
+                    </p>
                   </div>
                   <div style={styles.outingMeta}>
                     {isArchived && <span style={styles.archiveBadge}>Archived</span>}
@@ -410,15 +419,21 @@ export default function SkipperDashboard() {
                                 </div>
                               </div>
                               <div style={styles.requestActions}>
+                                {(() => {
+                                  const canApprove = canApproveRequest(outing, req.id);
+                                  return (
                                 <button
                                   onClick={() => handleApprove(req.id, outing.id)}
                                   disabled={actionLoading[req.id]}
-                                  style={{...styles.approveBtn, opacity: actionLoading[req.id] ? 0.5 : 1}}
-                                  onMouseEnter={(e) => !actionLoading[req.id] && (e.target.style.background = '#15803d')}
-                                  onMouseLeave={(e) => (e.target.style.background = '#16a34a')}
+                                  title={!canApprove ? 'This outing is full. Approving will exceed listed capacity.' : undefined}
+                                  style={{...styles.approveBtn, background: canApprove ? '#16a34a' : '#f59e0b', color: canApprove ? '#ffffff' : '#111827', opacity: actionLoading[req.id] ? 0.5 : 1}}
+                                  onMouseEnter={(e) => !actionLoading[req.id] && (e.target.style.background = canApprove ? '#15803d' : '#d97706')}
+                                  onMouseLeave={(e) => (e.target.style.background = canApprove ? '#16a34a' : '#f59e0b')}
                                 >
-                                  {actionLoading[req.id] ? '...' : '✓ Approve'}
+                                  {actionLoading[req.id] ? '...' : canApprove ? '✓ Approve' : 'Approve Anyway'}
                                 </button>
+                                  );
+                                })()}
                                 <button
                                   type="button"
                                   onClick={() => navigate(`/profile/${req.crew_id}?returnTo=${encodeURIComponent('/skipper-dashboard')}`)}
@@ -498,15 +513,21 @@ export default function SkipperDashboard() {
                                 </div>
                               </div>
                               <div style={styles.requestActions}>
+                                {(() => {
+                                  const canApprove = canApproveRequest(outing, req.id);
+                                  return (
                                 <button
                                   onClick={() => handleApprove(req.id, outing.id)}
                                   disabled={actionLoading[req.id]}
-                                  style={{...styles.approveBtn, opacity: actionLoading[req.id] ? 0.5 : 1}}
-                                  onMouseEnter={(e) => !actionLoading[req.id] && (e.target.style.background = '#15803d')}
-                                  onMouseLeave={(e) => (e.target.style.background = '#16a34a')}
+                                  title={!canApprove ? 'This outing is full. Approving will exceed listed capacity.' : undefined}
+                                  style={{...styles.approveBtn, background: canApprove ? '#16a34a' : '#f59e0b', color: canApprove ? '#ffffff' : '#111827', opacity: actionLoading[req.id] ? 0.5 : 1}}
+                                  onMouseEnter={(e) => !actionLoading[req.id] && (e.target.style.background = canApprove ? '#15803d' : '#d97706')}
+                                  onMouseLeave={(e) => (e.target.style.background = canApprove ? '#16a34a' : '#f59e0b')}
                                 >
-                                  {actionLoading[req.id] ? '...' : '✓ Approve from Waitlist'}
+                                  {actionLoading[req.id] ? '...' : canApprove ? '✓ Approve from Waitlist' : 'Approve Anyway'}
                                 </button>
+                                  );
+                                })()}
                                 <button
                                   type="button"
                                   onClick={() => navigate(`/profile/${req.crew_id}?returnTo=${encodeURIComponent('/skipper-dashboard')}`)}

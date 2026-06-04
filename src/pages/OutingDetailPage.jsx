@@ -321,23 +321,21 @@ export default function OutingDetailPage() {
       if (!canApproveRequest(requestId)) {
         throw new Error('This outing is already full. Decline the request or keep the member waitlisted until space opens.');
       }
-      const payload = statusUpdatePayload('approved');
-      const { error } = await supabase
-        .from('crew_requests')
-        .update(payload)
-        .eq('id', requestId);
+      const { data, error } = await supabase
+        .rpc('approve_crew_request', { p_request_id: requestId });
 
       if (error) throw error;
       const approvedRequest = crewRequests.find((req) => req.id === requestId);
+      const updatedRequest = Array.isArray(data) ? data[0] : data;
       setCrewRequests((prev) =>
         prev.map((req) =>
-          req.id === requestId ? { ...req, ...payload } : req
+          req.id === requestId ? { ...req, ...updatedRequest } : req
         )
       );
       if (approvedRequest) {
         setApprovedCrew((prev) => {
           if (prev.some((req) => req.id === requestId)) return prev;
-          return [...prev, { ...approvedRequest, ...payload }];
+          return [...prev, { ...approvedRequest, ...updatedRequest }];
         });
       }
       if (approvedRequest?.status !== 'approved') {
@@ -495,6 +493,10 @@ export default function OutingDetailPage() {
   ].filter(Boolean);
   const crewCapacity = Number(outing.capacity_available || 0);
   const crewSpotsRemaining = Math.max(crewCapacity - approvedCrewCount, 0);
+  const outingIsFull = crewCapacity > 0 && crewSpotsRemaining === 0;
+  const crewStatusText = crewCapacity > 0
+    ? `${approvedCrewCount} of ${crewCapacity} crew confirmed${outingIsFull ? ' • Full' : ` • ${crewSpotsRemaining} spot${crewSpotsRemaining === 1 ? '' : 's'} available`}`
+    : `${approvedCrewCount} crew confirmed`;
   const renderSkipperRequest = (req) => (
     <div key={req.id} style={requestCardStyle(req.status)}>
       {req.crew?.photo_url ? (
@@ -516,17 +518,21 @@ export default function OutingDetailPage() {
         <p style={styles.requestDate}>Requested: {new Date(req.requested_at).toLocaleDateString()}</p>
       </div>
       <div style={styles.requestActions}>
-        {(req.status === 'pending' || req.status === 'waitlisted') && (
+        {(req.status === 'pending' || req.status === 'waitlisted') && (() => {
+          const canApprove = canApproveRequest(req.id);
+          return (
           <button
             onClick={() => handleApproveRequest(req.id)}
-            disabled={actionLoading[req.id]}
-            style={{ ...styles.approveBtn, opacity: actionLoading[req.id] ? 0.6 : 1 }}
-            onMouseEnter={(e) => !actionLoading[req.id] && (e.target.style.background = '#15803d')}
+            disabled={actionLoading[req.id] || !canApprove}
+            title={!canApprove ? 'This outing is full. Decline the request or keep the member waiting until space opens.' : undefined}
+            style={{ ...styles.approveBtn, opacity: actionLoading[req.id] || !canApprove ? 0.55 : 1, cursor: actionLoading[req.id] || !canApprove ? 'not-allowed' : 'pointer' }}
+            onMouseEnter={(e) => !actionLoading[req.id] && canApprove && (e.target.style.background = '#15803d')}
             onMouseLeave={(e) => (e.target.style.background = '#16a34a')}
           >
-            {req.status === 'waitlisted' ? '✓ Approve from Waitlist' : '✓ Approve'}
+            {!canApprove ? 'Outing Full' : req.status === 'waitlisted' ? '✓ Approve from Waitlist' : '✓ Approve'}
           </button>
-        )}
+          );
+        })()}
         {req.status === 'pending' && (
           <button
             onClick={() => handleDeclineRequest(req.id)}
@@ -594,9 +600,9 @@ export default function OutingDetailPage() {
           </div>
 
           <div>
-            <p style={styles.detailLabel}>👥 Crew Spots Available</p>
+            <p style={styles.detailLabel}>👥 Crew Status</p>
             <p style={styles.detailValue}>
-              {crewSpotsRemaining} of {crewCapacity} spot{crewCapacity !== 1 ? 's' : ''} available
+              {crewStatusText}
             </p>
           </div>
         </div>

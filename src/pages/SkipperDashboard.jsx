@@ -192,13 +192,11 @@ export default function SkipperDashboard() {
       if (!canApproveRequest(outing, requestId)) {
         throw new Error('This outing is already full. Decline the request or keep the member waitlisted until space opens.');
       }
-      const payload = statusUpdatePayload('approved');
-      const { error } = await supabase
-        .from('crew_requests')
-        .update(payload)
-        .eq('id', requestId);
+      const { data, error } = await supabase
+        .rpc('approve_crew_request', { p_request_id: requestId });
       if (error) throw error;
-      updateRequestStatusLocally(outingId, requestId, payload);
+      const updatedRequest = Array.isArray(data) ? data[0] : data;
+      updateRequestStatusLocally(outingId, requestId, updatedRequest);
       refreshNotificationCounts();
     } catch (err) {
       setError(err.message);

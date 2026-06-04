@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
@@ -60,6 +60,47 @@ export default function ProfilePage() {
   const [boats, setBoats] = useState([]);
   const [boatId, setBoatId] = useState(null);
 
+  const updateBoatState = useCallback((boatRows) => {
+    const rows = boatRows || [];
+    setBoats(rows);
+
+    if (rows.length === 0) {
+      setBoatId(null);
+      return;
+    }
+
+    const primaryBoat = rows[0];
+    setBoatId(primaryBoat.id);
+    const brandModelColor = [primaryBoat.brand, primaryBoat.model, primaryBoat.color]
+      .filter(Boolean)
+      .join(' / ') || '';
+    setBoatData({
+      name: primaryBoat.name || '',
+      brand_model_color: brandModelColor,
+      size_ft: primaryBoat.size_ft || '',
+      capacity: primaryBoat.capacity || '',
+      mooring_location: primaryBoat.mooring_location || '',
+    });
+  }, []);
+
+  const loadMyBoats = useCallback(async () => {
+    if (!user || profile?.user_type !== 'owner') {
+      setBoatId(null);
+      setBoats([]);
+      return [];
+    }
+
+    const { data, error } = await supabase
+      .from('boats')
+      .select('*')
+      .eq('owner_id', user.id)
+      .order('created_at', { ascending: true });
+
+    if (error) throw error;
+    updateBoatState(data || []);
+    return data || [];
+  }, [user, profile?.user_type, updateBoatState]);
+
   useEffect(() => {
     if (isViewingOther) {
       const fetchViewedProfile = async () => {
@@ -115,36 +156,14 @@ export default function ProfilePage() {
 
   useEffect(() => {
     const fetchBoats = async () => {
-      if (!user || profile?.user_type !== 'owner') {
-        setBoatId(null);
-        setBoats([]);
-        return;
-      }
       try {
-        const { data } = await supabase
-          .from('boats')
-          .select('*')
-          .eq('owner_id', user.id);
-        if (data && data.length > 0) {
-          setBoatId(data[0].id);
-          const brandModelColor = [data[0].brand, data[0].model, data[0].color]
-            .filter(Boolean)
-            .join(' / ') || '';
-          setBoatData({
-            name: data[0].name || '',
-            brand_model_color: brandModelColor,
-            size_ft: data[0].size_ft || '',
-            capacity: data[0].capacity || '',
-            mooring_location: data[0].mooring_location || '',
-          });
-          setBoats(data);
-        }
+        await loadMyBoats();
       } catch (err) {
         console.error('Error fetching boats:', err);
       }
     };
     fetchBoats();
-  }, [user, profile]);
+  }, [loadMyBoats]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -201,16 +220,20 @@ export default function ProfilePage() {
       mooring_location: boatData.mooring_location || null,
     };
 
-    if (boatId) {
-      const { data, error } = await supabase
+    const existingBoats = await loadMyBoats();
+    const existingBoatId = boatId || existingBoats[0]?.id;
+
+    if (existingBoatId) {
+      const { error } = await supabase
         .from('boats')
         .update(boatPayload)
-        .eq('id', boatId)
+        .eq('id', existingBoatId)
+        .eq('owner_id', user.id)
         .select()
         .single();
 
       if (error) throw error;
-      setBoats([data]);
+      await loadMyBoats();
       return;
     }
 
@@ -222,7 +245,7 @@ export default function ProfilePage() {
 
     if (error) throw error;
     setBoatId(data.id);
-    setBoats([data]);
+    await loadMyBoats();
   };
 
   const handlePhotoUpload = async (e) => {
@@ -552,7 +575,7 @@ export default function ProfilePage() {
 
                 <div style={styles.formGrid}>
                 <div style={styles.field}>
-                  <div style={styles.label}>Boat Name</div>
+                  <div style={styles.label}>Boat Name *</div>
                   <input type="text" name="name" value={boatData.name} onChange={handleBoatChange} style={styles.input} />
                 </div>
 
@@ -567,7 +590,7 @@ export default function ProfilePage() {
                   </div>
 
                   <div style={styles.field}>
-                    <div style={styles.label}>Capacity</div>
+                    <div style={styles.label}>Capacity *</div>
                     <input type="number" name="capacity" value={boatData.capacity} onChange={handleBoatChange} style={styles.input} />
                   </div>
 

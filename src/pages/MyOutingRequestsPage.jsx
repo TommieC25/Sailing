@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
@@ -60,53 +60,79 @@ export default function MyOutingRequestsPage() {
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    const fetchRequests = async () => {
-      if (!user) return;
+  const fetchRequests = useCallback(async ({ markSeen = true, showLoading = false } = {}) => {
+    if (!user) return;
 
-      try {
-        setLoading(true);
-        setError('');
+    try {
+      if (showLoading) setLoading(true);
+      setError('');
 
-        const { data, error: fetchError } = await supabase
-          .from('crew_requests')
-          .select('*, outings(id, title, outing_date, outing_time, skipper_id)')
-          .eq('crew_id', user.id)
-          .order('requested_at', { ascending: false });
+      const { data, error: fetchError } = await supabase
+        .from('crew_requests')
+        .select('*, outings(id, title, outing_date, outing_time, skipper_id)')
+        .eq('crew_id', user.id)
+        .order('requested_at', { ascending: false });
 
-        if (fetchError) throw fetchError;
+      if (fetchError) throw fetchError;
 
-        const skipperIds = [...new Set((data || []).map((request) => request.outings?.skipper_id).filter(Boolean))];
-        const { data: skippers, error: skipperError } = skipperIds.length
-          ? await supabase
-              .from('public_profiles')
-              .select('id, full_name')
-              .in('id', skipperIds)
-          : { data: [], error: null };
+      const skipperIds = [...new Set((data || []).map((request) => request.outings?.skipper_id).filter(Boolean))];
+      const { data: skippers, error: skipperError } = skipperIds.length
+        ? await supabase
+            .from('public_profiles')
+            .select('id, full_name')
+            .in('id', skipperIds)
+        : { data: [], error: null };
 
-        if (skipperError) throw skipperError;
+      if (skipperError) throw skipperError;
 
-        const skipperById = Object.fromEntries((skippers || []).map((skipper) => [skipper.id, skipper]));
-        setRequests((data || []).map((request) => ({
-          ...request,
-          skipper: skipperById[request.outings?.skipper_id] || null,
-        })));
+      const skipperById = Object.fromEntries((skippers || []).map((skipper) => [skipper.id, skipper]));
+      setRequests((data || []).map((request) => ({
+        ...request,
+        skipper: skipperById[request.outings?.skipper_id] || null,
+      })));
 
+      if (markSeen) {
         const { error: seenError } = await supabase.rpc('mark_my_crew_requests_seen');
         if (!seenError) {
           window.dispatchEvent(new Event('sailing:outing-requests-updated'));
         } else {
           console.warn('Could not mark outing request statuses seen:', seenError.message);
         }
-      } catch (err) {
-        setError(err.message || 'Could not load outing requests');
-      } finally {
-        setLoading(false);
       }
-    };
-
-    fetchRequests();
+    } catch (err) {
+      setError(err.message || 'Could not load outing requests');
+    } finally {
+      if (showLoading) setLoading(false);
+    }
   }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const refreshQuietly = () => fetchRequests({ markSeen: false });
+    const initialFetch = window.setTimeout(() => {
+      fetchRequests({ showLoading: true });
+    }, 0);
+
+    window.addEventListener('focus', refreshQuietly);
+    window.addEventListener('pageshow', refreshQuietly);
+
+    const channel = supabase
+      .channel(`my-outing-requests-${user.id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'crew_requests', filter: `crew_id=eq.${user.id}` },
+        refreshQuietly
+      )
+      .subscribe();
+
+    return () => {
+      window.clearTimeout(initialFetch);
+      window.removeEventListener('focus', refreshQuietly);
+      window.removeEventListener('pageshow', refreshQuietly);
+      supabase.removeChannel(channel);
+    };
+  }, [user, fetchRequests]);
 
   const sortedRequests = useMemo(() => {
     return [...requests].sort((a, b) => {
@@ -195,7 +221,7 @@ export default function MyOutingRequestsPage() {
                   {request.outing_id && (
                     <button
                       type="button"
-                      onClick={() => navigate(`/outing/${request.outing_id}`)}
+                      onClick={() => navigate(`/outing/${request.outing_id}?returnTo=${encodeURIComponent('/my-outing-requests')}`)}
                       style={{ ...styles.button, ...styles.linkBtn }}
                     >
                       View Outing

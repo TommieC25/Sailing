@@ -39,6 +39,7 @@ export default function HomePage() {
         const skipperById = Object.fromEntries((skippers || []).map((skipper) => [skipper.id, skipper]));
         const outingIds = (data || []).map((outing) => outing.id);
         let approvedCountsByOutingId = {};
+        let unreadChatByOutingId = {};
         if (outingIds.length > 0) {
           const { data: approvedCounts, error: approvedCountsError } = await supabase
             .rpc('outing_approved_counts', { p_outing_ids: outingIds });
@@ -48,6 +49,18 @@ export default function HomePage() {
           } else {
             approvedCountsByOutingId = (approvedCounts || []).reduce((counts, row) => {
               counts[row.outing_id] = row.approved_count || 0;
+              return counts;
+            }, {});
+          }
+
+          const { data: unreadChats, error: unreadChatsError } = await supabase
+            .rpc('my_unread_event_chat_counts');
+
+          if (unreadChatsError) {
+            console.warn('Could not load outing chat counts:', unreadChatsError.message);
+          } else {
+            unreadChatByOutingId = (unreadChats || []).reduce((counts, row) => {
+              counts[row.outing_id] = Number(row.unread_count || 0);
               return counts;
             }, {});
           }
@@ -80,6 +93,7 @@ export default function HomePage() {
           skipper: skipperById[outing.skipper_id] || null,
           pendingCrewRequestCount: pendingByOutingId[outing.id] || 0,
           approvedCrewCount: approvedCountsByOutingId[outing.id] || 0,
+          unreadChatCount: unreadChatByOutingId[outing.id] || 0,
         })));
       } catch (err) {
         setError(err.message);
@@ -94,11 +108,13 @@ export default function HomePage() {
     const initialFetch = window.setTimeout(fetchOutings, 0);
 
     window.addEventListener('sailing:crew-requests-updated', fetchOutings);
+    window.addEventListener('sailing:event-chat-updated', fetchOutings);
     window.addEventListener('focus', fetchOutings);
     window.addEventListener('pageshow', fetchOutings);
 
     return () => {
       window.removeEventListener('sailing:crew-requests-updated', fetchOutings);
+      window.removeEventListener('sailing:event-chat-updated', fetchOutings);
       window.removeEventListener('focus', fetchOutings);
       window.removeEventListener('pageshow', fetchOutings);
       window.clearTimeout(initialFetch);
@@ -270,6 +286,7 @@ export default function HomePage() {
 function OutingCard({ outing, isYours, isPast = false }) {
   const crewCapacity = Number(outing.capacity_available || 0);
   const approvedCrewCount = outing.approvedCrewCount || 0;
+  const unreadChatCount = outing.unreadChatCount || 0;
   const availableSpots = Math.max(crewCapacity - approvedCrewCount, 0);
   const availabilityText = crewCapacity > 0
     ? `${availableSpots}/${crewCapacity} spots available${availableSpots === 0 ? ' · Full' : ''}`
@@ -297,6 +314,11 @@ function OutingCard({ outing, isYours, isPast = false }) {
           {isPast && (
             <span style={{background: '#e2e8f0', color: '#475569', padding: '4px 10px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 800, flexShrink: 0, whiteSpace: 'nowrap'}}>
               Past
+            </span>
+          )}
+          {unreadChatCount > 0 && (
+            <span style={{background: '#fee2e2', color: '#991b1b', padding: '4px 10px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 900, flexShrink: 0, whiteSpace: 'nowrap'}}>
+              {unreadChatCount} chat
             </span>
           )}
           {!isPast && availableSpots > 0 && !isYours && (

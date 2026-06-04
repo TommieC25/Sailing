@@ -19,6 +19,7 @@ export default function Layout({ children }) {
   const [unreadFeatureReplyCount, setUnreadFeatureReplyCount] = useState(0);
   const [unreadDirectMessageCount, setUnreadDirectMessageCount] = useState(0);
   const [unreadOutingRequestStatusCount, setUnreadOutingRequestStatusCount] = useState(0);
+  const [unreadEventChatItems, setUnreadEventChatItems] = useState([]);
   const [pendingCrewRequestCount, setPendingCrewRequestCount] = useState(0);
   const [isNarrowHeader, setIsNarrowHeader] = useState(() => (
     typeof window !== 'undefined' ? window.innerWidth < 430 : false
@@ -26,7 +27,8 @@ export default function Layout({ children }) {
   const isAdmin = profile?.role === 'admin';
   const isSkipper = profile?.user_type === 'owner';
   const unreadInboxCount = isAdmin ? unreadInboxCounts.messages + unreadInboxCounts.bugs + unreadInboxCounts.features : 0;
-  const totalNotificationCount = unreadAnnouncementCount + pendingCrewRequestCount + unreadBugReplyCount + unreadFeatureReplyCount + unreadDirectMessageCount + unreadOutingRequestStatusCount;
+  const unreadEventChatCount = unreadEventChatItems.reduce((total, item) => total + Number(item.unread_count || 0), 0);
+  const totalNotificationCount = unreadAnnouncementCount + pendingCrewRequestCount + unreadBugReplyCount + unreadFeatureReplyCount + unreadDirectMessageCount + unreadOutingRequestStatusCount + unreadEventChatCount;
   const adminInboxLink = unreadInboxCounts.messages > 0
     ? '/admin/inbox?tab=messages'
     : unreadInboxCounts.bugs > 0
@@ -106,6 +108,42 @@ export default function Layout({ children }) {
     window.addEventListener('sailing:outing-requests-updated', fetchOutingRequestStatusCount);
 
     return () => window.removeEventListener('sailing:outing-requests-updated', fetchOutingRequestStatusCount);
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchEventChatCount = async () => {
+      try {
+        const { data, error } = await supabase.rpc('my_unread_event_chat_counts');
+        if (error) throw error;
+        setUnreadEventChatItems(data || []);
+      } catch (err) {
+        console.error('Error fetching outing chat count:', err);
+        setUnreadEventChatItems([]);
+      }
+    };
+
+    fetchEventChatCount();
+    window.addEventListener('sailing:event-chat-updated', fetchEventChatCount);
+    window.addEventListener('focus', fetchEventChatCount);
+    window.addEventListener('pageshow', fetchEventChatCount);
+
+    const channel = supabase
+      .channel(`event-chat-notifications-${user.id}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'event_chat' },
+        fetchEventChatCount
+      )
+      .subscribe();
+
+    return () => {
+      window.removeEventListener('sailing:event-chat-updated', fetchEventChatCount);
+      window.removeEventListener('focus', fetchEventChatCount);
+      window.removeEventListener('pageshow', fetchEventChatCount);
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   useEffect(() => {
@@ -391,6 +429,22 @@ export default function Layout({ children }) {
                         </span>
                       </button>
                     )}
+                    {unreadEventChatCount > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNotificationMenuOpen(false);
+                          const firstUnreadOuting = unreadEventChatItems[0]?.outing_id;
+                          navigate(firstUnreadOuting ? `/outing/${firstUnreadOuting}` : '/');
+                        }}
+                        style={{width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', padding: '12px 14px', background: 'none', border: 'none', borderBottom: '1px solid #e2e8f0', cursor: 'pointer', color: '#1e293b', textAlign: 'left', fontSize: '1rem', fontWeight: 700}}
+                      >
+                        <span>Outing group chat</span>
+                        <span style={{background: '#ef4444', color: '#ffffff', borderRadius: '999px', minWidth: '24px', padding: '2px 8px', textAlign: 'center', fontWeight: 900}}>
+                          {unreadEventChatCount}
+                        </span>
+                      </button>
+                    )}
                     {unreadFeatureReplyCount > 0 && (
                       <button
                         type="button"
@@ -461,7 +515,9 @@ export default function Layout({ children }) {
             <div style={{borderTop: '1px solid rgba(255,255,255,0.3)', paddingTop: '12px', paddingBottom: '16px'}}>
               {user ? (
                 <>
-                  <Link to="/" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#ffffff', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>⛵ Outings</Link>
+                  <Link to="/" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#ffffff', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>
+                    ⛵ Outings{unreadEventChatCount > 0 ? ` (${unreadEventChatCount})` : ''}
+                  </Link>
                   <Link to="/my-outing-requests" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#ffffff', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>
                     📌 My Outing Requests{unreadOutingRequestStatusCount > 0 ? ` (${unreadOutingRequestStatusCount})` : ''}
                   </Link>

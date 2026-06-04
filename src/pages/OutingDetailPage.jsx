@@ -279,6 +279,17 @@ export default function OutingDetailPage() {
           ...msg,
           user: messageUserById[msg.user_id] || null,
         })));
+
+        if (canViewChat) {
+          const { error: seenError } = await supabase.rpc('mark_event_chat_seen', {
+            p_outing_id: id,
+          });
+          if (!seenError) {
+            window.dispatchEvent(new Event('sailing:event-chat-updated'));
+          } else {
+            console.warn('Could not mark outing chat seen:', seenError.message);
+          }
+        }
       } catch (err) {
         setError(err.message || 'Could not load outing details');
       } finally {
@@ -415,6 +426,7 @@ export default function OutingDetailPage() {
       if (error) throw error;
       setMessages([...messages, { ...newMsg, user: profile }]);
       setMessageText('');
+      window.dispatchEvent(new Event('sailing:event-chat-updated'));
     } catch (err) {
       setError(err.message);
     } finally {

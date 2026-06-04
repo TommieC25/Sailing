@@ -334,7 +334,7 @@ export default function SignupForm() {
 
           <form onSubmit={handleSubmit} style={styles.form} autoComplete="on" noValidate>
             <div style={styles.fieldGroup}>
-              <label htmlFor="signup-full-name" style={styles.label}>Full Name</label>
+              <label htmlFor="signup-full-name" style={styles.label}>Full Name *</label>
               <input
                 id="signup-full-name"
                 type="text"
@@ -349,7 +349,7 @@ export default function SignupForm() {
             </div>
 
             <div style={styles.fieldGroup}>
-              <label htmlFor="signup-phone" style={styles.label}>Phone Number</label>
+              <label htmlFor="signup-phone" style={styles.label}>Phone Number *</label>
               <input
                 id="signup-phone"
                 type="tel"
@@ -364,7 +364,7 @@ export default function SignupForm() {
             </div>
 
             <div style={styles.fieldGroup}>
-              <label htmlFor="signup-gender" style={styles.label}>Gender</label>
+              <label htmlFor="signup-gender" style={styles.label}>Gender *</label>
               <select
                 id="signup-gender"
                 name="gender"
@@ -402,7 +402,7 @@ export default function SignupForm() {
             </div>
 
             <div style={styles.fieldGroup}>
-              <label htmlFor="signup-email" style={styles.label}>Email</label>
+              <label htmlFor="signup-email" style={styles.label}>Email *</label>
               <input
                 id="signup-email"
                 type="email"
@@ -418,7 +418,7 @@ export default function SignupForm() {
             </div>
 
             <div style={styles.fieldGroup}>
-              <label htmlFor="signup-password" style={styles.label}>Password</label>
+              <label htmlFor="signup-password" style={styles.label}>Password *</label>
               <button
                 type="button"
                 onClick={generatePassword}
@@ -440,7 +440,7 @@ export default function SignupForm() {
             </div>
 
             <div style={styles.fieldGroup}>
-              <label htmlFor="signup-confirm-password" style={styles.label}>Confirm Password</label>
+              <label htmlFor="signup-confirm-password" style={styles.label}>Confirm Password *</label>
               <input
                 id="signup-confirm-password"
                 type="password"

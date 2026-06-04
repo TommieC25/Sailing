@@ -20,6 +20,7 @@ const styles = {
   textarea: { width: '100%', padding: '10px 12px', border: '2px solid #dbeafe', borderRadius: '8px', fontSize: '0.95rem', fontWeight: 500, color: '#1e293b', fontFamily: 'inherit', minHeight: '88px', resize: 'vertical', background: '#ffffff' },
   fileInput: { padding: '10px 12px', border: '2px dashed #dbeafe', borderRadius: '8px', fontSize: '0.92rem', color: '#1e293b', cursor: 'pointer', background: '#f0f9ff' },
   attachedFile: { background: '#f0fdf4', border: '2px solid #bbf7d0', color: '#166534', borderRadius: '8px', padding: '10px', fontSize: '0.9rem', fontWeight: 800, lineHeight: 1.35 },
+  pasteHint: { color: '#64748b', fontSize: '0.84rem', fontWeight: 700, margin: '2px 0 0' },
   inlineProfileButton: { background: 'none', border: 'none', padding: 0, color: '#0369a1', font: 'inherit', fontWeight: 900, cursor: 'pointer', textAlign: 'left' },
   buttons: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', paddingBottom: '4px' },
   submitButton: { padding: '11px', borderRadius: '8px', fontWeight: 900, fontSize: '1rem', color: '#ffffff', border: 'none', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.08)', transition: 'all 0.2s' },
@@ -141,8 +142,7 @@ export default function BugReportPage() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleScreenshotChange = (e) => {
-    const file = e.target.files?.[0];
+  const applyScreenshotFile = (file) => {
     setError('');
     setSuccess(false);
 
@@ -177,6 +177,28 @@ export default function BugReportPage() {
       setScreenshotPreview(reader.result);
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleScreenshotChange = (e) => {
+    applyScreenshotFile(e.target.files?.[0]);
+  };
+
+  const handlePaste = (e) => {
+    const clipboardItems = Array.from(e.clipboardData?.items || []);
+    const imageItem = clipboardItems.find((item) => item.type.startsWith('image/'));
+    if (!imageItem) return;
+
+    const clipboardFile = imageItem.getAsFile();
+    if (!clipboardFile) return;
+
+    e.preventDefault();
+    const extension = clipboardFile.type.split('/')[1]?.replace('jpeg', 'jpg') || 'png';
+    const pastedScreenshot = new File(
+      [clipboardFile],
+      `pasted-screenshot-${Date.now()}.${extension}`,
+      { type: clipboardFile.type || 'image/png' }
+    );
+    applyScreenshotFile(pastedScreenshot);
   };
 
   const removeScreenshot = () => {
@@ -326,7 +348,7 @@ export default function BugReportPage() {
         {error && <div style={styles.errorBox}>{error}</div>}
         {success && <div style={styles.successBox}>✓ Bug report submitted! Thank you for helping us improve.</div>}
 
-        <form onSubmit={handleSubmit} style={styles.form}>
+        <form onSubmit={handleSubmit} onPaste={handlePaste} style={styles.form}>
           <div style={styles.guidanceBox}>
             Please be clear and specific. Describe what you expected to happen, what you actually saw, and why the result does not seem right. A screenshot is helpful but optional. Thank you!
           </div>
@@ -355,7 +377,8 @@ export default function BugReportPage() {
           </div>
 
           <div style={styles.fieldGroup}>
-            <label style={styles.label}>Screenshot or attachment (optional)</label>
+            <label style={styles.label}>Screenshot image (optional)</label>
+            <p style={styles.pasteHint}>Choose an image file, or paste a copied screenshot while this form is open.</p>
             <input
               ref={screenshotInputRef}
               type="file"
@@ -365,7 +388,7 @@ export default function BugReportPage() {
             />
             {screenshot && (
               <div style={styles.attachedFile}>
-                Screenshot attached: {screenshot.name || 'image'} {formatFileSize(screenshot.size) && `(${formatFileSize(screenshot.size)})`}
+                Screenshot selected: {screenshot.name || 'image'} {formatFileSize(screenshot.size) && `(${formatFileSize(screenshot.size)})`}
               </div>
             )}
             {screenshotPreview && (

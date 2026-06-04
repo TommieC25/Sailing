@@ -348,10 +348,20 @@ export default function AdminInboxPage() {
   const bugNeedsAttention = (bug) => bug.status === 'open';
   const featureNeedsAttention = (feature) => ['pending', 'in_development'].includes(featureStatusValue(feature.status));
   const newestFirst = (a, b) => new Date(b.created_at) - new Date(a.created_at);
-  const activeFirst = (items, needsAttention) => [...items].sort((a, b) => {
-    const aActive = needsAttention(a);
-    const bActive = needsAttention(b);
-    if (aActive !== bActive) return aActive ? -1 : 1;
+  const statusRank = {
+    open: 0,
+    pending: 0,
+    in_progress: 1,
+    in_development: 1,
+    read: 2,
+    resolved: 3,
+    implemented: 3,
+    archived: 4,
+  };
+  const workflowFirst = (items, getStatus) => [...items].sort((a, b) => {
+    const aRank = statusRank[getStatus(a)] ?? 2;
+    const bRank = statusRank[getStatus(b)] ?? 2;
+    if (aRank !== bRank) return aRank - bRank;
     return newestFirst(a, b);
   });
 
@@ -573,9 +583,9 @@ export default function AdminInboxPage() {
   const attentionCount = messageAttentionCount + bugAttentionCount + featureAttentionCount;
 
   const currentData = {
-    messages: activeFirst(messages, messageNeedsAttention),
-    bugs: activeFirst(bugReports, bugNeedsAttention),
-    features: activeFirst(featureRequests, featureNeedsAttention),
+    messages: workflowFirst(messages, (message) => message.status || 'open'),
+    bugs: workflowFirst(bugReports, (bug) => bug.status || 'open'),
+    features: workflowFirst(featureRequests, (feature) => featureStatusValue(feature.status)),
   };
 
   const currentItems = currentData[activeTab];

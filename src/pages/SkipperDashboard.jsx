@@ -355,7 +355,7 @@ export default function SkipperDashboard() {
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
-                        navigate(`/outing/${outing.id}`);
+                        navigate(`/outing/${outing.id}?returnTo=${encodeURIComponent('/skipper-dashboard')}`);
                       }}
                       style={styles.detailsBtn}
                     >

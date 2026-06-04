@@ -727,7 +727,7 @@ const AdminDashboard = () => {
                                   <button
                                     key={outing.id}
                                     type="button"
-                                    onClick={() => navigate(`/outing/${outing.id}`)}
+                                    onClick={() => navigate(`/outing/${outing.id}?returnTo=${encodeURIComponent(membersReturnTo)}`)}
                                     style={memberOutingStyle(outing)}
                                   >
                                     {outing.title} · {memberOutingDate(outing)}
@@ -839,7 +839,7 @@ const AdminDashboard = () => {
               visibleAdminOutings.map((outing) => renderDataCard({
                 key: outing.id,
                 title: outing.title || 'Untitled outing',
-                onTitleClick: () => navigate(`/outing/${outing.id}`),
+                onTitleClick: () => navigate(`/outing/${outing.id}?returnTo=${encodeURIComponent('/admin/dashboard?tab=outings')}`),
                 meta: `Skipper: ${outing.users?.full_name || 'Unknown skipper'}${outing.users?.email ? ` • ${outing.users.email}` : ''}`,
                 details: [
                   isPastLocalDate(outing.outing_date) ? 'Archived' : 'Active',
@@ -857,7 +857,7 @@ const AdminDashboard = () => {
                         Skipper
                       </button>
                     )}
-                    <button type="button" onClick={() => navigate(`/outing/${outing.id}`)} style={{ padding: '8px 12px', borderRadius: '8px', border: 'none', background: '#0369a1', color: '#ffffff', fontWeight: 900, cursor: 'pointer' }}>
+                    <button type="button" onClick={() => navigate(`/outing/${outing.id}?returnTo=${encodeURIComponent('/admin/dashboard?tab=outings')}`)} style={{ padding: '8px 12px', borderRadius: '8px', border: 'none', background: '#0369a1', color: '#ffffff', fontWeight: 900, cursor: 'pointer' }}>
                       Outing
                     </button>
                   </div>

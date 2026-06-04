@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
 import { formatLocalDate, isPastLocalDate } from '../utils/dateUtils';
@@ -84,6 +84,7 @@ const styles = {
 export default function OutingDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, profile } = useAuth();
   const [outing, setOuting] = useState(null);
   const [skipper, setSkipper] = useState(null);
@@ -453,6 +454,8 @@ export default function OutingDetailPage() {
   }
 
   const isSkipper = user && user.id === outing.skipper_id;
+  const returnTo = searchParams.get('returnTo') || '/';
+  const currentOutingPath = `/outing/${id}${searchParams.get('returnTo') ? `?returnTo=${encodeURIComponent(returnTo)}` : ''}`;
   const isArchived = isPastLocalDate(outing.outing_date);
   const statusColors = {
     open: { bg: '#dbeafe', text: '#1e40af' },
@@ -502,7 +505,7 @@ export default function OutingDetailPage() {
       <div style={styles.requestInfo}>
         <button
           type="button"
-          onClick={() => navigate(`/profile/${req.crew_id}?returnTo=${encodeURIComponent(`/outing/${id}`)}`)}
+          onClick={() => navigate(`/profile/${req.crew_id}?returnTo=${encodeURIComponent(currentOutingPath)}`)}
           style={styles.profileLinkButton}
         >
           {req.crew?.full_name || 'View profile'}
@@ -547,12 +550,12 @@ export default function OutingDetailPage() {
   return (
     <div style={styles.container}>
       <button
-        onClick={() => navigate('/')}
+        onClick={() => navigate(returnTo)}
         style={styles.backButton}
         onMouseEnter={(e) => e.target.style.background = '#bfdbfe'}
         onMouseLeave={(e) => e.target.style.background = '#e0f2fe'}
       >
-        ← Back to Outings
+        ← Back to Previous
       </button>
 
       <div style={styles.mainCard}>
@@ -608,7 +611,7 @@ export default function OutingDetailPage() {
         {/* Skipper */}
         <button
           type="button"
-          onClick={() => navigate(`/profile/${outing.skipper_id}?returnTo=${encodeURIComponent(`/outing/${id}`)}`)}
+          onClick={() => navigate(`/profile/${outing.skipper_id}?returnTo=${encodeURIComponent(currentOutingPath)}`)}
           style={{background: '#ffffff', border: '2px solid #e5e7eb', borderRadius: '8px', padding: '12px 14px', marginBottom: '12px', display: 'flex', gap: '12px', alignItems: 'center', width: '100%', textAlign: 'left', cursor: 'pointer'}}
         >
           {skipper?.photo_url ? (
@@ -655,7 +658,7 @@ export default function OutingDetailPage() {
                         <button
                           type="button"
                           style={styles.profileLinkButton}
-                          onClick={() => navigate(`/profile/${req.crew_id}?returnTo=${encodeURIComponent(`/outing/${id}`)}`)}
+                          onClick={() => navigate(`/profile/${req.crew_id}?returnTo=${encodeURIComponent(currentOutingPath)}`)}
                         >
                           {req.crew?.full_name || 'View profile'}
                         </button>
@@ -671,7 +674,7 @@ export default function OutingDetailPage() {
                         <button
                           type="button"
                           style={styles.messageBtn}
-                          onClick={() => navigate(`/messages/${req.crew_id}?returnTo=${encodeURIComponent(`/outing/${id}`)}`)}
+                          onClick={() => navigate(`/messages/${req.crew_id}?returnTo=${encodeURIComponent(currentOutingPath)}`)}
                         >
                           Message
                         </button>
@@ -703,7 +706,7 @@ export default function OutingDetailPage() {
                             {msg.user_id ? (
                               <button
                                 type="button"
-                                onClick={() => navigate(`/profile/${msg.user_id}?returnTo=${encodeURIComponent(`/outing/${id}`)}`)}
+                                onClick={() => navigate(`/profile/${msg.user_id}?returnTo=${encodeURIComponent(currentOutingPath)}`)}
                                 style={styles.chatAuthorButton}
                               >
                                 {msg.user?.full_name || 'Member'}

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../utils/supabaseClient';
 import { clearStoredSupabaseSession } from '../hooks/useAuth';
+import { friendlyPasswordError, getPasswordValidationMessage, PASSWORD_MIN_LENGTH } from '../utils/passwordRules';
 
 const styles = {
   container: { minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(to bottom right, #0c3880, #0369a1, #06b6d4)', paddingLeft: '1rem', paddingRight: '1rem', paddingTop: '2rem', paddingBottom: '2rem' },
@@ -49,8 +50,9 @@ export default function ResetPasswordPage() {
     setError('');
     setSuccess('');
 
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters');
+    const passwordValidation = getPasswordValidationMessage(password);
+    if (passwordValidation) {
+      setError(passwordValidation);
       return;
     }
 
@@ -71,7 +73,7 @@ export default function ResetPasswordPage() {
       clearStoredSupabaseSession();
       setTimeout(() => navigate('/login?reset=success', { replace: true }), 2000);
     } catch (err) {
-      setError(err.message || 'Failed to reset password');
+      setError(friendlyPasswordError(err) || err.message || 'Failed to reset password');
     } finally {
       setLoading(false);
     }
@@ -116,7 +118,9 @@ export default function ResetPasswordPage() {
 
         <div style={styles.card}>
           <h2 style={styles.cardTitle}>New Password</h2>
-          <p style={styles.cardSubtitle}>Enter a new password below</p>
+          <p style={styles.cardSubtitle}>
+            Use at least {PASSWORD_MIN_LENGTH} characters with uppercase, lowercase, a number, and a symbol.
+          </p>
 
           {error && <div style={styles.errorBox}>{error}</div>}
           {success && <div style={styles.successBox}>{success}</div>}

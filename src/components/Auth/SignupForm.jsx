@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../utils/supabaseClient';
 import { formatPhoneNumber, phoneDigits } from '../../utils/phoneFormat';
+import { friendlyPasswordError, generateStrongPassword, getPasswordValidationMessage, PASSWORD_MIN_LENGTH } from '../../utils/passwordRules';
 
 const SIGNUP_SUCCESS_EMAIL_KEY = 'signupSuccessEmail';
 const SIGNUP_SUCCESS_AT_KEY = 'signupSuccessAt';
@@ -27,6 +28,10 @@ const styles = {
   footer: { marginTop: '2rem', paddingTop: '1.5rem', borderTop: '3px solid #e5e7eb' },
   footerText: { color: '#374151', fontSize: '1.25rem', fontWeight: 700, textAlign: 'center', marginBottom: '1rem', margin: '0 0 1rem 0' },
   signInLink: { display: 'block', width: '100%', paddingY: '1.25rem', borderRadius: '12px', fontWeight: 900, color: '#1e3a8a', fontSize: '1.5rem', border: '3px solid #1e3a8a', textAlign: 'center', textDecoration: 'none', transition: 'all 0.2s' },
+  passwordHint: { color: '#475569', fontSize: '0.95rem', fontWeight: 700, lineHeight: 1.35, margin: '0' },
+  passwordActions: { display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' },
+  smallButton: { background: '#e0f2fe', color: '#0c2340', border: '2px solid #0369a1', borderRadius: '10px', padding: '10px 14px', fontSize: '1rem', fontWeight: 900, cursor: 'pointer' },
+  generatedNotice: { background: '#fef3c7', border: '2px solid #f59e0b', color: '#78350f', borderRadius: '10px', padding: '0.75rem', fontSize: '0.95rem', fontWeight: 800, lineHeight: 1.35 },
   bottomText: { color: '#ffffff', textAlign: 'center', fontSize: '1.125rem', fontWeight: 600, marginTop: '2rem', textShadow: '0 1px 3px rgba(0,0,0,0.4)' },
 };
 
@@ -47,6 +52,8 @@ export default function SignupForm() {
   const [photoPreview, setPhotoPreview] = useState(null);
   const [error, setError] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [generatedPasswordNotice, setGeneratedPasswordNotice] = useState('');
   const [signupDebug, setSignupDebug] = useState(() => {
     try {
       return localStorage.getItem('signupDebug') || '';
@@ -150,16 +157,15 @@ export default function SignupForm() {
   };
 
   const generatePassword = () => {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%&*?';
-    const bytes = new Uint8Array(18);
-    window.crypto.getRandomValues(bytes);
-    const password = Array.from(bytes, (byte) => chars[byte % chars.length]).join('');
+    const password = generateStrongPassword();
 
     setFormData((prev) => ({
       ...prev,
       password,
       confirmPassword: password,
     }));
+    setShowPassword(true);
+    setGeneratedPasswordNotice('Generated password filled in below. Save it before creating your account.');
   };
 
   const handleSubmit = async (e) => {
@@ -186,8 +192,9 @@ export default function SignupForm() {
       fail('Passwords do not match');
       return;
     }
-    if (formData.password.length < 6) {
-      fail('Password must be at least 6 characters');
+    const passwordValidation = getPasswordValidationMessage(formData.password);
+    if (passwordValidation) {
+      fail(passwordValidation);
       return;
     }
     if (!formData.fullName.trim()) {
@@ -220,6 +227,8 @@ export default function SignupForm() {
       if (message.toLowerCase().includes('email rate limit')) {
         return 'Supabase is temporarily blocking more confirmation emails because we sent too many while testing. Please wait a few minutes before trying again, or use a different test email.';
       }
+      const passwordError = friendlyPasswordError(err);
+      if (passwordError) return passwordError;
       return message || 'Failed to sign up. Please try again.';
     };
 
@@ -419,22 +428,39 @@ export default function SignupForm() {
 
             <div style={styles.fieldGroup}>
               <label htmlFor="signup-password" style={styles.label}>Password *</label>
-              <button
-                type="button"
-                onClick={generatePassword}
-                style={{background: '#e0f2fe', color: '#0c2340', border: '2px solid #0369a1', borderRadius: '10px', padding: '10px 14px', fontSize: '1rem', fontWeight: 900, cursor: 'pointer', marginBottom: '8px'}}
-              >
-                Generate Password
-              </button>
+              <div style={styles.passwordActions}>
+                <button
+                  type="button"
+                  onClick={generatePassword}
+                  style={styles.smallButton}
+                >
+                  Generate Strong Password
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  style={{...styles.smallButton, background: '#ffffff'}}
+                >
+                  {showPassword ? 'Hide Password' : 'Show Password'}
+                </button>
+              </div>
+              <p style={styles.passwordHint}>
+                At least {PASSWORD_MIN_LENGTH} characters with uppercase, lowercase, a number, and a symbol.
+              </p>
+              {generatedPasswordNotice && (
+                <div style={styles.generatedNotice}>
+                  {generatedPasswordNotice}
+                </div>
+              )}
               <input
                 id="signup-password"
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
                 autoComplete="new-password"
                 required
-                placeholder="Min 6 characters"
+                placeholder={`Min ${PASSWORD_MIN_LENGTH} characters`}
                 style={styles.input}
               />
             </div>
@@ -443,7 +469,7 @@ export default function SignupForm() {
               <label htmlFor="signup-confirm-password" style={styles.label}>Confirm Password *</label>
               <input
                 id="signup-confirm-password"
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleChange}

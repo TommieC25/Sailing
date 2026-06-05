@@ -160,6 +160,30 @@ export default function AdminInboxPage() {
           window.dispatchEvent(new Event('sailing:bug-replies-updated'));
         }
 
+        const featureIds = featuresWithUsers.map((feature) => feature.id);
+        if (featureIds.length > 0) {
+          const { data: featureReplies, error: featureRepliesError } = await supabase
+            .from('feature_request_replies')
+            .select('id, sender_id, read_at')
+            .in('feature_request_id', featureIds);
+
+          if (featureRepliesError) {
+            console.error('Error fetching feature request replies:', featureRepliesError);
+          } else {
+            const unreadFeatureReplyIds = (featureReplies || [])
+              .filter((reply) => reply.sender_id !== user.id && !reply.read_at)
+              .map((reply) => reply.id);
+
+            if (unreadFeatureReplyIds.length > 0) {
+              await supabase
+                .from('feature_request_replies')
+                .update({ read_at: new Date().toISOString() })
+                .in('id', unreadFeatureReplyIds);
+              window.dispatchEvent(new Event('sailing:feature-replies-updated'));
+            }
+          }
+        }
+
         setMessages(messagesWithUsers.filter((message) => message.status === 'open'));
         const bugsWithScreenshots = await attachBugScreenshotUrls(supabase, bugsWithUsers);
 

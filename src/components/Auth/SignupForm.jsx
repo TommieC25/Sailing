@@ -54,6 +54,7 @@ export default function SignupForm() {
   const [statusMessage, setStatusMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [generatedPasswordNotice, setGeneratedPasswordNotice] = useState('');
+  const [passwordCopyStatus, setPasswordCopyStatus] = useState('');
   const [signupDebug, setSignupDebug] = useState(() => {
     try {
       return localStorage.getItem('signupDebug') || '';
@@ -166,6 +167,21 @@ export default function SignupForm() {
     }));
     setShowPassword(true);
     setGeneratedPasswordNotice('Generated password filled in below. Save it before creating your account.');
+    setPasswordCopyStatus('');
+  };
+
+  const copyPassword = async () => {
+    if (!formData.password) {
+      setPasswordCopyStatus('Generate or enter a password first.');
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(formData.password);
+      setPasswordCopyStatus('Password copied. Save it somewhere safe.');
+    } catch {
+      setShowPassword(true);
+      setPasswordCopyStatus('Copy was blocked. Password is visible below so you can save it.');
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -180,6 +196,23 @@ export default function SignupForm() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
+    if (!formData.fullName.trim()) {
+      fail('Please enter your full name');
+      return;
+    }
+    const normalizedPhone = phoneDigits(formData.phone);
+    if (normalizedPhone.length !== 10) {
+      fail('Please enter a valid 10-digit phone number');
+      return;
+    }
+    if (!formData.gender) {
+      fail('Please select your gender');
+      return;
+    }
+    if (!photoFile) {
+      fail('Profile photo is required');
+      return;
+    }
     if (!formData.email.trim()) {
       fail('Please enter your email address');
       return;
@@ -197,29 +230,12 @@ export default function SignupForm() {
       fail(passwordValidation);
       return;
     }
-    if (!formData.fullName.trim()) {
-      fail('Please enter your full name');
-      return;
-    }
-    if (!formData.gender) {
-      fail('Please select your gender');
-      return;
-    }
     if (!formData.userType) {
       fail('Please select your account type');
       return;
     }
     if (!formData.sailingExperience) {
       fail('Please select your experience level');
-      return;
-    }
-    const normalizedPhone = phoneDigits(formData.phone);
-    if (normalizedPhone.length !== 10) {
-      fail('Please enter a valid 10-digit phone number');
-      return;
-    }
-    if (!photoFile) {
-      fail('Profile photo is required');
       return;
     }
     const friendlyError = (err) => {
@@ -234,7 +250,27 @@ export default function SignupForm() {
 
     try {
       setLoading(true);
-      const normalizedEmail = formData.email.trim();
+      const normalizedEmail = formData.email.trim().toLowerCase();
+
+      noteSignupStep('Checking account status');
+      setStatusMessage('Checking account status...');
+      const { data: accountStatus, error: accountStatusError } = await supabase.rpc('auth_account_status', {
+        p_email: normalizedEmail,
+      });
+
+      if (accountStatusError) {
+        throw accountStatusError;
+      }
+
+      if (accountStatus === 'unconfirmed') {
+        showCheckEmailFor(normalizedEmail);
+        return;
+      }
+
+      if (accountStatus === 'confirmed') {
+        fail('An account with this email already exists. Please sign in, or use Forgot Password if you do not know the password.');
+        return;
+      }
 
       const photoUrl = await uploadProfilePhoto();
 
@@ -262,7 +298,7 @@ export default function SignupForm() {
     } catch (err) {
       noteSignupStep(`Error: ${err.message || 'Failed to sign up'}`);
       if (err?.code === 'email_exists') {
-        const normalizedEmail = formData.email.trim();
+        const normalizedEmail = formData.email.trim().toLowerCase();
         const { data: accountStatus } = await supabase.rpc('auth_account_status', {
           p_email: normalizedEmail,
         });
@@ -443,6 +479,13 @@ export default function SignupForm() {
                 >
                   {showPassword ? 'Hide Password' : 'Show Password'}
                 </button>
+                <button
+                  type="button"
+                  onClick={copyPassword}
+                  style={{...styles.smallButton, background: '#ffffff'}}
+                >
+                  Copy Password
+                </button>
               </div>
               <p style={styles.passwordHint}>
                 At least {PASSWORD_MIN_LENGTH} characters with uppercase, lowercase, a number, and a symbol.
@@ -450,6 +493,11 @@ export default function SignupForm() {
               {generatedPasswordNotice && (
                 <div style={styles.generatedNotice}>
                   {generatedPasswordNotice}
+                </div>
+              )}
+              {passwordCopyStatus && (
+                <div style={{...styles.generatedNotice, background: '#dcfce7', borderColor: '#16a34a', color: '#166534'}}>
+                  {passwordCopyStatus}
                 </div>
               )}
               <input

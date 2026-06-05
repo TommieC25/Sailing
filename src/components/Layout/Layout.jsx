@@ -333,6 +333,7 @@ export default function Layout({ children }) {
                   )}
                   <Link to="/messages" style={navLinkStyle}>Messages</Link>
                   <Link to="/profile" style={navLinkStyle}>Profile</Link>
+                  <Link to="/guide" style={navLinkStyle}>Guide</Link>
                   <button onClick={handleSignOut} style={{background: '#06b6d4', color: '#ffffff', fontWeight: 900, padding: '8px 16px', borderRadius: '12px', border: 'none', cursor: 'pointer', fontSize: '1rem'}}>
                     Sign Out
                   </button>
@@ -530,6 +531,7 @@ export default function Layout({ children }) {
                     💬 Messages{unreadDirectMessageCount > 0 ? ` (${unreadDirectMessageCount})` : ''}
                   </Link>
                   <Link to="/profile" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#ffffff', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>👤 Profile</Link>
+                  <Link to="/guide" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#ffffff', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>📖 User Guide / FAQ</Link>
                   {isAdmin && (
                     <>
                       <Link to="/admin/dashboard" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#fbbf24', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>⚙️ Admin Dashboard</Link>

@@ -20,6 +20,7 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import AnnouncementsFeed from './pages/AnnouncementsFeed';
 import EmailConfirmedPage from './pages/EmailConfirmedPage';
+import UserGuidePage from './pages/UserGuidePage';
 import SignupForm from './components/Auth/SignupForm';
 import LoginForm from './components/Auth/LoginForm';
 import SignupSuccessPage from './pages/SignupSuccessPage';
@@ -134,6 +135,7 @@ function App() {
           <Route path="/feature-request" element={<ProtectedRoute><FeatureRequestPage /></ProtectedRoute>} />
           <Route path="/feature-request/:id" element={<ProtectedRoute><FeatureRequestThreadPage /></ProtectedRoute>} />
           <Route path="/contact-admin" element={<ProtectedRoute><ContactAdminPage /></ProtectedRoute>} />
+          <Route path="/guide" element={<ProtectedRoute><UserGuidePage /></ProtectedRoute>} />
           <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
           <Route path="/admin/inbox" element={<AdminRoute><AdminInboxPage /></AdminRoute>} />
           <Route path="/announcements" element={<ProtectedRoute><AnnouncementsFeed /></ProtectedRoute>} />

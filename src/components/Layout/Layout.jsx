@@ -21,6 +21,7 @@ export default function Layout({ children }) {
   const [unreadOutingRequestStatusCount, setUnreadOutingRequestStatusCount] = useState(0);
   const [unreadEventChatItems, setUnreadEventChatItems] = useState([]);
   const [unreadClubEventChatCount, setUnreadClubEventChatCount] = useState(0);
+  const [hasActiveClubEvent, setHasActiveClubEvent] = useState(false);
   const [pendingCrewRequestCount, setPendingCrewRequestCount] = useState(0);
   const [isNarrowHeader, setIsNarrowHeader] = useState(() => (
     typeof window !== 'undefined' ? window.innerWidth < 430 : false
@@ -116,12 +117,22 @@ export default function Layout({ children }) {
 
     const fetchClubEventChatCount = async () => {
       try {
-        const { data, error } = await supabase.rpc('my_unread_club_event_count');
-        if (error) throw error;
-        setUnreadClubEventChatCount(Number(data || 0));
+        const [unreadResult, activeEventResult] = await Promise.all([
+          supabase.rpc('my_unread_club_event_count'),
+          supabase
+            .from('club_events')
+            .select('id')
+            .eq('status', 'active')
+            .limit(1),
+        ]);
+        if (unreadResult.error) throw unreadResult.error;
+        if (activeEventResult.error) throw activeEventResult.error;
+        setUnreadClubEventChatCount(Number(unreadResult.data || 0));
+        setHasActiveClubEvent((activeEventResult.data || []).length > 0);
       } catch (err) {
         console.error('Error fetching Event Chat count:', err);
         setUnreadClubEventChatCount(0);
+        setHasActiveClubEvent(false);
       }
     };
 
@@ -135,6 +146,11 @@ export default function Layout({ children }) {
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'club_event_messages' },
+        fetchClubEventChatCount
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'club_events' },
         fetchClubEventChatCount
       )
       .subscribe();
@@ -363,13 +379,14 @@ export default function Layout({ children }) {
             <div style={{display: 'none'}} className="md-nav-links">
               {user ? (
                 <>
+                  {hasActiveClubEvent && <Link to="/event-chat" style={navLinkStyle}>Rendezvous</Link>}
                   <Link to="/" style={navLinkStyle}>Outings</Link>
                   <Link to="/my-outing-requests" style={navLinkStyle}>My Outing Requests</Link>
                   {profile?.user_type === 'owner' && (
                     <Link to="/skipper-dashboard" style={navLinkStyle}>My Outings</Link>
                   )}
                   <Link to="/messages" style={navLinkStyle}>Messages</Link>
-                  <Link to="/event-chat" style={navLinkStyle}>Rendezvous</Link>
+                  {!hasActiveClubEvent && <Link to="/event-chat" style={navLinkStyle}>Rendezvous</Link>}
                   <Link to="/profile" style={navLinkStyle}>Profile</Link>
                   <Link to="/guide" style={navLinkStyle}>Guide</Link>
                   <button onClick={handleSignOut} style={{background: '#06b6d4', color: '#ffffff', fontWeight: 900, padding: '8px 16px', borderRadius: '12px', border: 'none', cursor: 'pointer', fontSize: '1rem'}}>
@@ -569,6 +586,11 @@ export default function Layout({ children }) {
             <div style={{borderTop: '1px solid rgba(255,255,255,0.3)', paddingTop: '12px', paddingBottom: '16px'}}>
               {user ? (
                 <>
+                  {hasActiveClubEvent && (
+                    <Link to="/event-chat" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#fde047', fontSize: '1.25rem', fontWeight: 900, textDecoration: 'none', borderRadius: '12px'}}>
+                      📣 Upcoming Rendezvous{unreadClubEventChatCount > 0 ? ` (${unreadClubEventChatCount})` : ''}
+                    </Link>
+                  )}
                   <Link to="/" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#ffffff', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>
                     ⛵ Outings{unreadEventChatCount > 0 ? ` (${unreadEventChatCount})` : ''}
                   </Link>
@@ -583,9 +605,11 @@ export default function Layout({ children }) {
                   <Link to="/messages" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#ffffff', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>
                     💬 Messages{unreadDirectMessageCount > 0 ? ` (${unreadDirectMessageCount})` : ''}
                   </Link>
-                  <Link to="/event-chat" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#ffffff', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>
-                    📣 Upcoming Rendezvous{unreadClubEventChatCount > 0 ? ` (${unreadClubEventChatCount})` : ''}
-                  </Link>
+                  {!hasActiveClubEvent && (
+                    <Link to="/event-chat" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#ffffff', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>
+                      📣 Upcoming Rendezvous
+                    </Link>
+                  )}
                   <Link to="/profile" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#ffffff', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>👤 Profile</Link>
                   <Link to="/guide" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#ffffff', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>📖 User Guide / FAQ</Link>
                   {isAdmin && (

@@ -186,10 +186,22 @@ export default function HomePage() {
     <div style={{marginLeft: '-10px', marginRight: '-10px', marginTop: '-16px'}}>
       {/* Header with greeting */}
       <div style={{background: HEADER_BG, padding: '20px 14px', color: '#ffffff', marginBottom: '16px'}}>
-        <h1 style={{fontSize: '1.55rem', fontWeight: 900, margin: '0 0 2px 0'}}>Hello, {profile?.full_name || 'Sailor'}! 👋</h1>
-        <p style={{fontSize: '1rem', margin: 0, opacity: 0.95}}>
-          {isSkipper ? "Your outings are waiting for crew." : "Find your next adventure on the water."}
-        </p>
+        <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap'}}>
+          <div>
+            <h1 style={{fontSize: '1.55rem', fontWeight: 900, margin: '0 0 2px 0'}}>Hello, {profile?.full_name || 'Sailor'}! 👋</h1>
+            <p style={{fontSize: '1rem', margin: 0, opacity: 0.95}}>
+              {isSkipper ? "Your outings are waiting for crew." : "Find your next adventure on the water."}
+            </p>
+          </div>
+          {isAdmin && (
+            <Link
+              to="/admin/dashboard"
+              style={{background: '#fbbf24', color: '#0c2340', padding: '9px 13px', borderRadius: '7px', fontWeight: 900, fontSize: '0.95rem', textDecoration: 'none', whiteSpace: 'nowrap'}}
+            >
+              ⚙️ Admin Tools
+            </Link>
+          )}
+        </div>
       </div>
 
       {/* Main content with padding */}

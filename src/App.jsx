@@ -22,6 +22,7 @@ import AnnouncementsFeed from './pages/AnnouncementsFeed';
 import EmailConfirmedPage from './pages/EmailConfirmedPage';
 import UserGuidePage from './pages/UserGuidePage';
 import WaiverAcceptancePage from './pages/WaiverAcceptancePage';
+import ClubEventChatPage from './pages/ClubEventChatPage';
 import SignupForm from './components/Auth/SignupForm';
 import LoginForm from './components/Auth/LoginForm';
 import SignupSuccessPage from './pages/SignupSuccessPage';
@@ -147,6 +148,7 @@ function App() {
           <Route path="/contact-admin" element={<ProtectedRoute><ContactAdminPage /></ProtectedRoute>} />
           <Route path="/guide" element={<ProtectedRoute><UserGuidePage /></ProtectedRoute>} />
           <Route path="/waiver" element={<ProtectedRoute><WaiverAcceptancePage /></ProtectedRoute>} />
+          <Route path="/event-chat" element={<ProtectedRoute><ClubEventChatPage /></ProtectedRoute>} />
           <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
           <Route path="/admin/inbox" element={<AdminRoute><AdminInboxPage /></AdminRoute>} />
           <Route path="/announcements" element={<ProtectedRoute><AnnouncementsFeed /></ProtectedRoute>} />

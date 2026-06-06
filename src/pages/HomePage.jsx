@@ -9,6 +9,7 @@ const HEADER_BG = 'linear-gradient(135deg, #0c2340 0%, #0369a1 100%)';
 export default function HomePage() {
   const { user, profile, loading: authLoading } = useAuth();
   const [outings, setOutings] = useState([]);
+  const [activeClubEvent, setActiveClubEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -121,6 +122,34 @@ export default function HomePage() {
     };
   }, [user, fetchOutings]);
 
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchActiveClubEvent = async () => {
+      const { data, error: clubEventError } = await supabase
+        .from('club_events')
+        .select('id, title, event_date, location')
+        .eq('status', 'active')
+        .maybeSingle();
+
+      if (clubEventError) {
+        console.error('Could not load Upcoming Rendezvous:', clubEventError);
+        return;
+      }
+      setActiveClubEvent(data || null);
+    };
+
+    const initialFetch = window.setTimeout(fetchActiveClubEvent, 0);
+    window.addEventListener('sailing:club-event-chat-updated', fetchActiveClubEvent);
+    window.addEventListener('focus', fetchActiveClubEvent);
+
+    return () => {
+      window.clearTimeout(initialFetch);
+      window.removeEventListener('sailing:club-event-chat-updated', fetchActiveClubEvent);
+      window.removeEventListener('focus', fetchActiveClubEvent);
+    };
+  }, [user]);
+
   if (authLoading) {
     return (
       <div style={{textAlign: 'center', padding: '40px'}}>
@@ -165,6 +194,20 @@ export default function HomePage() {
 
       {/* Main content with padding */}
       <div style={{padding: '0 12px 24px 12px'}}>
+
+        {activeClubEvent && (
+          <Link
+            to="/event-chat"
+            style={{display: 'block', background: '#e0f2fe', border: '3px solid #0284c7', borderRadius: '10px', padding: '13px 14px', marginBottom: '16px', textDecoration: 'none'}}
+          >
+            <div style={{fontSize: '1.15rem', fontWeight: 900, color: '#0c2340', marginBottom: '3px'}}>
+              📣 Upcoming Rendezvous: {activeClubEvent.title}
+            </div>
+            <div style={{fontSize: '0.92rem', color: '#0369a1', fontWeight: 800}}>
+              {formatLocalDate(activeClubEvent.event_date)}{activeClubEvent.location ? ` · ${activeClubEvent.location}` : ''} · Open conversation →
+            </div>
+          </Link>
+        )}
 
         {/* Bio prompt - shown to users who haven't filled in their bio yet */}
         {profile && !profile.bio?.trim() && (

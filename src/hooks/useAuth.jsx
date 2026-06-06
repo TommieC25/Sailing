@@ -111,6 +111,40 @@ export function AuthProvider({ children }) {
     return () => subscription?.unsubscribe();
   }, []);
 
+  useEffect(() => {
+    if (!user?.id) return undefined;
+
+    let active = true;
+
+    const refreshProfile = async () => {
+      try {
+        const profileData = await loadProfile(user.id);
+        if (active) setProfile(profileData);
+      } catch (err) {
+        if (active) setError(err.message);
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        refreshProfile();
+      }
+    };
+
+    const handleFocus = () => refreshProfile();
+    const intervalId = window.setInterval(refreshProfile, 60_000);
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      active = false;
+      window.clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [user?.id]);
+
   const signUp = async (email, password, userProfile) => {
     try {
       const redirectUrl = `${window.location.origin}/Sailing/email-confirmed`;

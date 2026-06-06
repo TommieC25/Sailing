@@ -239,14 +239,24 @@ export default function ClubEventChatPage() {
             <div style={styles.composer}>
               <textarea style={styles.textarea} value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Post to all SailAway members..." />
               {!!outings.length && (
-                <select style={styles.input} value={linkedOutingId} onChange={(e) => setLinkedOutingId(e.target.value)}>
-                  <option value="">No outing link</option>
-                  {outings.map((outing) => (
-                    <option key={outing.id} value={outing.id}>{outing.title} · {formatLocalDate(outing.outing_date)}</option>
-                  ))}
-                </select>
+                <label style={{display: 'grid', gap: '5px', color: '#334155', fontWeight: 900}}>
+                  Optional: Link an Upcoming Outing
+                  <span style={{fontSize: '0.85rem', color: '#64748b', fontWeight: 650}}>
+                    Select an outing if members should open it to view details or request to join.
+                  </span>
+                  <select style={styles.input} value={linkedOutingId} onChange={(e) => setLinkedOutingId(e.target.value)}>
+                    <option value="">Do not link an outing</option>
+                    {outings.map((outing) => (
+                      <option key={outing.id} value={outing.id}>{outing.title} · {formatLocalDate(outing.outing_date)}</option>
+                    ))}
+                  </select>
+                </label>
               )}
-              {selectedOuting && <div style={{color: '#475569', fontWeight: 700}}>Linked outing: {selectedOuting.title}</div>}
+              {selectedOuting && (
+                <div style={{background: '#e0f2fe', border: '2px solid #38bdf8', borderRadius: '7px', padding: '9px', color: '#0c2340', fontWeight: 800}}>
+                  This post will include a clickable link to: {selectedOuting.title}
+                </div>
+              )}
               <button type="button" onClick={sendMessage} disabled={saving || !message.trim()} style={{...styles.button, ...styles.primary, opacity: saving || !message.trim() ? 0.55 : 1}}>Post Message</button>
             </div>
           </section>

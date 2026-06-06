@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const styles = {
   container: { maxWidth: '900px', margin: '0 auto', display: 'grid', gap: '12px' },
@@ -12,6 +12,7 @@ const styles = {
   text: { color: '#475569', fontSize: '0.95rem', lineHeight: 1.48, margin: '0 0 8px' },
   list: { color: '#475569', fontSize: '0.95rem', lineHeight: 1.5, margin: '6px 0 0', paddingLeft: '20px' },
   callout: { background: '#fef3c7', border: '1px solid #f59e0b', color: '#78350f', borderRadius: '8px', padding: '10px 12px', fontSize: '0.95rem', fontWeight: 750, lineHeight: 1.45 },
+  linkButton: { display: 'inline-block', background: '#0369a1', color: '#ffffff', textDecoration: 'none', borderRadius: '6px', padding: '9px 12px', fontWeight: 900, fontSize: '0.95rem' },
 };
 
 export default function UserGuidePage() {
@@ -79,6 +80,14 @@ export default function UserGuidePage() {
           <li>Member visibility is based on real app activity and sailing context.</li>
           <li>Admins can access information needed to support the app and club workflow.</li>
         </ul>
+      </div>
+
+      <div style={styles.card}>
+        <h2 style={styles.sectionTitle}>Waiver & Disclaimer of Liability</h2>
+        <p style={styles.text}>
+          Every member must accept the current Waiver, Release & Disclaimer of Liability before using SailAway. You can review the version you accepted at any time.
+        </p>
+        <Link to="/waiver" style={styles.linkButton}>Review Waiver</Link>
       </div>
 
       <div style={styles.card}>

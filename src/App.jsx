@@ -21,9 +21,11 @@ import ResetPasswordPage from './pages/ResetPasswordPage';
 import AnnouncementsFeed from './pages/AnnouncementsFeed';
 import EmailConfirmedPage from './pages/EmailConfirmedPage';
 import UserGuidePage from './pages/UserGuidePage';
+import WaiverAcceptancePage from './pages/WaiverAcceptancePage';
 import SignupForm from './components/Auth/SignupForm';
 import LoginForm from './components/Auth/LoginForm';
 import SignupSuccessPage from './pages/SignupSuccessPage';
+import { hasAcceptedCurrentWaiver } from './utils/waiver';
 
 const Spinner = () => (
   <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '48px'}}>
@@ -37,7 +39,7 @@ const Spinner = () => (
 );
 
 function ProtectedRoute({ children }) {
-  const { user, loading } = useAuth();
+  const { user, profile, loading } = useAuth();
 
   if (loading) {
     return (
@@ -49,6 +51,10 @@ function ProtectedRoute({ children }) {
 
   if (!user) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (profile && !hasAcceptedCurrentWaiver(profile)) {
+    return <WaiverAcceptancePage />;
   }
 
   return <Layout>{children}</Layout>;
@@ -85,6 +91,10 @@ function AdminRoute({ children }) {
 
   if (!user || profile?.role !== 'admin') {
     return <Navigate to="/" replace />;
+  }
+
+  if (!hasAcceptedCurrentWaiver(profile)) {
+    return <WaiverAcceptancePage />;
   }
 
   return <Layout>{children}</Layout>;
@@ -136,6 +146,7 @@ function App() {
           <Route path="/feature-request/:id" element={<ProtectedRoute><FeatureRequestThreadPage /></ProtectedRoute>} />
           <Route path="/contact-admin" element={<ProtectedRoute><ContactAdminPage /></ProtectedRoute>} />
           <Route path="/guide" element={<ProtectedRoute><UserGuidePage /></ProtectedRoute>} />
+          <Route path="/waiver" element={<ProtectedRoute><WaiverAcceptancePage /></ProtectedRoute>} />
           <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
           <Route path="/admin/inbox" element={<AdminRoute><AdminInboxPage /></AdminRoute>} />
           <Route path="/announcements" element={<ProtectedRoute><AnnouncementsFeed /></ProtectedRoute>} />

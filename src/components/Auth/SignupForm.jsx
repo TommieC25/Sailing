@@ -4,6 +4,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../utils/supabaseClient';
 import { formatPhoneNumber, phoneDigits } from '../../utils/phoneFormat';
 import { friendlyPasswordError, generateStrongPassword, getPasswordValidationMessage, PASSWORD_MIN_LENGTH } from '../../utils/passwordRules';
+import { CURRENT_WAIVER_VERSION, WAIVER_TEXT } from '../../utils/waiver';
 
 const SIGNUP_SUCCESS_EMAIL_KEY = 'signupSuccessEmail';
 const SIGNUP_SUCCESS_AT_KEY = 'signupSuccessAt';
@@ -32,6 +33,9 @@ const styles = {
   passwordActions: { display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' },
   smallButton: { background: '#e0f2fe', color: '#0c2340', border: '2px solid #0369a1', borderRadius: '10px', padding: '10px 14px', fontSize: '1rem', fontWeight: 900, cursor: 'pointer' },
   generatedNotice: { background: '#fef3c7', border: '2px solid #f59e0b', color: '#78350f', borderRadius: '10px', padding: '0.75rem', fontSize: '0.95rem', fontWeight: 800, lineHeight: 1.35 },
+  waiverText: { maxHeight: '180px', overflowY: 'auto', background: '#f8fafc', border: '2px solid #94a3b8', borderRadius: '10px', padding: '12px', color: '#334155', fontSize: '0.95rem', lineHeight: 1.5 },
+  waiverAgreement: { display: 'flex', gap: '10px', alignItems: 'flex-start', background: '#fff7ed', border: '2px solid #f59e0b', borderRadius: '10px', padding: '12px', color: '#78350f', fontWeight: 800, lineHeight: 1.4 },
+  waiverCheckbox: { width: '24px', height: '24px', flex: '0 0 auto', marginTop: '1px' },
   bottomText: { color: '#ffffff', textAlign: 'center', fontSize: '1.125rem', fontWeight: 600, marginTop: '2rem', textShadow: '0 1px 3px rgba(0,0,0,0.4)' },
 };
 
@@ -55,6 +59,7 @@ export default function SignupForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [generatedPasswordNotice, setGeneratedPasswordNotice] = useState('');
   const [passwordCopyStatus, setPasswordCopyStatus] = useState('');
+  const [waiverAccepted, setWaiverAccepted] = useState(false);
   const [signupDebug, setSignupDebug] = useState(() => {
     try {
       return localStorage.getItem('signupDebug') || '';
@@ -106,13 +111,15 @@ export default function SignupForm() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const buildUserProfile = (photoUrl) => ({
+  const buildUserProfile = (photoUrl, waiverAcceptedAt) => ({
     full_name: formData.fullName,
     phone_number: phoneDigits(formData.phone),
     gender: formData.gender,
     user_type: formData.userType,
     sailing_experience: formData.sailingExperience,
     photo_url: photoUrl,
+    waiver_version: CURRENT_WAIVER_VERSION,
+    waiver_accepted_at: waiverAcceptedAt,
   });
 
   const uploadProfilePhoto = async () => {
@@ -238,6 +245,10 @@ export default function SignupForm() {
       fail('Please select your experience level');
       return;
     }
+    if (!waiverAccepted) {
+      fail('Please read and accept the Waiver, Release & Disclaimer of Liability');
+      return;
+    }
     const friendlyError = (err) => {
       const message = err?.message || '';
       if (message.toLowerCase().includes('email rate limit')) {
@@ -277,7 +288,8 @@ export default function SignupForm() {
       noteSignupStep('Calling Supabase signup');
       setStatusMessage('Creating account and sending confirmation email...');
 
-      await signUp(normalizedEmail, formData.password, buildUserProfile(photoUrl));
+      const waiverAcceptedAt = new Date().toISOString();
+      await signUp(normalizedEmail, formData.password, buildUserProfile(photoUrl, waiverAcceptedAt));
 
       // Ensure user is not auto-logged-in, so they MUST confirm email first.
       await supabase.auth.signOut().catch(() => undefined);
@@ -559,6 +571,20 @@ export default function SignupForm() {
                 <option value="intermediate">Intermediate</option>
                 <option value="advanced">Advanced</option>
               </select>
+            </div>
+
+            <div style={styles.fieldGroup}>
+              <label style={styles.label}>Waiver, Release & Disclaimer of Liability *</label>
+              <div style={styles.waiverText}>{WAIVER_TEXT}</div>
+              <label style={styles.waiverAgreement}>
+                <input
+                  type="checkbox"
+                  checked={waiverAccepted}
+                  onChange={(event) => setWaiverAccepted(event.target.checked)}
+                  style={styles.waiverCheckbox}
+                />
+                <span>I have read, understand, and agree to this Waiver, Release & Disclaimer of Liability.</span>
+              </label>
             </div>
 
             <button

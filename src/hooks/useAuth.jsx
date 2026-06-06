@@ -245,8 +245,26 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const acceptWaiver = async (waiverVersion) => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase.rpc('accept_current_waiver', {
+        p_waiver_version: waiverVersion,
+      });
+
+      if (error) throw error;
+      setProfile(data);
+      return data;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, profile, loading, error, signUp, signIn, signOut, updateProfile, resendConfirmation }}>
+    <AuthContext.Provider value={{ user, profile, loading, error, signUp, signIn, signOut, updateProfile, acceptWaiver, resendConfirmation }}>
       {children}
     </AuthContext.Provider>
   );

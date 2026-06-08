@@ -23,6 +23,7 @@ import EmailConfirmedPage from './pages/EmailConfirmedPage';
 import UserGuidePage from './pages/UserGuidePage';
 import WaiverAcceptancePage from './pages/WaiverAcceptancePage';
 import ClubEventChatPage from './pages/ClubEventChatPage';
+import WelcomePage, { WELCOME_SEEN_KEY } from './pages/WelcomePage';
 import SignupForm from './components/Auth/SignupForm';
 import LoginForm from './components/Auth/LoginForm';
 import SignupSuccessPage from './pages/SignupSuccessPage';
@@ -108,16 +109,34 @@ const isSignupConfirmationUrl = () => {
   return hashParams.get('type') === 'signup';
 };
 
+const hasSeenWelcomePage = () => {
+  try {
+    return localStorage.getItem(WELCOME_SEEN_KEY) === '1';
+  } catch {
+    return false;
+  }
+};
+
 function HomeRoute() {
+  const { user, profile, loading } = useAuth();
+
   if (isSignupConfirmationUrl()) {
     return <EmailConfirmedPage />;
   }
 
-  return (
-    <ProtectedRoute>
-      <HomePage />
-    </ProtectedRoute>
-  );
+  if (loading) return <Spinner />;
+
+  if (!user) {
+    return hasSeenWelcomePage()
+      ? <Navigate to="/login" replace />
+      : <WelcomePage />;
+  }
+
+  if (profile && !hasAcceptedCurrentWaiver(profile)) {
+    return <WaiverAcceptancePage />;
+  }
+
+  return <Layout><HomePage /></Layout>;
 }
 
 function App() {
@@ -129,6 +148,7 @@ function App() {
           <Route path="/signup-success" element={<SignupSuccessPage />} />
           <Route path="/email-confirmed" element={<EmailConfirmedPage />} />
           <Route path="/login" element={<AuthRoute redirectAuthenticated={false}><LoginForm /></AuthRoute>} />
+          <Route path="/welcome" element={<AuthRoute><WelcomePage /></AuthRoute>} />
           <Route path="/forgot-password" element={<AuthRoute><ForgotPasswordPage /></AuthRoute>} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/" element={<HomeRoute />} />

@@ -3,8 +3,6 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../utils/supabaseClient';
 
-const SETUP_REMINDER_KEY = 'sailawaySetupReminderDismissed';
-
 const styles = {
   container: { minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(to bottom right, #0c3880, #0369a1, #06b6d4)', padding: '1.25rem' },
   content: { maxWidth: '480px', margin: '0 auto', width: '100%', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' },
@@ -24,13 +22,9 @@ const styles = {
   loginErrorLink: { color: '#991b1b', fontWeight: 900, textDecoration: 'underline' },
   success: { background: 'rgba(22, 163, 74, 0.95)', color: '#ffffff', fontSize: '1rem', padding: '0.9rem', borderRadius: '10px', marginBottom: '1rem', fontWeight: 800 },
   warning: { background: '#fef3c7', color: '#1f2937', padding: '1rem', borderRadius: '10px', marginBottom: '1rem', fontWeight: 750, fontSize: '0.98rem', lineHeight: 1.45, border: '2px solid #f59e0b' },
-  reminder: { background: '#e0f2fe', border: '2px solid #38bdf8', color: '#0c2340', borderRadius: '12px', padding: '1rem', marginBottom: '1rem', fontSize: '0.98rem', fontWeight: 750, lineHeight: 1.45 },
-  reminderTitle: { margin: '0 0 0.45rem', fontSize: '1.05rem', fontWeight: 900 },
-  reminderList: { margin: '0.35rem 0 0.75rem', paddingLeft: '1.15rem' },
   smallButton: { background: '#ffffff', color: '#0369a1', border: '2px solid #0369a1', borderRadius: '9px', padding: '0.55rem 0.75rem', fontSize: '0.9rem', fontWeight: 900, cursor: 'pointer' },
   footer: { display: 'grid', gap: '0.9rem', marginTop: '1rem', textAlign: 'center' },
   link: { color: '#e0f2fe', fontSize: '1rem', fontWeight: 850, textDecoration: 'none' },
-  signUpLink: { display: 'block', width: '100%', padding: '0.95rem', borderRadius: '10px', fontWeight: 900, fontSize: '1.08rem', background: '#ffffff', color: '#111827', textDecoration: 'none', textAlign: 'center', boxShadow: '0 8px 14px rgba(0,0,0,0.18)' },
   debug: { background: 'rgba(255,255,255,0.92)', color: '#1f2937', padding: '0.85rem', borderRadius: '0.75rem', marginBottom: '1rem', fontWeight: 700, fontSize: '0.95rem' },
 };
 
@@ -42,13 +36,6 @@ export default function LoginForm() {
   const [needsConfirmation, setNeedsConfirmation] = useState(false);
   const [resendStatus, setResendStatus] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showReminder, setShowReminder] = useState(() => {
-    try {
-      return localStorage.getItem(SETUP_REMINDER_KEY) !== '1';
-    } catch {
-      return true;
-    }
-  });
   const readAuthDebug = () => {
     try {
       return window.sessionStorage.getItem('sailingAuthDebug') || '';
@@ -58,15 +45,6 @@ export default function LoginForm() {
   };
   const [authDebug, setAuthDebug] = useState(readAuthDebug);
   const showAuthDebug = searchParams.get('authDebug') === '1';
-
-  const dismissReminder = () => {
-    setShowReminder(false);
-    try {
-      localStorage.setItem(SETUP_REMINDER_KEY, '1');
-    } catch {
-      // Some private browsing modes block localStorage.
-    }
-  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -138,20 +116,6 @@ export default function LoginForm() {
           <h1 style={styles.title}>SailAway</h1>
           <p style={styles.subtitle}>Sign in to find outings, crew, and updates.</p>
         </div>
-
-        {showReminder && (
-          <div style={styles.reminder}>
-            <p style={styles.reminderTitle}>First time using SailAway?</p>
-            <ul style={styles.reminderList}>
-              <li>This is a web-based app, so you need an internet connection.</li>
-              <li>Save your password when your phone or browser offers.</li>
-              <li>For quickest access, add SailAway to your Home Screen or bookmarks.</li>
-            </ul>
-            <button type="button" onClick={dismissReminder} style={styles.smallButton}>
-              Don't show this again
-            </button>
-          </div>
-        )}
 
         <div style={styles.card}>
           <h2 style={styles.cardTitle}>Sign In</h2>
@@ -230,7 +194,6 @@ export default function LoginForm() {
 
         <div style={styles.footer}>
           <Link to="/forgot-password" style={styles.link}>Forgot Password?</Link>
-          <Link to="/signup" style={styles.signUpLink}>Create Account</Link>
         </div>
       </div>
     </div>

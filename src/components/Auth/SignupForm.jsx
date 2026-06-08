@@ -178,7 +178,7 @@ export default function SignupForm() {
       confirmPassword: password,
     }));
     setShowPassword(true);
-    setGeneratedPasswordNotice('Generated password filled in below. Save it before creating your account. Use Copy Password or your device password manager.');
+    setGeneratedPasswordNotice('Generated password filled in below. Tap Copy Password before creating your account. Your iPhone may offer to save or update it after your first sign-in.');
     setPasswordCopyStatus('');
   };
 
@@ -393,7 +393,7 @@ export default function SignupForm() {
               If your phone or browser offers a strong password, use that first so it can save the password for you. If you create your own, it must be at least {PASSWORD_MIN_LENGTH} characters and include uppercase, lowercase, a number, and a symbol.
             </p>
             <div style={styles.orientationNote}>
-              SailAway can also generate a strong password below. Make sure it is saved before creating your account.
+              If you use SailAway's password generator, copy the password before creating your account. Your device may offer to save it after your first sign-in.
             </div>
           </section>
 
@@ -518,7 +518,7 @@ export default function SignupForm() {
                   onClick={copyPassword}
                   style={{...styles.smallButton, background: '#ffffff'}}
                 >
-                  Copy Password
+                  Copy Generated Password
                 </button>
               </div>
               <p style={styles.passwordHint}>

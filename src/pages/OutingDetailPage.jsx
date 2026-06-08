@@ -3,6 +3,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
 import { formatLocalDate, isPastLocalDate } from '../utils/dateUtils';
+import { formatPhoneNumber, phoneDigits } from '../utils/phoneFormat';
 
 const styles = {
   container: { display: 'grid', gap: '12px' },
@@ -149,9 +150,19 @@ export default function OutingDetailPage() {
           .maybeSingle();
 
         if (skipperError) throw skipperError;
-        setSkipper(skipperData || {
+        const { data: skipperContacts, error: skipperContactsError } = await supabase
+          .rpc('outing_skipper_contacts', { p_outing_ids: [outingData.id] });
+
+        if (skipperContactsError) {
+          console.warn('Could not load skipper contact number:', skipperContactsError.message);
+        }
+
+        setSkipper({
+          ...(skipperData || {
           id: outingData.skipper_id,
           full_name: 'Skipper profile unavailable',
+          }),
+          phone_number: skipperContacts?.[0]?.phone_number || '',
         });
 
         const { data: boatData, error: boatError } = await supabase
@@ -631,25 +642,35 @@ export default function OutingDetailPage() {
         </div>
 
         {/* Skipper */}
-        <button
-          type="button"
-          onClick={() => navigate(`/profile/${outing.skipper_id}?returnTo=${encodeURIComponent(currentOutingPath)}`)}
-          style={{background: '#ffffff', border: '2px solid #e5e7eb', borderRadius: '8px', padding: '12px 14px', marginBottom: '12px', display: 'flex', gap: '12px', alignItems: 'center', width: '100%', textAlign: 'left', cursor: 'pointer'}}
-        >
-          {skipper?.photo_url ? (
-            <img src={skipper.photo_url} alt={skipper.full_name} style={{width: '52px', height: '52px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0}} />
-          ) : (
-            <div style={{width: '52px', height: '52px', borderRadius: '50%', background: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', flexShrink: 0}}>👤</div>
-          )}
-          <div>
-            <p style={{fontSize: '1rem', fontWeight: 900, color: '#1e293b', margin: '0 0 2px 0'}}>⛵ Skipper</p>
-            <p style={{fontSize: '1rem', color: '#1e293b', fontWeight: 600, margin: '0 0 2px 0'}}>{skipper?.full_name}</p>
-            {skipper?.sailing_experience && (
-              <p style={{fontSize: '0.875rem', color: '#64748b', margin: 0, textTransform: 'capitalize'}}>{skipper.sailing_experience} sailor</p>
+        <div style={{background: '#ffffff', border: '2px solid #e5e7eb', borderRadius: '8px', padding: '12px 14px', marginBottom: '12px', display: 'flex', gap: '12px', alignItems: 'center', width: '100%', flexWrap: 'wrap'}}>
+          <button
+            type="button"
+            onClick={() => navigate(`/profile/${outing.skipper_id}?returnTo=${encodeURIComponent(currentOutingPath)}`)}
+            style={{background: 'none', border: 0, padding: 0, display: 'flex', gap: '12px', alignItems: 'center', flex: 1, minWidth: '220px', textAlign: 'left', cursor: 'pointer'}}
+          >
+            {skipper?.photo_url ? (
+              <img src={skipper.photo_url} alt={skipper.full_name} style={{width: '52px', height: '52px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0}} />
+            ) : (
+              <div style={{width: '52px', height: '52px', borderRadius: '50%', background: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', flexShrink: 0}}>👤</div>
             )}
-            {skipper?.bio && <p style={{fontSize: '0.875rem', color: '#475569', margin: '6px 0 0 0'}}>{skipper.bio}</p>}
-          </div>
-        </button>
+            <div>
+              <p style={{fontSize: '1rem', fontWeight: 900, color: '#1e293b', margin: '0 0 2px 0'}}>⛵ Skipper</p>
+              <p style={{fontSize: '1rem', color: '#1e293b', fontWeight: 600, margin: '0 0 2px 0'}}>{skipper?.full_name}</p>
+              {skipper?.sailing_experience && (
+                <p style={{fontSize: '0.875rem', color: '#64748b', margin: 0, textTransform: 'capitalize'}}>{skipper.sailing_experience} sailor</p>
+              )}
+              {skipper?.bio && <p style={{fontSize: '0.875rem', color: '#475569', margin: '6px 0 0 0'}}>{skipper.bio}</p>}
+            </div>
+          </button>
+          {skipper?.phone_number && (
+            <a
+              href={`tel:${phoneDigits(skipper.phone_number)}`}
+              style={{background: '#dcfce7', border: '2px solid #16a34a', color: '#166534', padding: '9px 12px', borderRadius: '7px', fontWeight: 900, textDecoration: 'none', whiteSpace: 'nowrap'}}
+            >
+              📞 {formatPhoneNumber(skipper.phone_number)}
+            </a>
+          )}
+        </div>
 
         {/* Description */}
         {outing.description && (

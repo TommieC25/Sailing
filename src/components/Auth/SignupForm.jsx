@@ -393,7 +393,7 @@ export default function SignupForm() {
               If your phone or browser offers a strong password, use that first so it can save the password for you. If you create your own, it must be at least {PASSWORD_MIN_LENGTH} characters and include uppercase, lowercase, a number, and a symbol.
             </p>
             <div style={styles.orientationNote}>
-              SailAway has a backup password generator below, but your device password manager is usually the smoother option.
+              SailAway can also generate a strong password below. Make sure it is saved before creating your account.
             </div>
           </section>
 
@@ -504,7 +504,7 @@ export default function SignupForm() {
                   onClick={generatePassword}
                   style={styles.smallButton}
                 >
-                  Generate Backup Password
+                  Generate Strong Password
                 </button>
                 <button
                   type="button"

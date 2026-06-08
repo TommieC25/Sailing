@@ -390,10 +390,10 @@ export default function SignupForm() {
               <li>You will need a profile photo so other sailors can recognize you at the dock. A quick selfie is fine.</li>
             </ul>
             <p style={styles.orientationText}>
-              SailAway can generate a strong password for you. If you create your own, it must be at least {PASSWORD_MIN_LENGTH} characters and include uppercase, lowercase, a number, and one of these symbols: ! @ # $ % & * ?
+              If your phone or browser offers a strong password, use that first so it can save the password for you. If you create your own, it must be at least {PASSWORD_MIN_LENGTH} characters and include uppercase, lowercase, a number, and a symbol.
             </p>
             <div style={styles.orientationNote}>
-              Make sure to save your password. Most phones and browsers offer to save it for you; please use one of those methods so signing in later is smooth.
+              SailAway has a backup password generator below, but your device password manager is usually the smoother option.
             </div>
           </section>
 
@@ -504,7 +504,7 @@ export default function SignupForm() {
                   onClick={generatePassword}
                   style={styles.smallButton}
                 >
-                  Generate Strong Password
+                  Generate Backup Password
                 </button>
                 <button
                   type="button"
@@ -522,7 +522,7 @@ export default function SignupForm() {
                 </button>
               </div>
               <p style={styles.passwordHint}>
-                At least {PASSWORD_MIN_LENGTH} characters with uppercase, lowercase, a number, and a symbol.
+                At least {PASSWORD_MIN_LENGTH} characters with uppercase, lowercase, a number, and a symbol. iPhone/iPad suggested passwords are accepted.
               </p>
               {generatedPasswordNotice && (
                 <div style={styles.generatedNotice}>
@@ -541,6 +541,8 @@ export default function SignupForm() {
                 value={formData.password}
                 onChange={handleChange}
                 autoComplete="new-password"
+                minLength={PASSWORD_MIN_LENGTH}
+                passwordrules={`minlength: ${PASSWORD_MIN_LENGTH}; required: upper; required: lower; required: digit; required: special;`}
                 required
                 placeholder={`Min ${PASSWORD_MIN_LENGTH} characters`}
                 style={styles.input}

@@ -3,7 +3,7 @@ export const PASSWORD_MIN_LENGTH = 12;
 const UPPERCASE = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
 const LOWERCASE = 'abcdefghijkmnopqrstuvwxyz';
 const DIGITS = '23456789';
-const SYMBOLS = '!@#$%&*?';
+const SYMBOLS = '!@#$%&*?-';
 const ALL_PASSWORD_CHARS = `${UPPERCASE}${LOWERCASE}${DIGITS}${SYMBOLS}`;
 
 const randomChar = (chars) => {
@@ -48,7 +48,7 @@ export const getPasswordValidationMessage = (password) => {
   if (!/[0-9]/.test(password)) {
     return 'Password must include at least one number';
   }
-  if (!/[!@#$%&*?]/.test(password)) {
+  if (!/[^A-Za-z0-9]/.test(password)) {
     return 'Password must include at least one symbol';
   }
   return '';

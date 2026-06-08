@@ -387,6 +387,7 @@ export default function SignupForm() {
               <li>You need an internet connection.</li>
               <li>It opens in a browser window or saved Home Screen web app.</li>
               <li>For easy return access, add it to bookmarks or save it to your Home Screen.</li>
+              <li>You will need a profile photo so other sailors can recognize you at the dock. A quick selfie is fine.</li>
             </ul>
             <p style={styles.orientationText}>
               SailAway can generate a strong password for you. If you create your own, it must be at least {PASSWORD_MIN_LENGTH} characters and include uppercase, lowercase, a number, and one of these symbols: ! @ # $ % & * ?

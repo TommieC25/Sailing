@@ -15,6 +15,13 @@
     <meta name="apple-mobile-web-app-title" content="SailAway" />
     <title>SailAway with CGSC</title>
     <script>
+      try {
+        localStorage.removeItem('sailawayWelcomeSeen');
+      } catch {
+        // Some private browsing modes block localStorage.
+      }
+    </script>
+    <script>
       (function(l) {
         if (l.search[1] === '/') {
           var decoded = l.search.slice(1).split('&').map(function(s) {

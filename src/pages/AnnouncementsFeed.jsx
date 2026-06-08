@@ -62,13 +62,15 @@ export default function AnnouncementsFeed() {
             .map((a) => a.id);
 
           if (unviewedIds.length > 0) {
-            await supabase.from('announcement_views').insert(
+            const { error: markViewedError } = await supabase.from('announcement_views').insert(
               unviewedIds.map((id) => ({
                 announcement_id: id,
                 user_id: user.id,
               }))
             );
+            if (markViewedError) throw markViewedError;
             setViewedAnnouncements(new Set([...viewedIds, ...unviewedIds]));
+            window.dispatchEvent(new Event('sailing:announcements-updated'));
           }
         }
       } catch (err) {

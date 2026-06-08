@@ -12,20 +12,32 @@ Deleting only the row in `public.users` does not delete the login account. The e
 
 ## Fully Remove A Test User
 
-Use this order:
+For repeatable local administration, create the git-ignored `.env.admin.local`
+from `.env.admin.example` and add the direct Supabase Postgres connection URL.
+
+Inspect an exact email without changing anything:
+
+```sh
+npm run admin:user-status -- user@example.com
+```
+
+Delete an exact test account only after reviewing the status output:
+
+```sh
+npm run admin:user-delete -- user@example.com --confirm user@example.com
+```
+
+The matching confirmation is required to reduce accidental deletion risk. The
+helper deletes the matching Auth identity and Auth user in one transaction,
+then verifies Auth, identity, and profile state. If related data prevents
+deletion, the transaction rolls back without partially deleting the account.
+
+The fallback manual method remains:
 
 1. In Supabase, go to Authentication > Users.
 2. Find the person by email.
 3. Delete the Auth user there.
-4. Then remove related rows in app tables if needed, such as:
-   - `public.users`
-   - `public.boats`
-   - `public.outings`
-   - `public.crew_requests`
-   - `public.bug_reports`
-   - `public.feature_requests`
-   - `public.contact_messages`
-   - `public.announcement_views`
+4. Verify both `auth.users` and `auth.identities` no longer contain the email.
 
 ## Admin Model
 

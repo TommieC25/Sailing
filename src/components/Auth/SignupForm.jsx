@@ -19,6 +19,11 @@ const styles = {
   subtitle: { fontSize: '1.5rem', fontWeight: 600, color: '#e0f2fe', margin: 0 },
   card: { background: '#ffffff', borderRadius: '24px', boxShadow: '0 20px 25px rgba(0,0,0,0.2)', padding: '32px' },
   cardTitle: { fontSize: '2.25rem', fontWeight: 900, textAlign: 'center', marginBottom: '32px', color: '#1e3a8a', margin: '0 0 32px 0' },
+  orientationCard: { background: '#e0f2fe', border: '3px solid #0369a1', borderRadius: '16px', padding: '18px', marginBottom: '18px', color: '#0c2340', boxShadow: '0 12px 18px rgba(0,0,0,0.12)' },
+  orientationTitle: { margin: '0 0 10px', fontSize: '1.45rem', fontWeight: 900, color: '#0c2340' },
+  orientationText: { margin: '0 0 10px', fontSize: '1rem', fontWeight: 750, lineHeight: 1.45 },
+  orientationList: { margin: '0 0 12px', paddingLeft: '1.2rem', fontSize: '0.98rem', fontWeight: 750, lineHeight: 1.45 },
+  orientationNote: { background: '#fef3c7', border: '2px solid #f59e0b', color: '#78350f', borderRadius: '10px', padding: '10px', fontSize: '0.95rem', fontWeight: 850, lineHeight: 1.4 },
   errorBox: { background: '#fee2e2', border: '2px solid #dc2626', color: '#991b1b', fontSize: '1.125rem', paddingX: '1.25rem', paddingY: '1rem', borderRadius: '12px', marginBottom: '1.5rem', fontWeight: 600, padding: '1rem 1.25rem' },
   form: { display: 'grid', gap: '1.5rem' },
   fieldGroup: { display: 'grid', gap: '12px' },
@@ -173,7 +178,7 @@ export default function SignupForm() {
       confirmPassword: password,
     }));
     setShowPassword(true);
-    setGeneratedPasswordNotice('Generated password filled in below. Save it before creating your account.');
+    setGeneratedPasswordNotice('Generated password filled in below. Save it before creating your account. Use Copy Password or your device password manager.');
     setPasswordCopyStatus('');
   };
 
@@ -374,6 +379,22 @@ export default function SignupForm() {
         {/* Form Card */}
         <div style={styles.card}>
           <h2 style={styles.cardTitle}>Create Account</h2>
+
+          <section style={styles.orientationCard}>
+            <h3 style={styles.orientationTitle}>Please read before creating your account</h3>
+            <p style={styles.orientationText}>SailAway is a web-based app. That means:</p>
+            <ul style={styles.orientationList}>
+              <li>You need an internet connection.</li>
+              <li>It opens in a browser window or saved Home Screen web app.</li>
+              <li>For easy return access, add it to bookmarks or save it to your Home Screen.</li>
+            </ul>
+            <p style={styles.orientationText}>
+              SailAway can generate a strong password for you. If you create your own, it must be at least {PASSWORD_MIN_LENGTH} characters and include uppercase, lowercase, a number, and one of these symbols: ! @ # $ % & * ?
+            </p>
+            <div style={styles.orientationNote}>
+              Make sure to save your password. Most phones and browsers offer to save it for you; please use one of those methods so signing in later is smooth.
+            </div>
+          </section>
 
           {error && <div style={styles.errorBox}>{error}</div>}
 

@@ -3,31 +3,35 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../utils/supabaseClient';
 
+const SETUP_REMINDER_KEY = 'sailawaySetupReminderDismissed';
+
 const styles = {
-  container: { minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(to bottom right, #0c3880, #0369a1, #06b6d4)', paddingLeft: '1.25rem', paddingRight: '1.25rem', paddingTop: '2rem', paddingBottom: '2rem' },
-  content: { maxWidth: '800px', margin: '0 auto', width: '100%' },
-  header: { textAlign: 'center', marginBottom: '2.5rem' },
-  logo: { height: '112px', width: 'auto', margin: '0 auto 1.25rem', filter: 'drop-shadow(0 25px 50px rgba(0, 0, 0, 0.3))' },
-  title: { fontSize: '3rem', fontWeight: 900, color: '#ffffff', marginBottom: '0.5rem', textShadow: '0 4px 12px rgba(0,0,0,0.3)' },
-  subtitle: { fontSize: '1.875rem', fontWeight: 900, color: '#a5f3fc', textShadow: '0 4px 12px rgba(0,0,0,0.3)' },
-  sectionTitle: { fontSize: '1.875rem', fontWeight: 900, color: '#ffffff', marginBottom: '1.25rem' },
-  sectionBox: { background: 'rgba(255,255,255,0.1)', borderRadius: '1rem', padding: '0.75rem 1.5rem', marginBottom: '1rem', border: '1px solid rgba(255,255,255,0.2)' },
-  label: { fontSize: '1.5rem', fontWeight: 900, color: '#ffffff', marginBottom: '0.75rem', display: 'block' },
-  input: { width: '100%', padding: '1rem', borderRadius: '0.75rem', fontSize: '1.25rem', fontWeight: 600, color: '#ffffff', placeholder: '#e0f2fe', border: '2px solid #93c5fd', background: 'rgba(255,255,255,0.15)', outline: 'none', marginBottom: '1.5rem', fontFamily: 'inherit' },
-  button: { width: '100%', padding: '1.25rem', borderRadius: '0.75rem', fontWeight: 900, fontSize: '1.5rem', background: '#06b6d4', color: '#111827', border: 'none', cursor: 'pointer', boxShadow: '0 10px 15px rgba(0,0,0,0.2)', transition: 'all 0.2s' },
-  buttonDisabled: { opacity: 0.5, cursor: 'not-allowed' },
-  error: { background: 'rgba(239, 68, 68, 0.8)', color: '#ffffff', fontSize: '1.1rem', padding: '1rem', borderRadius: '0.75rem', marginBottom: '1.5rem', fontWeight: 700 },
-  loginError: { background: '#fee2e2', color: '#7f1d1d', fontSize: '1.05rem', padding: '1rem', borderRadius: '0.75rem', marginBottom: '1rem', fontWeight: 800, border: '2px solid #ef4444', lineHeight: 1.45 },
-  loginErrorActions: { display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginTop: '0.75rem' },
+  container: { minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(to bottom right, #0c3880, #0369a1, #06b6d4)', padding: '1.25rem' },
+  content: { maxWidth: '480px', margin: '0 auto', width: '100%', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' },
+  header: { textAlign: 'center', marginBottom: '1.25rem' },
+  logo: { height: '86px', width: 'auto', margin: '0 auto 0.75rem', filter: 'drop-shadow(0 18px 35px rgba(0, 0, 0, 0.28))' },
+  title: { fontSize: '2.2rem', fontWeight: 900, color: '#ffffff', margin: 0, textShadow: '0 4px 12px rgba(0,0,0,0.3)' },
+  subtitle: { fontSize: '1rem', fontWeight: 750, color: '#e0f2fe', margin: '0.35rem 0 0' },
+  card: { background: '#ffffff', borderRadius: '18px', boxShadow: '0 18px 25px rgba(0,0,0,0.22)', padding: '22px' },
+  cardTitle: { fontSize: '1.7rem', fontWeight: 900, color: '#1e3a8a', textAlign: 'center', margin: '0 0 16px' },
+  form: { display: 'grid', gap: '1rem' },
+  label: { fontSize: '1.05rem', fontWeight: 900, color: '#1e3a8a', display: 'block', marginBottom: '0.4rem' },
+  input: { width: '100%', padding: '0.9rem 1rem', borderRadius: '10px', fontSize: '1.05rem', fontWeight: 650, color: '#1e3a8a', border: '3px solid #93c5fd', background: '#ffffff', outline: 'none', fontFamily: 'inherit' },
+  button: { width: '100%', padding: '1rem', borderRadius: '10px', fontWeight: 900, fontSize: '1.15rem', background: '#06b6d4', color: '#111827', border: 'none', cursor: 'pointer', boxShadow: '0 8px 14px rgba(0,0,0,0.18)' },
+  buttonDisabled: { opacity: 0.55, cursor: 'not-allowed' },
+  loginError: { background: '#fee2e2', color: '#7f1d1d', fontSize: '1rem', padding: '0.9rem', borderRadius: '10px', marginBottom: '1rem', fontWeight: 800, border: '2px solid #ef4444', lineHeight: 1.45 },
+  loginErrorActions: { display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginTop: '0.7rem' },
   loginErrorLink: { color: '#991b1b', fontWeight: 900, textDecoration: 'underline' },
-  section: { marginBottom: '2rem' },
-  description: { color: '#e0f2fe', fontSize: '1.125rem', fontWeight: 600, lineHeight: '1.6' },
-  card: { display: 'flex', alignItems: 'flex-start', gap: '1rem', background: 'rgba(255,255,255,0.1)', borderRadius: '0.75rem', padding: '1rem', border: '1px solid rgba(255,255,255,0.2)', marginBottom: '0.75rem' },
-  emoji: { fontSize: '1.875rem', flexShrink: 0 },
-  cardTitle: { color: '#ffffff', fontSize: '1.375rem', fontWeight: 900, marginBottom: '0.25rem' },
-  cardDesc: { color: '#e0f2fe', fontSize: '1rem', fontWeight: 600 },
-  signUpLink: { display: 'block', width: '100%', padding: '1.25rem', borderRadius: '0.75rem', fontWeight: 900, fontSize: '1.5rem', background: '#ffffff', color: '#111827', textDecoration: 'none', textAlign: 'center', boxShadow: '0 10px 15px rgba(0,0,0,0.2)', transition: 'all 0.2s', marginBottom: '2.5rem' },
-  signUpText: { color: '#e0f2fe', fontSize: '1.125rem', fontWeight: 700, marginBottom: '1rem' },
+  success: { background: 'rgba(22, 163, 74, 0.95)', color: '#ffffff', fontSize: '1rem', padding: '0.9rem', borderRadius: '10px', marginBottom: '1rem', fontWeight: 800 },
+  warning: { background: '#fef3c7', color: '#1f2937', padding: '1rem', borderRadius: '10px', marginBottom: '1rem', fontWeight: 750, fontSize: '0.98rem', lineHeight: 1.45, border: '2px solid #f59e0b' },
+  reminder: { background: '#e0f2fe', border: '2px solid #38bdf8', color: '#0c2340', borderRadius: '12px', padding: '1rem', marginBottom: '1rem', fontSize: '0.98rem', fontWeight: 750, lineHeight: 1.45 },
+  reminderTitle: { margin: '0 0 0.45rem', fontSize: '1.05rem', fontWeight: 900 },
+  reminderList: { margin: '0.35rem 0 0.75rem', paddingLeft: '1.15rem' },
+  smallButton: { background: '#ffffff', color: '#0369a1', border: '2px solid #0369a1', borderRadius: '9px', padding: '0.55rem 0.75rem', fontSize: '0.9rem', fontWeight: 900, cursor: 'pointer' },
+  footer: { display: 'grid', gap: '0.9rem', marginTop: '1rem', textAlign: 'center' },
+  link: { color: '#e0f2fe', fontSize: '1rem', fontWeight: 850, textDecoration: 'none' },
+  signUpLink: { display: 'block', width: '100%', padding: '0.95rem', borderRadius: '10px', fontWeight: 900, fontSize: '1.08rem', background: '#ffffff', color: '#111827', textDecoration: 'none', textAlign: 'center', boxShadow: '0 8px 14px rgba(0,0,0,0.18)' },
+  debug: { background: 'rgba(255,255,255,0.92)', color: '#1f2937', padding: '0.85rem', borderRadius: '0.75rem', marginBottom: '1rem', fontWeight: 700, fontSize: '0.95rem' },
 };
 
 export default function LoginForm() {
@@ -38,6 +42,13 @@ export default function LoginForm() {
   const [needsConfirmation, setNeedsConfirmation] = useState(false);
   const [resendStatus, setResendStatus] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showReminder, setShowReminder] = useState(() => {
+    try {
+      return localStorage.getItem(SETUP_REMINDER_KEY) !== '1';
+    } catch {
+      return true;
+    }
+  });
   const readAuthDebug = () => {
     try {
       return window.sessionStorage.getItem('sailingAuthDebug') || '';
@@ -47,6 +58,15 @@ export default function LoginForm() {
   };
   const [authDebug, setAuthDebug] = useState(readAuthDebug);
   const showAuthDebug = searchParams.get('authDebug') === '1';
+
+  const dismissReminder = () => {
+    setShowReminder(false);
+    try {
+      localStorage.setItem(SETUP_REMINDER_KEY, '1');
+    } catch {
+      // Some private browsing modes block localStorage.
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -71,7 +91,7 @@ export default function LoginForm() {
       } else {
         accountExists = Boolean(emailExists);
         if (!accountExists) {
-          setError('No such user account exists. Please sign up.');
+          setError('No such user account exists. Please create an account first.');
           return;
         }
       }
@@ -104,7 +124,7 @@ export default function LoginForm() {
     setResendStatus('');
     try {
       await resendConfirmation(formData.email);
-      setResendStatus('Confirmation email re-sent. Check your inbox (and spam folder).');
+      setResendStatus('Confirmation email re-sent. Check your inbox and spam folder.');
     } catch (err) {
       setResendStatus(err.message || 'Could not resend confirmation email.');
     }
@@ -113,78 +133,36 @@ export default function LoginForm() {
   return (
     <div style={styles.container}>
       <div style={styles.content}>
-
-        {/* Logo + Title */}
         <div style={styles.header}>
           <img src="/Sailing/Club Logo.jpg" alt="CGSC Logo" style={styles.logo} />
-          <h1 style={styles.title}>Sail Away<br />With CGSC!</h1>
+          <h1 style={styles.title}>SailAway</h1>
+          <p style={styles.subtitle}>Sign in to find outings, crew, and updates.</p>
         </div>
 
-        {/* Welcome to community */}
-        <div style={styles.section}>
-          <p style={styles.description}>
-            Welcome to the community of sailors at Coconut Grove Sailing Club. Whether you own a boat or love crewing, this app connects you with people and outings.
-          </p>
-        </div>
-
-        {/* How It Works */}
-        <div style={styles.section}>
-          <h2 style={styles.sectionTitle}>Here's How It Works</h2>
-
-          <div style={styles.sectionBox}>
-            <p style={{...styles.cardTitle, marginBottom: '0.75rem'}}>🚢 Skippers</p>
-            <p style={styles.description}>
-              Manage your outings and invite crew. Post your upcoming sail, review crew requests, approve who joins, and chat with your crew.
-            </p>
+        {showReminder && (
+          <div style={styles.reminder}>
+            <p style={styles.reminderTitle}>First time using SailAway?</p>
+            <ul style={styles.reminderList}>
+              <li>This is a web-based app, so you need an internet connection.</li>
+              <li>Save your password when your phone or browser offers.</li>
+              <li>For quickest access, add SailAway to your Home Screen or bookmarks.</li>
+            </ul>
+            <button type="button" onClick={dismissReminder} style={styles.smallButton}>
+              Don't show this again
+            </button>
           </div>
+        )}
 
-          <div style={styles.sectionBox}>
-            <p style={{...styles.cardTitle, marginBottom: '0.75rem'}}>⛵ Crew</p>
-            <p style={styles.description}>
-              Browse upcoming outings and request to join. Find a sail you like, ask the skipper if you can crew, and connect with your team.
-            </p>
-          </div>
-
-          <div style={styles.sectionBox}>
-            <p style={{...styles.cardTitle, marginBottom: '0.75rem'}}>💬 Group Chat</p>
-            <p style={styles.description}>
-              Stay connected before, during, and after each outing. Share updates, photos, and stay in touch with your sailing community.
-            </p>
-          </div>
-        </div>
-
-        {/* Getting Started */}
-        <div style={styles.section}>
-          <h2 style={styles.sectionTitle}>Getting Started</h2>
-          {[
-            { n: '1️⃣', text: 'Create Your Account — Sign up with your email and password.' },
-            { n: '2️⃣', text: 'Complete Your Profile — Add a photo and tell us about your sailing experience.' },
-            { n: '3️⃣', text: 'Create or Browse Outings — Skippers post, crew explore what\'s available.' },
-            { n: '4️⃣', text: 'Plan Your Cruise — Connect with your team, confirm details, get ready.' },
-            { n: '5️⃣', text: 'Show Up and Shove Off! — Hit the water and make memories.' },
-          ].map(({ n, text }) => (
-            <div key={n} style={{display: 'flex', alignItems: 'flex-start', gap: '1rem', background: 'rgba(255,255,255,0.1)', borderRadius: '0.75rem', padding: '1rem', border: '1px solid rgba(255,255,255,0.2)', marginBottom: '0.75rem'}}>
-              <span style={{fontSize: '1.375rem', flexShrink: 0}}>{n}</span>
-              <p style={{color: '#ffffff', fontSize: '1.125rem', fontWeight: 600, lineHeight: '1.5', margin: 0}}>{text}</p>
-            </div>
-          ))}
-        </div>
-
-        <div style={{...styles.section, textAlign: 'center', padding: '1.5rem', background: 'rgba(255,255,255,0.1)', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.2)'}}>
-          <p style={{...styles.description, margin: 0, fontSize: '1.25rem'}}>⛵ Ready to set sail?</p>
-          <p style={{...styles.sectionTitle, marginTop: '0.5rem', color: '#a5f3fc'}}>Permission Granted to Come Aboard!</p>
-        </div>
-
-        {/* Sign In Form */}
-        <div style={{marginBottom: '1.5rem'}}>
+        <div style={styles.card}>
+          <h2 style={styles.cardTitle}>Sign In</h2>
 
           {searchParams.get('reset') === 'success' && (
-            <div style={{background: 'rgba(22, 163, 74, 0.95)', color: '#ffffff', fontSize: '1.1rem', padding: '1rem', borderRadius: '0.75rem', marginBottom: '1.5rem', fontWeight: 800}}>
+            <div style={styles.success}>
               Password reset successfully. Sign in with your new password.
             </div>
           )}
           {showAuthDebug && authDebug && (
-            <div style={{background: 'rgba(255,255,255,0.92)', color: '#1f2937', padding: '0.85rem', borderRadius: '0.75rem', marginBottom: '1rem', fontWeight: 700, fontSize: '0.95rem'}}>
+            <div style={styles.debug}>
               Auth diagnostic: {authDebug}
             </div>
           )}
@@ -200,23 +178,19 @@ export default function LoginForm() {
           )}
 
           {needsConfirmation && (
-            <div style={{background: 'rgba(251, 191, 36, 0.95)', color: '#1f2937', padding: '1.25rem', borderRadius: '0.75rem', marginBottom: '1.5rem', fontWeight: 700, fontSize: '1.05rem', lineHeight: 1.5}}>
-              <div style={{fontSize: '1.25rem', fontWeight: 900, marginBottom: '0.5rem'}}>Please confirm your email first</div>
+            <div style={styles.warning}>
+              <div style={{fontSize: '1.08rem', fontWeight: 900, marginBottom: '0.35rem'}}>Please confirm your email first</div>
               <div style={{marginBottom: '0.75rem'}}>
-                We sent a confirmation link to <strong>{formData.email}</strong>. Click it to verify your account, then sign in. Check your spam folder if you don't see it.
+                We sent a confirmation link to <strong>{formData.email}</strong>. Click it to verify your account, then sign in.
               </div>
-              <button
-                type="button"
-                onClick={handleResend}
-                style={{background: '#0c2340', color: '#ffffff', border: 'none', padding: '0.75rem 1.25rem', borderRadius: '0.5rem', fontWeight: 900, fontSize: '1rem', cursor: 'pointer'}}
-              >
+              <button type="button" onClick={handleResend} style={{...styles.smallButton, background: '#0c2340', color: '#ffffff', borderColor: '#0c2340'}}>
                 Resend confirmation email
               </button>
               {resendStatus && <div style={{marginTop: '0.75rem', fontSize: '0.95rem'}}>{resendStatus}</div>}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} style={{display: 'flex', flexDirection: 'column', gap: '1.5rem'}} autoComplete="on">
+          <form onSubmit={handleSubmit} style={styles.form} autoComplete="on">
             <div>
               <label htmlFor="login-email" style={styles.label}>Email</label>
               <input
@@ -248,35 +222,16 @@ export default function LoginForm() {
               />
             </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              style={{...styles.button, ...(loading ? styles.buttonDisabled : {})}}
-            >
-              {loading ? 'Setting Sail...' : "Let's Go Sailing!"}
+            <button type="submit" disabled={loading} style={{...styles.button, ...(loading ? styles.buttonDisabled : {})}}>
+              {loading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
-
-          <div style={{textAlign: 'center', marginTop: '1.5rem'}}>
-            <Link
-              to="/forgot-password"
-              style={{color: '#e0f2fe', fontSize: '1.125rem', fontWeight: 700, textDecoration: 'none', transition: 'all 0.2s'}}
-              onMouseEnter={(e) => (e.target.style.color = '#a5f3fc')}
-              onMouseLeave={(e) => (e.target.style.color = '#e0f2fe')}
-            >
-              Forgot Password? <strong>CLICK HERE</strong>
-            </Link>
-          </div>
         </div>
 
-        {/* Sign Up CTA */}
-        <div style={{textAlign: 'center', paddingBottom: '2.5rem'}}>
-          <p style={{...styles.signUpText, fontSize: '1.5rem', fontWeight: 900, marginBottom: '1rem'}}>New Here?</p>
-          <Link to="/signup" style={styles.signUpLink}>
-            Create Account →
-          </Link>
+        <div style={styles.footer}>
+          <Link to="/forgot-password" style={styles.link}>Forgot Password?</Link>
+          <Link to="/signup" style={styles.signUpLink}>Create Account</Link>
         </div>
-
       </div>
     </div>
   );

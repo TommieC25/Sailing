@@ -69,17 +69,27 @@ async function findAccount(client) {
 }
 
 async function deleteAccount(client, account) {
-  if (account.authUsers.length !== 1) {
-    throw new Error(`Expected exactly one Auth user for ${email}; found ${account.authUsers.length}. No deletion performed.`);
+  if (account.authUsers.length > 1) {
+    throw new Error(`Expected no more than one Auth user for ${email}; found ${account.authUsers.length}. No deletion performed.`);
   }
 
-  const userId = account.authUsers[0].id;
+  const userId = account.authUsers[0]?.id || null;
   await client.query('begin');
   try {
-    const identities = await client.query('delete from auth.identities where user_id = $1', [userId]);
-    const authUsers = await client.query('delete from auth.users where id = $1 and lower(email) = $2', [userId, email]);
+    const profiles = await client.query('delete from public.users where lower(email) = $1', [email]);
+    const identities = userId
+      ? await client.query('delete from auth.identities where user_id = $1', [userId])
+      : await client.query('delete from auth.identities where lower(identity_data->>\'email\') = $1', [email]);
+    const authUsers = userId
+      ? await client.query('delete from auth.users where id = $1 and lower(email) = $2', [userId, email])
+      : { rowCount: 0 };
     await client.query('commit');
-    return { userId, deletedIdentities: identities.rowCount, deletedAuthUsers: authUsers.rowCount };
+    return {
+      userId,
+      deletedProfiles: profiles.rowCount,
+      deletedIdentities: identities.rowCount,
+      deletedAuthUsers: authUsers.rowCount,
+    };
   } catch (error) {
     await client.query('rollback');
     throw error;

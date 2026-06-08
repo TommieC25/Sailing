@@ -1,7 +1,4 @@
-import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-
-export const WELCOME_SEEN_KEY = 'sailawayWelcomeSeen';
 
 const styles = {
   container: { minHeight: '100vh', background: 'linear-gradient(to bottom right, #0c3880, #0369a1, #06b6d4)', padding: '28px 18px' },
@@ -23,14 +20,6 @@ const styles = {
 };
 
 export default function WelcomePage() {
-  useEffect(() => {
-    try {
-      localStorage.setItem(WELCOME_SEEN_KEY, '1');
-    } catch {
-      // Some private browsing modes block localStorage.
-    }
-  }, []);
-
   return (
     <div style={styles.container}>
       <main style={styles.content}>

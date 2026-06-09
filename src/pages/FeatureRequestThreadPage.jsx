@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import AuthorMessageActions from '../components/AuthorMessageActions';
+import AuthorSubmissionActions from '../components/AuthorSubmissionActions';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
 import { shouldSendCourtesyStatus, statusCourtesyMessage } from '../utils/statusMessages';
@@ -209,6 +210,35 @@ export default function FeatureRequestThreadPage() {
     window.dispatchEvent(new Event('sailing:admin-inbox-updated'));
   };
 
+  const editRequest = async (title, description) => {
+    const { error: editError } = await supabase.rpc('edit_authored_submission', {
+      p_kind: 'feature_request',
+      p_id: request.id,
+      p_title: title,
+      p_body: description,
+    });
+    if (editError) {
+      setError(editError.message);
+      throw editError;
+    }
+    setRequest((current) => ({ ...current, title, description }));
+    window.dispatchEvent(new Event('sailing:admin-inbox-updated'));
+  };
+
+  const deleteRequest = async () => {
+    const { error: deleteError } = await supabase.rpc('delete_authored_submission', {
+      p_kind: 'feature_request',
+      p_id: request.id,
+    });
+    if (deleteError) {
+      setError(deleteError.message);
+      throw deleteError;
+    }
+    window.dispatchEvent(new Event('sailing:feature-replies-updated'));
+    window.dispatchEvent(new Event('sailing:admin-inbox-updated'));
+    navigate(returnTo);
+  };
+
   if (loading) {
     return <div style={styles.container}>Loading feature request...</div>;
   }
@@ -267,6 +297,15 @@ export default function FeatureRequestThreadPage() {
             <option value="in_development">In Development</option>
             <option value="implemented">Implemented</option>
           </select>
+        )}
+
+        {request.user_id === user.id && (
+          <AuthorSubmissionActions
+            title={request.title}
+            body={request.description}
+            onSave={editRequest}
+            onDelete={deleteRequest}
+          />
         )}
       </div>
 

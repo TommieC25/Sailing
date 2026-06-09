@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import AuthorSubmissionActions from '../components/AuthorSubmissionActions';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
 
@@ -18,6 +19,8 @@ const styles = {
   input: { width: '100%', padding: '12px', border: '2px solid #cbd5e1', borderRadius: '8px', fontSize: '1rem', fontFamily: 'inherit' },
   textarea: { width: '100%', padding: '12px', border: '2px solid #cbd5e1', borderRadius: '8px', fontSize: '1rem', fontFamily: 'inherit', minHeight: '120px', resize: 'vertical' },
   button: { width: '100%', padding: '12px', background: 'linear-gradient(135deg, #0c2340 0%, #0369a1 100%)', color: '#ffffff', fontWeight: 900, fontSize: '1.125rem', border: 'none', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s' },
+  list: { display: 'grid', gap: '10px', marginTop: '14px' },
+  messageCard: { background: '#ffffff', borderRadius: '8px', border: '1px solid #e5e7eb', padding: '12px' },
 };
 
 export default function ContactAdminPage() {
@@ -27,6 +30,21 @@ export default function ContactAdminPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+  const [messages, setMessages] = useState([]);
+
+  useEffect(() => {
+    if (!user) return;
+    const loadMessages = async () => {
+      const { data, error: loadError } = await supabase
+        .from('contact_messages')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+      if (loadError) setError(loadError.message);
+      else setMessages(data || []);
+    };
+    loadMessages();
+  }, [user]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -50,22 +68,52 @@ export default function ContactAdminPage() {
     try {
       setLoading(true);
 
-      const { error: insertError } = await supabase.from('contact_messages').insert({
+      const { data: inserted, error: insertError } = await supabase.from('contact_messages').insert({
         user_id: user.id,
         subject: formData.subject,
         message: formData.message,
-      });
+      }).select().single();
 
       if (insertError) throw insertError;
 
       setSuccess('Message sent! Admin will respond soon.');
+      setMessages((current) => [inserted, ...current]);
       setFormData({ subject: '', message: '' });
-      setTimeout(() => navigate('/'), 2000);
+      window.dispatchEvent(new Event('sailing:admin-inbox-updated'));
     } catch (err) {
       setError(err.message || 'Failed to send message');
     } finally {
       setLoading(false);
     }
+  };
+
+  const editMessage = async (id, subject, message) => {
+    const { error: editError } = await supabase.rpc('edit_authored_submission', {
+      p_kind: 'contact_message',
+      p_id: id,
+      p_title: subject,
+      p_body: message,
+    });
+    if (editError) {
+      setError(editError.message);
+      throw editError;
+    }
+    setMessages((current) => current.map((item) => item.id === id ? { ...item, subject, message } : item));
+    window.dispatchEvent(new Event('sailing:admin-inbox-updated'));
+  };
+
+  const deleteMessage = async (id) => {
+    const { error: deleteError } = await supabase.rpc('delete_authored_submission', {
+      p_kind: 'contact_message',
+      p_id: id,
+    });
+    if (deleteError) {
+      setError(deleteError.message);
+      throw deleteError;
+    }
+    setMessages((current) => current.filter((item) => item.id !== id));
+    window.dispatchEvent(new Event('sailing:direct-messages-updated'));
+    window.dispatchEvent(new Event('sailing:admin-inbox-updated'));
   };
 
   return (
@@ -126,6 +174,31 @@ export default function ContactAdminPage() {
             {loading ? 'Sending...' : 'Send Message →'}
           </button>
         </form>
+      </div>
+
+      <div style={{ ...styles.card, marginTop: '14px' }}>
+        <h2 style={{ margin: '0 0 10px', color: '#1e293b' }}>Your Messages to Admin</h2>
+        {messages.length === 0 ? (
+          <p style={{ color: '#64748b', fontWeight: 700, margin: 0 }}>No messages sent yet.</p>
+        ) : (
+          <div style={styles.list}>
+            {messages.map((item) => (
+              <div key={item.id} style={styles.messageCard}>
+                <h3 style={{ margin: '0 0 5px', color: '#0f172a' }}>{item.subject}</h3>
+                <p style={{ margin: '0 0 5px', color: '#64748b', fontSize: '0.82rem', fontWeight: 700 }}>
+                  Sent {new Date(item.created_at).toLocaleString()} · {item.status || 'open'}
+                </p>
+                <p style={{ margin: 0, color: '#475569', whiteSpace: 'pre-wrap', lineHeight: 1.4 }}>{item.message}</p>
+                <AuthorSubmissionActions
+                  title={item.subject}
+                  body={item.message}
+                  onSave={(subject, message) => editMessage(item.id, subject, message)}
+                  onDelete={() => deleteMessage(item.id)}
+                />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

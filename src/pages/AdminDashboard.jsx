@@ -266,6 +266,21 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleDeleteAnnouncement = async (announcement) => {
+    if (!window.confirm(`Delete "${announcement.title}"? It will disappear for all members.`)) return;
+    try {
+      const { error } = await supabase
+        .from('announcements')
+        .delete()
+        .eq('id', announcement.id);
+      if (error) throw error;
+      await loadDashboardData();
+      window.dispatchEvent(new Event('sailing:announcements-updated'));
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   const handleUpdateBugReport = async (id, newStatus, item = null) => {
     try {
       const previousStatus = item?.status;
@@ -1046,13 +1061,22 @@ const AdminDashboard = () => {
                     <>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
                         <h4 style={{ margin: '0 0 8px', fontSize: '1.1rem', fontWeight: 900 }}>{ann.title}</h4>
-                        <button
-                          type="button"
-                          onClick={() => startEditingAnnouncement(ann)}
-                          style={{ padding: '7px 10px', borderRadius: '8px', border: 'none', background: '#e0f2fe', color: '#0369a1', fontWeight: 900, cursor: 'pointer', flexShrink: 0 }}
-                        >
-                          Edit
-                        </button>
+                        <div style={{ display: 'flex', gap: '7px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                          <button
+                            type="button"
+                            onClick={() => startEditingAnnouncement(ann)}
+                            style={{ padding: '7px 10px', borderRadius: '8px', border: 'none', background: '#e0f2fe', color: '#0369a1', fontWeight: 900, cursor: 'pointer', flexShrink: 0 }}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteAnnouncement(ann)}
+                            style={{ padding: '7px 10px', borderRadius: '8px', border: 'none', background: '#dc2626', color: '#ffffff', fontWeight: 900, cursor: 'pointer', flexShrink: 0 }}
+                          >
+                            Delete
+                          </button>
+                        </div>
                       </div>
                       <p style={{ margin: '6px 0', color: '#666', lineHeight: '1.42', whiteSpace: 'pre-wrap' }}>{ann.message}</p>
                       <p style={{ margin: '6px 0 0', fontSize: '0.82rem', color: '#999' }}>

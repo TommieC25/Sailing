@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import AuthorMessageActions from '../components/AuthorMessageActions';
+import AuthorSubmissionActions from '../components/AuthorSubmissionActions';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
 import { shouldSendCourtesyStatus, statusCourtesyMessage } from '../utils/statusMessages';
-import { getBugScreenshotUrl } from '../utils/bugScreenshots';
+import { BUG_SCREENSHOT_BUCKET, getBugScreenshotUrl } from '../utils/bugScreenshots';
 
 const styles = {
   container: { maxWidth: '760px', margin: '0 auto' },
@@ -227,6 +228,41 @@ export default function BugReportThreadPage() {
     window.dispatchEvent(new Event('sailing:admin-inbox-updated'));
   };
 
+  const editReport = async (title, description) => {
+    const { error: editError } = await supabase.rpc('edit_authored_submission', {
+      p_kind: 'bug_report',
+      p_id: report.id,
+      p_title: title,
+      p_body: description,
+    });
+    if (editError) {
+      setError(editError.message);
+      throw editError;
+    }
+    setReport((current) => ({ ...current, title, description }));
+    window.dispatchEvent(new Event('sailing:admin-inbox-updated'));
+  };
+
+  const deleteReport = async () => {
+    const { error: deleteError } = await supabase.rpc('delete_authored_submission', {
+      p_kind: 'bug_report',
+      p_id: report.id,
+    });
+    if (deleteError) {
+      setError(deleteError.message);
+      throw deleteError;
+    }
+    if (report.screenshot_url && !/^https?:\/\//i.test(report.screenshot_url)) {
+      const { error: screenshotError } = await supabase.storage
+        .from(BUG_SCREENSHOT_BUCKET)
+        .remove([report.screenshot_url]);
+      if (screenshotError) console.warn('Could not remove deleted bug report screenshot:', screenshotError.message);
+    }
+    window.dispatchEvent(new Event('sailing:bug-replies-updated'));
+    window.dispatchEvent(new Event('sailing:admin-inbox-updated'));
+    navigate(returnTo);
+  };
+
   if (loading) {
     return <div style={styles.container}>Loading bug report...</div>;
   }
@@ -292,6 +328,15 @@ export default function BugReportThreadPage() {
             Open screenshot
             <img src={screenshotUrl} alt="Bug report screenshot" style={styles.screenshot} />
           </a>
+        )}
+
+        {report.user_id === user.id && (
+          <AuthorSubmissionActions
+            title={report.title}
+            body={report.description}
+            onSave={editReport}
+            onDelete={deleteReport}
+          />
         )}
       </div>
 

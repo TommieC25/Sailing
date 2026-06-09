@@ -40,6 +40,35 @@ export default function Layout({ children }) {
         : '/admin/inbox';
 
   useEffect(() => {
+    if (!user) return;
+
+    const refreshEvents = [
+      'sailing:announcements-updated',
+      'sailing:direct-messages-updated',
+      'sailing:bug-replies-updated',
+      'sailing:feature-replies-updated',
+      'sailing:event-chat-updated',
+      'sailing:club-event-chat-updated',
+      'sailing:crew-requests-updated',
+      'sailing:outing-requests-updated',
+      'sailing:admin-inbox-updated',
+    ];
+    const refreshNotifications = () => refreshEvents.forEach((eventName) => {
+      window.dispatchEvent(new Event(eventName));
+    });
+    const refreshOnFocus = () => {
+      if (document.visibilityState === 'visible') refreshNotifications();
+    };
+    const interval = window.setInterval(refreshNotifications, 30_000);
+    document.addEventListener('visibilitychange', refreshOnFocus);
+
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener('visibilitychange', refreshOnFocus);
+    };
+  }, [user]);
+
+  useEffect(() => {
     const updateHeaderWidth = () => setIsNarrowHeader(window.innerWidth < 430);
     updateHeaderWidth();
     window.addEventListener('resize', updateHeaderWidth);

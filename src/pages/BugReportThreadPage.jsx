@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import AuthorMessageActions from '../components/AuthorMessageActions';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
 import { shouldSendCourtesyStatus, statusCourtesyMessage } from '../utils/statusMessages';
@@ -199,6 +200,33 @@ export default function BugReportThreadPage() {
     window.dispatchEvent(new Event('sailing:admin-inbox-updated'));
   };
 
+  const editReply = async (replyId, message) => {
+    const { error: editError } = await supabase.rpc('edit_authored_message', {
+      p_kind: 'bug_reply',
+      p_id: replyId,
+      p_text: message,
+    });
+    if (editError) {
+      setError(editError.message);
+      throw editError;
+    }
+    setReplies((current) => current.map((reply) => reply.id === replyId ? { ...reply, message } : reply));
+  };
+
+  const deleteReply = async (replyId) => {
+    const { error: deleteError } = await supabase.rpc('delete_authored_message', {
+      p_kind: 'bug_reply',
+      p_id: replyId,
+    });
+    if (deleteError) {
+      setError(deleteError.message);
+      throw deleteError;
+    }
+    setReplies((current) => current.filter((reply) => reply.id !== replyId));
+    window.dispatchEvent(new Event('sailing:bug-replies-updated'));
+    window.dispatchEvent(new Event('sailing:admin-inbox-updated'));
+  };
+
   if (loading) {
     return <div style={styles.container}>Loading bug report...</div>;
   }
@@ -290,6 +318,13 @@ export default function BugReportThreadPage() {
                   )} · {new Date(message.created_at).toLocaleString()}
                 </p>
                 <p style={styles.messageText}>{message.message}</p>
+                {isOwn && !message.isOriginal && (
+                  <AuthorMessageActions
+                    value={message.message}
+                    onSave={(text) => editReply(message.id, text)}
+                    onDelete={() => deleteReply(message.id)}
+                  />
+                )}
               </div>
             </div>
           );

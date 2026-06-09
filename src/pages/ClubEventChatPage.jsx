@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import AuthorMessageActions from '../components/AuthorMessageActions';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
 import { formatLocalDate, todayLocalDateString } from '../utils/dateUtils';
@@ -182,6 +183,31 @@ export default function ClubEventChatPage() {
     }
   };
 
+  const editMessage = async (messageId, text) => {
+    const { error: editError } = await supabase.rpc('edit_authored_message', {
+      p_kind: 'club_event_chat',
+      p_id: messageId,
+      p_text: text,
+    });
+    if (editError) {
+      setError(editError.message);
+      throw editError;
+    }
+    await loadEvent();
+  };
+
+  const deleteMessage = async (messageId) => {
+    const { error: deleteError } = await supabase.rpc('delete_authored_message', {
+      p_kind: 'club_event_chat',
+      p_id: messageId,
+    });
+    if (deleteError) {
+      setError(deleteError.message);
+      throw deleteError;
+    }
+    await loadEvent();
+  };
+
   return (
     <div style={styles.container}>
       <button type="button" onClick={() => navigate(-1)} style={styles.back}>← Back</button>
@@ -230,6 +256,13 @@ export default function ClubEventChatPage() {
                     </button>
                   )}
                   <div style={{fontSize: '0.72rem', opacity: 0.7, marginTop: '5px'}}>{new Date(item.message_created_at).toLocaleString()}</div>
+                  {item.sender_id === user.id && (
+                    <AuthorMessageActions
+                      value={item.message_text}
+                      onSave={(text) => editMessage(item.message_id, text)}
+                      onDelete={() => deleteMessage(item.message_id)}
+                    />
+                  )}
                 </div>
               ))}
             </div>

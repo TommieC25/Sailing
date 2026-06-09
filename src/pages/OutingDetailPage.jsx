@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import AuthorMessageActions from '../components/AuthorMessageActions';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
 import { formatLocalDate, isPastLocalDate } from '../utils/dateUtils';
@@ -445,6 +446,33 @@ export default function OutingDetailPage() {
     }
   };
 
+  const editChatMessage = async (messageId, text) => {
+    const { error: editError } = await supabase.rpc('edit_authored_message', {
+      p_kind: 'outing_chat',
+      p_id: messageId,
+      p_text: text,
+    });
+    if (editError) {
+      setError(editError.message);
+      throw editError;
+    }
+    setMessages((current) => current.map((item) => item.id === messageId ? { ...item, message: text } : item));
+    window.dispatchEvent(new Event('sailing:event-chat-updated'));
+  };
+
+  const deleteChatMessage = async (messageId) => {
+    const { error: deleteError } = await supabase.rpc('delete_authored_message', {
+      p_kind: 'outing_chat',
+      p_id: messageId,
+    });
+    if (deleteError) {
+      setError(deleteError.message);
+      throw deleteError;
+    }
+    setMessages((current) => current.filter((item) => item.id !== messageId));
+    window.dispatchEvent(new Event('sailing:event-chat-updated'));
+  };
+
   const handleDeleteOuting = async () => {
     if (!window.confirm('Are you sure you want to delete this outing? This cannot be undone.')) {
       return;
@@ -763,6 +791,13 @@ export default function OutingDetailPage() {
                         <div style={{fontSize: '0.7rem', opacity: 0.6, marginTop: '4px'}}>
                           {new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                         </div>
+                        {msg.user_id === user?.id && (
+                          <AuthorMessageActions
+                            value={msg.message}
+                            onSave={(text) => editChatMessage(msg.id, text)}
+                            onDelete={() => deleteChatMessage(msg.id)}
+                          />
+                        )}
                       </div>
                     ))
                   )}

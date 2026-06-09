@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import AuthorMessageActions from '../components/AuthorMessageActions';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
 
@@ -160,6 +161,33 @@ export default function DirectMessageThreadPage() {
     }
   };
 
+  const editMessage = async (messageId, body) => {
+    const { error: editError } = await supabase.rpc('edit_authored_message', {
+      p_kind: 'direct_message',
+      p_id: messageId,
+      p_text: body,
+    });
+    if (editError) {
+      setError(editError.message);
+      throw editError;
+    }
+    setMessages((current) => current.map((item) => item.id === messageId ? { ...item, body } : item));
+    window.dispatchEvent(new Event('sailing:direct-messages-updated'));
+  };
+
+  const deleteMessage = async (messageId) => {
+    const { error: deleteError } = await supabase.rpc('delete_authored_message', {
+      p_kind: 'direct_message',
+      p_id: messageId,
+    });
+    if (deleteError) {
+      setError(deleteError.message);
+      throw deleteError;
+    }
+    setMessages((current) => current.filter((item) => item.id !== messageId));
+    window.dispatchEvent(new Event('sailing:direct-messages-updated'));
+  };
+
   if (loading) {
     return <div style={styles.container}><div style={styles.empty}>Loading conversation...</div></div>;
   }
@@ -218,6 +246,13 @@ export default function DirectMessageThreadPage() {
                 <div style={{ ...styles.bubble, ...(isOwn ? styles.ownBubble : styles.otherBubble) }}>
                   <div style={{ whiteSpace: 'pre-wrap', lineHeight: 1.45 }}>{message.body}</div>
                   <div style={styles.time}>{new Date(message.created_at).toLocaleString()}</div>
+                  {isOwn && (
+                    <AuthorMessageActions
+                      value={message.body}
+                      onSave={(body) => editMessage(message.id, body)}
+                      onDelete={() => deleteMessage(message.id)}
+                    />
+                  )}
                 </div>
               </div>
             );

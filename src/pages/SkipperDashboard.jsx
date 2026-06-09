@@ -466,13 +466,13 @@ export default function SkipperDashboard() {
                         </div>
                         <div style={styles.requestsList}>
                           {approved.map((req) => (
-                            <div key={req.id} style={styles.approvedRequest}>
+                            <div key={req.id} style={{ ...styles.approvedRequest, flexWrap: 'wrap' }}>
                               {req.crew?.photo_url ? (
                                 <img src={req.crew.photo_url} alt={req.crew.full_name} style={styles.approvedSmallPhoto} />
                               ) : (
                                 <div style={{...styles.photoPlaceholder, width: '48px', height: '48px'}}>📷</div>
                               )}
-                              <div>
+                              <div style={{ flex: 1, minWidth: '160px' }}>
                                 <button
                                   type="button"
                                   onClick={() => navigate(`/profile/${req.crew_id}?returnTo=${encodeURIComponent('/skipper-dashboard')}`)}
@@ -482,6 +482,16 @@ export default function SkipperDashboard() {
                                 </button>
                                 <p style={styles.approvedSkill}>{req.crew?.sailing_experience} sailor</p>
                               </div>
+                              {!isArchived && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleDecline(req.id, outing.id)}
+                                  disabled={actionLoading[req.id]}
+                                  style={{ ...styles.declineBtn, padding: '9px 11px', opacity: actionLoading[req.id] ? 0.5 : 1 }}
+                                >
+                                  {actionLoading[req.id] ? '...' : 'Remove from Outing'}
+                                </button>
+                              )}
                             </div>
                           ))}
                         </div>
@@ -536,6 +546,13 @@ export default function SkipperDashboard() {
                                   onMouseLeave={(e) => (e.target.style.background = '#0369a1')}
                                 >
                                   View Profile
+                                </button>
+                                <button
+                                  onClick={() => handleDecline(req.id, outing.id)}
+                                  disabled={actionLoading[req.id]}
+                                  style={{...styles.declineBtn, opacity: actionLoading[req.id] ? 0.5 : 1}}
+                                >
+                                  {actionLoading[req.id] ? '...' : 'Remove from Waitlist'}
                                 </button>
                               </div>
                             </div>

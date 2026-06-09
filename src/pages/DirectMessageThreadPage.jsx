@@ -113,10 +113,7 @@ export default function DirectMessageThreadPage() {
           .map((message) => message.id);
 
         if (unreadIds.length > 0) {
-          await supabase
-            .from('direct_messages')
-            .update({ read_at: new Date().toISOString() })
-            .in('id', unreadIds);
+          await supabase.rpc('mark_direct_messages_read', { p_ids: unreadIds });
           window.dispatchEvent(new Event('sailing:direct-messages-updated'));
         }
       } catch (err) {

@@ -379,6 +379,7 @@ export default function OutingDetailPage() {
   const handleDeclineRequest = async (requestId) => {
     const note = window.prompt('Optional note to the member about this decision:', '');
     if (note === null) return;
+    const existingRequest = crewRequests.find((request) => request.id === requestId);
 
     try {
       setActionLoading((prev) => ({ ...prev, [requestId]: true }));
@@ -395,6 +396,9 @@ export default function OutingDetailPage() {
         )
       );
       setApprovedCrew((prev) => prev.filter((req) => req.id !== requestId));
+      if (existingRequest?.status === 'approved') {
+        setApprovedCrewCount((current) => Math.max(current - 1, 0));
+      }
       refreshRequestNotifications();
     } catch (err) {
       setError(err.message);
@@ -418,6 +422,38 @@ export default function OutingDetailPage() {
       refreshRequestNotifications();
     } catch (err) {
       setError(err.message || 'Could not join waitlist');
+    } finally {
+      setActionLoading((prev) => ({ ...prev, [crewRequest.id]: false }));
+    }
+  };
+
+  const handleWithdrawRequest = async () => {
+    if (!crewRequest || !user) return;
+    const labels = {
+      pending: 'Withdraw this request?',
+      waitlisted: 'Leave this waitlist?',
+      approved: 'Leave this outing? You will lose access to its crew roster and group chat.',
+      declined: 'Remove this declined request?',
+    };
+    if (!window.confirm(labels[crewRequest.status] || 'Remove this outing request?')) return;
+
+    try {
+      setActionLoading((prev) => ({ ...prev, [crewRequest.id]: true }));
+      const { error: deleteError } = await supabase
+        .from('crew_requests')
+        .delete()
+        .eq('id', crewRequest.id)
+        .eq('crew_id', user.id);
+      if (deleteError) throw deleteError;
+      setCrewRequest(null);
+      setApprovedCrew((current) => current.filter((item) => item.crew_id !== user.id));
+      if (crewRequest.status === 'approved') {
+        setApprovedCrewCount((current) => Math.max(current - 1, 0));
+      }
+      refreshRequestNotifications();
+      window.dispatchEvent(new Event('sailing:event-chat-updated'));
+    } catch (err) {
+      setError(err.message || 'Could not remove outing request');
     } finally {
       setActionLoading((prev) => ({ ...prev, [crewRequest.id]: false }));
     }
@@ -588,7 +624,7 @@ export default function OutingDetailPage() {
           </button>
           );
         })()}
-        {req.status === 'pending' && (
+        {['pending', 'waitlisted', 'approved'].includes(req.status) && (
           <button
             onClick={() => handleDeclineRequest(req.id)}
             disabled={actionLoading[req.id]}
@@ -596,7 +632,7 @@ export default function OutingDetailPage() {
             onMouseEnter={(e) => !actionLoading[req.id] && (e.target.style.background = '#b91c1c')}
             onMouseLeave={(e) => (e.target.style.background = '#dc2626')}
           >
-            ✗ Decline
+            {req.status === 'approved' ? 'Remove from Outing' : req.status === 'waitlisted' ? 'Remove from Waitlist' : '✗ Decline'}
           </button>
         )}
         {req.status !== 'pending' && req.status !== 'waitlisted' && (
@@ -825,6 +861,19 @@ export default function OutingDetailPage() {
                 </form>
               </div>
             )}
+
+            {!isSkipper && crewRequest?.status === 'approved' && !isArchived && (
+              <div style={styles.joinSection}>
+                <button
+                  type="button"
+                  onClick={handleWithdrawRequest}
+                  disabled={actionLoading[crewRequest.id]}
+                  style={{ ...styles.joinButton, background: '#fee2e2', color: '#991b1b', border: '1px solid #ef4444', opacity: actionLoading[crewRequest.id] ? 0.6 : 1 }}
+                >
+                  {actionLoading[crewRequest.id] ? 'Leaving...' : 'Leave Outing'}
+                </button>
+              </div>
+            )}
           </>
         )}
 
@@ -913,6 +962,14 @@ export default function OutingDetailPage() {
                   </>
                 )}
                 {crewRequest.status === 'waitlisted' && <p style={{ fontSize: '0.875rem' }}>You have been added to the waitlist for {outing.title} and will be notified if a crew spot becomes available.</p>}
+                <button
+                  type="button"
+                  onClick={handleWithdrawRequest}
+                  disabled={actionLoading[crewRequest.id]}
+                  style={{ ...styles.joinButton, background: '#fee2e2', color: '#991b1b', border: '1px solid #ef4444', marginTop: '10px', opacity: actionLoading[crewRequest.id] ? 0.6 : 1 }}
+                >
+                  {actionLoading[crewRequest.id] ? 'Removing...' : crewRequest.status === 'pending' ? 'Withdraw Request' : crewRequest.status === 'waitlisted' ? 'Leave Waitlist' : 'Remove Request'}
+                </button>
               </div>
             ) : (
               <button

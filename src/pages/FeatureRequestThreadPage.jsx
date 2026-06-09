@@ -112,10 +112,7 @@ export default function FeatureRequestThreadPage() {
           .map((reply) => reply.id);
 
         if (unreadReplyIds.length > 0) {
-          await supabase
-            .from('feature_request_replies')
-            .update({ read_at: new Date().toISOString() })
-            .in('id', unreadReplyIds);
+          await supabase.rpc('mark_feature_request_replies_read', { p_ids: unreadReplyIds });
           window.dispatchEvent(new Event('sailing:feature-replies-updated'));
         }
       } catch (err) {

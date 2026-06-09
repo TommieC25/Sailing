@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
-import { formatLocalDate } from '../utils/dateUtils';
+import { formatLocalDate, isPastLocalDate } from '../utils/dateUtils';
 
 const styles = {
   container: { display: 'grid', gap: '12px' },
@@ -21,6 +21,7 @@ const styles = {
   inlineLink: { background: 'none', border: 'none', padding: 0, color: '#0369a1', font: 'inherit', fontWeight: 900, cursor: 'pointer', textAlign: 'left' },
   linkBtn: { background: '#0369a1', color: '#ffffff' },
   waitlistBtn: { background: '#f59e0b', color: '#111827' },
+  withdrawBtn: { background: '#fee2e2', color: '#991b1b', border: '1px solid #ef4444' },
   success: { background: '#dcfce7', border: '1px solid #86efac', color: '#166534', borderRadius: '8px', padding: '10px 12px', fontWeight: 700 },
   error: { background: '#fee2e2', border: '1px solid #fecaca', color: '#991b1b', borderRadius: '8px', padding: '10px 12px', fontWeight: 700 },
   empty: { background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '18px', color: '#475569', fontWeight: 700, textAlign: 'center' },
@@ -167,6 +168,37 @@ export default function MyOutingRequestsPage() {
     }
   };
 
+  const handleWithdrawRequest = async (request) => {
+    const labels = {
+      pending: 'Withdraw this request?',
+      waitlisted: 'Leave this waitlist?',
+      approved: 'Leave this outing? You will lose access to its crew roster and group chat.',
+      declined: 'Remove this declined request?',
+    };
+    if (!window.confirm(labels[request.status] || 'Remove this outing request?')) return;
+
+    try {
+      setActionLoading((prev) => ({ ...prev, [request.id]: true }));
+      setError('');
+      setSuccess('');
+      const { error: deleteError } = await supabase
+        .from('crew_requests')
+        .delete()
+        .eq('id', request.id)
+        .eq('crew_id', user.id);
+      if (deleteError) throw deleteError;
+      setRequests((current) => current.filter((item) => item.id !== request.id));
+      setSuccess('Outing request removed.');
+      window.dispatchEvent(new Event('sailing:crew-requests-updated'));
+      window.dispatchEvent(new Event('sailing:outing-requests-updated'));
+      window.dispatchEvent(new Event('sailing:event-chat-updated'));
+    } catch (err) {
+      setError(err.message || 'Could not remove outing request');
+    } finally {
+      setActionLoading((prev) => ({ ...prev, [request.id]: false }));
+    }
+  };
+
   return (
     <div style={styles.container}>
       <div style={styles.header}>
@@ -185,6 +217,13 @@ export default function MyOutingRequestsPage() {
         <div style={styles.list}>
           {sortedRequests.map((request) => {
             const status = statusDisplay[request.status] || statusDisplay.pending;
+            const isArchived = !request.outings?.outing_date || isPastLocalDate(request.outings.outing_date);
+            const withdrawLabels = {
+              pending: 'Withdraw Request',
+              waitlisted: 'Leave Waitlist',
+              approved: 'Leave Outing',
+              declined: 'Remove Request',
+            };
             return (
               <div key={request.id} style={{ ...styles.card, borderLeftColor: status.border }}>
                 <div style={styles.cardHeader}>
@@ -235,6 +274,16 @@ export default function MyOutingRequestsPage() {
                       style={{ ...styles.button, ...styles.waitlistBtn, opacity: actionLoading[request.id] ? 0.6 : 1 }}
                     >
                       {actionLoading[request.id] ? 'Adding...' : 'Join Waitlist'}
+                    </button>
+                  )}
+                  {!isArchived && (
+                    <button
+                      type="button"
+                      onClick={() => handleWithdrawRequest(request)}
+                      disabled={actionLoading[request.id]}
+                      style={{ ...styles.button, ...styles.withdrawBtn, opacity: actionLoading[request.id] ? 0.6 : 1 }}
+                    >
+                      {actionLoading[request.id] ? 'Removing...' : withdrawLabels[request.status] || 'Remove Request'}
                     </button>
                   )}
                 </div>

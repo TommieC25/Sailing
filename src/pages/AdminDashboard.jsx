@@ -350,11 +350,28 @@ const AdminDashboard = () => {
   };
 
   const handleRemoveAdmin = async (userId) => {
+    const admin = users.find((item) => item.id === userId);
+    if (!window.confirm(`Remove admin access from ${admin?.full_name || admin?.email || 'this member'}?`)) return;
     try {
       const { error } = await supabase
         .from('users')
         .update({ role: 'user' })
         .eq('id', userId);
+
+      if (error) throw error;
+      await loadDashboardData();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const handleMakeAdmin = async (member) => {
+    if (!window.confirm(`Grant admin access to ${member.full_name || member.email || 'this member'}? Admins can manage members, content, and workflow statuses.`)) return;
+    try {
+      const { error } = await supabase
+        .from('users')
+        .update({ role: 'admin' })
+        .eq('id', member.id);
 
       if (error) throw error;
       await loadDashboardData();
@@ -778,6 +795,15 @@ const AdminDashboard = () => {
                             <span style={{ background: '#fef3c7', color: '#92400e', padding: '4px 8px', borderRadius: '4px', fontWeight: 700 }}>
                               Admin
                             </span>
+                          )}
+                          {u.role !== 'admin' && u.id !== user?.id && (
+                            <button
+                              type="button"
+                              onClick={() => handleMakeAdmin(u)}
+                              style={{ background: '#fef3c7', color: '#92400e', padding: '6px 10px', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 700 }}
+                            >
+                              Make Admin
+                            </button>
                           )}
                         </td>
                       </tr>

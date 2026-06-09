@@ -153,10 +153,7 @@ export default function AdminInboxPage() {
           .map((reply) => reply.id);
 
         if (unreadReplyIds.length > 0) {
-          await supabase
-            .from('bug_report_replies')
-            .update({ read_at: new Date().toISOString() })
-            .in('id', unreadReplyIds);
+          await supabase.rpc('mark_bug_report_replies_read', { p_ids: unreadReplyIds });
           window.dispatchEvent(new Event('sailing:bug-replies-updated'));
         }
 
@@ -175,10 +172,7 @@ export default function AdminInboxPage() {
               .map((reply) => reply.id);
 
             if (unreadFeatureReplyIds.length > 0) {
-              await supabase
-                .from('feature_request_replies')
-                .update({ read_at: new Date().toISOString() })
-                .in('id', unreadFeatureReplyIds);
+              await supabase.rpc('mark_feature_request_replies_read', { p_ids: unreadFeatureReplyIds });
               window.dispatchEvent(new Event('sailing:feature-replies-updated'));
             }
           }

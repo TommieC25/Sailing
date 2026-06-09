@@ -163,6 +163,7 @@ function App() {
           <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
           <Route path="/admin/inbox" element={<AdminRoute><AdminInboxPage /></AdminRoute>} />
           <Route path="/announcements" element={<ProtectedRoute><AnnouncementsFeed /></ProtectedRoute>} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
     </AuthProvider>

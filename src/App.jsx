@@ -149,6 +149,7 @@ function App() {
           <Route path="/messages/:memberId" element={<ProtectedRoute><DirectMessageThreadPage /></ProtectedRoute>} />
           <Route path="/my-outing-requests" element={<ProtectedRoute><MyOutingRequestsPage /></ProtectedRoute>} />
           <Route path="/outing/:id" element={<ProtectedRoute><OutingDetailPage /></ProtectedRoute>} />
+          <Route path="/outing/:id/edit" element={<ProtectedRoute><CreateOutingPage /></ProtectedRoute>} />
           <Route path="/skipper-dashboard" element={<ProtectedRoute><SkipperDashboard /></ProtectedRoute>} />
           <Route path="/create-outing" element={<ProtectedRoute><CreateOutingPage /></ProtectedRoute>} />
           <Route path="/bug-report" element={<ProtectedRoute><BugReportPage /></ProtectedRoute>} />

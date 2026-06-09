@@ -628,7 +628,13 @@ export default function OutingDetailPage() {
         </div>
 
         {isSkipper && (
-          <div style={{marginBottom: '10px'}}>
+          <div style={{marginBottom: '10px', display: 'flex', flexWrap: 'wrap', gap: '8px'}}>
+            <button
+              onClick={() => navigate(`/outing/${id}/edit`)}
+              style={{background: '#0369a1', color: '#ffffff', padding: '9px 12px', borderRadius: '8px', fontSize: '0.95rem', fontWeight: 900, border: 'none', cursor: 'pointer'}}
+            >
+              Edit Outing
+            </button>
             <button
               onClick={handleDeleteOuting}
               style={{background: '#dc2626', color: '#ffffff', padding: '9px 12px', borderRadius: '8px', fontSize: '0.95rem', fontWeight: 900, border: 'none', cursor: 'pointer', transition: 'all 0.2s'}}

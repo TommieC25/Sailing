@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
 
@@ -57,8 +57,13 @@ const requiredFieldMessages = {
 
 export default function CreateOutingPage() {
   const navigate = useNavigate();
+  const { id: outingId } = useParams();
+  const isEditing = Boolean(outingId);
   const { user, profile, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(isEditing);
+  const [canEdit, setCanEdit] = useState(!isEditing);
+  const [boatId, setBoatId] = useState(null);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     title: '',
@@ -80,37 +85,82 @@ export default function CreateOutingPage() {
   };
 
   useEffect(() => {
-    const loadExistingBoatData = async () => {
-      if (!user || profile?.user_type !== 'owner') return;
+    const loadFormData = async () => {
+      if (!user || profile?.user_type !== 'owner') {
+        setInitialLoading(false);
+        return;
+      }
 
       try {
-        const { data: boats } = await supabase
-          .from('boats')
-          .select('*')
-          .eq('owner_id', user.id)
-          .limit(1);
+        if (isEditing) setInitialLoading(true);
+        let boat;
+        let outing;
 
-        if (boats && boats.length > 0) {
-          const boat = boats[0];
-          const brandModelColor = [boat.brand, boat.model, boat.color]
-            .filter(Boolean)
-            .join(' / ') || '';
-          setFormData((prev) => ({
-            ...prev,
+        if (isEditing) {
+          const { data: outingData, error: outingError } = await supabase
+            .from('outings')
+            .select('*')
+            .eq('id', outingId)
+            .maybeSingle();
+          if (outingError) throw outingError;
+          if (!outingData || outingData.skipper_id !== user.id) {
+            setCanEdit(false);
+            return;
+          }
+          outing = outingData;
+          setCanEdit(true);
+
+          const { data: boatData, error: boatError } = await supabase
+            .from('boats')
+            .select('*')
+            .eq('id', outingData.boat_id)
+            .maybeSingle();
+          if (boatError) throw boatError;
+          boat = boatData;
+        } else {
+          const { data: boats, error: boatsError } = await supabase
+            .from('boats')
+            .select('*')
+            .eq('owner_id', user.id)
+            .limit(1);
+          if (boatsError) throw boatsError;
+          boat = boats?.[0];
+        }
+
+        if (boat) setBoatId(boat.id);
+        const brandModelColor = [boat?.brand, boat?.model, boat?.color]
+          .filter(Boolean)
+          .join(' / ') || '';
+        setFormData({
+          title: outing?.title || '',
+          description: outing?.description || '',
+          outingDate: outing?.outing_date || '',
+          outingTime: outing?.outing_time?.slice(0, 5) || '',
+          location: outing?.location || '',
+          capacityAvailable: outing?.capacity_available ? String(outing.capacity_available) : '',
+          ...(boat ? {
             boatName: boat.name || '',
             boatBrandModelColor: brandModelColor,
             boatSize: boat.size_ft ? String(boat.size_ft) : '',
             boatCapacity: boat.capacity ? String(boat.capacity) : '',
             mooringLocation: boat.mooring_location || '',
-          }));
-        }
+          } : {
+            boatName: '',
+            boatBrandModelColor: '',
+            boatSize: '',
+            boatCapacity: '',
+            mooringLocation: '',
+          }),
+        });
       } catch (err) {
-        console.error('Error loading boat data:', err);
+        setError(err.message || 'Could not load outing details');
+      } finally {
+        setInitialLoading(false);
       }
     };
 
-    loadExistingBoatData();
-  }, [user, profile]);
+    loadFormData();
+  }, [user, profile, isEditing, outingId]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -150,20 +200,11 @@ export default function CreateOutingPage() {
     try {
       setLoading(true);
 
-      const { data: existingBoats, error: boatsError } = await supabase
-        .from('boats')
-        .select('id')
-        .eq('owner_id', user.id)
-        .limit(1);
-
-      if (boatsError) throw boatsError;
-
-      let boatId;
+      let savedBoatId = boatId;
 
       const parts = formData.boatBrandModelColor.split('/').map(s => s.trim());
 
-      if (existingBoats && existingBoats.length > 0) {
-        boatId = existingBoats[0].id;
+      if (savedBoatId) {
         const { error: updateError } = await supabase
           .from('boats')
           .update({
@@ -175,7 +216,7 @@ export default function CreateOutingPage() {
             capacity: boatCapacity,
             mooring_location: formData.mooringLocation || null,
           })
-          .eq('id', boatId);
+          .eq('id', savedBoatId);
         if (updateError) throw updateError;
       } else {
         const { data: newBoat, error: createError } = await supabase
@@ -193,35 +234,35 @@ export default function CreateOutingPage() {
           .select()
           .single();
         if (createError) throw createError;
-        boatId = newBoat.id;
+        savedBoatId = newBoat.id;
       }
 
-      const { data: newOuting, error: outingError } = await supabase
-        .from('outings')
-        .insert([{
-          boat_id: boatId,
-          skipper_id: user.id,
-          title: formData.title,
-          description: formData.description || null,
-          outing_date: formData.outingDate,
-          outing_time: formData.outingTime,
-          location: formData.location,
-          capacity_available: crewSpots,
-          status: 'open',
-        }])
-        .select()
-        .single();
+      const outingValues = {
+        boat_id: savedBoatId,
+        title: formData.title,
+        description: formData.description || null,
+        outing_date: formData.outingDate,
+        outing_time: formData.outingTime,
+        location: formData.location,
+        capacity_available: crewSpots,
+      };
+
+      const outingQuery = isEditing
+        ? supabase.from('outings').update(outingValues).eq('id', outingId).eq('skipper_id', user.id)
+        : supabase.from('outings').insert([{ ...outingValues, skipper_id: user.id, status: 'open' }]);
+
+      const { data: savedOuting, error: outingError } = await outingQuery.select().single();
 
       if (outingError) throw outingError;
-      navigate(`/outing/${newOuting.id}`);
+      navigate(`/outing/${savedOuting.id}`);
     } catch (err) {
-      setError(err.message || 'Failed to create outing');
+      setError(err.message || `Failed to ${isEditing ? 'update' : 'create'} outing`);
     } finally {
       setLoading(false);
     }
   };
 
-  if (authLoading) {
+  if (authLoading || initialLoading) {
     return (
       <div style={{textAlign: 'center', padding: '40px'}}>
         <div style={{display: 'inline-block', width: '40px', height: '40px', borderRadius: '50%', border: '4px solid #e2e8f0', borderTopColor: '#0369a1', animation: 'spin 0.8s linear infinite'}} />
@@ -234,20 +275,24 @@ export default function CreateOutingPage() {
     return <div style={styles.restrictedBox}>Only boat owners can create outings. Please update your profile to set your account type to "Boat Owner".</div>;
   }
 
+  if (!canEdit) {
+    return <div style={styles.restrictedBox}>Only the skipper who posted this outing can edit it.</div>;
+  }
+
   return (
     <div style={styles.container}>
       <button
-        onClick={() => navigate('/skipper-dashboard')}
+        onClick={() => navigate(isEditing ? `/outing/${outingId}` : '/skipper-dashboard')}
         style={styles.backButton}
         onMouseEnter={(e) => e.target.style.background = '#bfdbfe'}
         onMouseLeave={(e) => e.target.style.background = '#e0f2fe'}
       >
-        ← Back to My Outings
+        ← Back to {isEditing ? 'Outing' : 'My Outings'}
       </button>
 
       <div style={styles.header}>
-        <h1 style={styles.headerTitle}>Post New Outing</h1>
-        <p style={styles.headerSubtitle}>Fill in the details and crew can request to join</p>
+        <h1 style={styles.headerTitle}>{isEditing ? 'Edit Outing' : 'Post New Outing'}</h1>
+        <p style={styles.headerSubtitle}>{isEditing ? 'Update the details visible to crew' : 'Fill in the details and crew can request to join'}</p>
       </div>
 
       {error && <div style={styles.errorBox}>{error}</div>}
@@ -423,11 +468,11 @@ export default function CreateOutingPage() {
             onMouseEnter={(e) => !loading && (e.target.style.opacity = '0.9')}
             onMouseLeave={(e) => !loading && (e.target.style.opacity = '1')}
           >
-            {loading ? 'Posting...' : 'Post Outing →'}
+            {loading ? (isEditing ? 'Saving...' : 'Posting...') : (isEditing ? 'Save Changes' : 'Post Outing →')}
           </button>
           <button
             type="button"
-            onClick={() => navigate('/skipper-dashboard')}
+            onClick={() => navigate(isEditing ? `/outing/${outingId}` : '/skipper-dashboard')}
             style={styles.cancelButton}
             onMouseEnter={(e) => e.target.style.background = '#d1d5db'}
             onMouseLeave={(e) => e.target.style.background = '#e5e7eb'}

@@ -68,22 +68,6 @@ export default function SkipperDashboard() {
     window.dispatchEvent(new Event('sailing:outing-requests-updated'));
   };
 
-  const statusUpdatePayload = (status, note = null) => {
-    const now = new Date().toISOString();
-    const payload = {
-      status,
-      responded_at: now,
-      status_changed_at: now,
-      status_seen_at: null,
-    };
-
-    if (status === 'declined') {
-      payload.skipper_response_note = note || null;
-    }
-
-    return payload;
-  };
-
   const canApproveRequest = (outing, requestId) => {
     const crewLimit = Number(outing?.capacity_available || 0);
     const approvedCount = (outing?.crew_requests || []).filter((request) => (
@@ -215,12 +199,12 @@ export default function SkipperDashboard() {
 
     try {
       setActionLoading((prev) => ({ ...prev, [requestId]: true }));
-      const payload = statusUpdatePayload('declined', note.trim());
-      const { error } = await supabase
-        .from('crew_requests')
-        .update(payload)
-        .eq('id', requestId);
+      const { data, error } = await supabase.rpc('decline_crew_request', {
+        p_request_id: requestId,
+        p_note: note.trim(),
+      });
       if (error) throw error;
+      const payload = Array.isArray(data) ? data[0] : data;
       updateRequestStatusLocally(outingId, requestId, payload);
       refreshNotificationCounts();
     } catch (err) {

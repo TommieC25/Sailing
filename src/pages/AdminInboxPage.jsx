@@ -274,7 +274,7 @@ export default function AdminInboxPage() {
   };
 
   const deleteMessage = async (id) => {
-    if (!window.confirm('Delete this message? This cannot be undone.')) return;
+    if (!window.confirm('Delete this message and its entire reply conversation? This cannot be undone.')) return;
 
     try {
       setUpdating(id);

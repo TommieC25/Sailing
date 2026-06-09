@@ -19,6 +19,45 @@ on public.contact_messages for update to authenticated
 using (public.is_admin())
 with check (public.is_admin());
 
+create or replace function public.decline_crew_request(
+  p_request_id uuid,
+  p_note text default null
+)
+returns public.crew_requests
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  declined_request public.crew_requests;
+begin
+  update public.crew_requests request
+  set status = 'declined',
+      responded_at = now(),
+      status_changed_at = now(),
+      status_seen_at = null,
+      skipper_response_note = nullif(btrim(p_note), '')
+  where request.id = p_request_id
+    and exists (
+      select 1 from public.outings outing
+      where outing.id = request.outing_id and outing.skipper_id = auth.uid()
+    )
+  returning request.* into declined_request;
+
+  if declined_request.id is null then
+    raise exception 'Crew request not found or not managed by current skipper';
+  end if;
+
+  return declined_request;
+end;
+$$;
+
+revoke all on function public.decline_crew_request(uuid, text) from public;
+grant execute on function public.decline_crew_request(uuid, text) to authenticated;
+
+drop policy if exists "Skippers can update requests" on public.crew_requests;
+revoke update on public.crew_requests from authenticated;
+
 create or replace function public.protect_final_admin()
 returns trigger
 language plpgsql

@@ -64,6 +64,7 @@ export default function CreateOutingPage() {
   const [initialLoading, setInitialLoading] = useState(isEditing);
   const [canEdit, setCanEdit] = useState(!isEditing);
   const [boatId, setBoatId] = useState(null);
+  const [approvedCrewCount, setApprovedCrewCount] = useState(0);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     title: '',
@@ -109,6 +110,14 @@ export default function CreateOutingPage() {
           }
           outing = outingData;
           setCanEdit(true);
+
+          const { count: approvedCount, error: approvedError } = await supabase
+            .from('crew_requests')
+            .select('id', { count: 'exact', head: true })
+            .eq('outing_id', outingData.id)
+            .eq('status', 'approved');
+          if (approvedError) throw approvedError;
+          setApprovedCrewCount(approvedCount || 0);
 
           const { data: boatData, error: boatError } = await supabase
             .from('boats')
@@ -182,6 +191,14 @@ export default function CreateOutingPage() {
     if (!Number.isInteger(crewSpots) || crewSpots < 1) {
       setError('Available Crew Spots must be at least 1');
       window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    if (
+      isEditing
+      && crewSpots < approvedCrewCount
+      && !window.confirm(`${approvedCrewCount} crew members are already approved. Save only ${crewSpots} listed spots anyway?`)
+    ) {
       return;
     }
 

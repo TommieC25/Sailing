@@ -25,6 +25,8 @@ const styles = {
   smallButton: { background: '#ffffff', color: '#0369a1', border: '2px solid #0369a1', borderRadius: '9px', padding: '0.55rem 0.75rem', fontSize: '0.9rem', fontWeight: 900, cursor: 'pointer' },
   footer: { display: 'grid', gap: '0.9rem', marginTop: '1rem', textAlign: 'center' },
   link: { color: '#e0f2fe', fontSize: '1rem', fontWeight: 850, textDecoration: 'none' },
+  newUser: { background: 'rgba(255,255,255,0.14)', border: '2px solid rgba(255,255,255,0.55)', borderRadius: '10px', padding: '12px', color: '#ffffff', fontSize: '1rem', fontWeight: 850, lineHeight: 1.4 },
+  newUserLink: { display: 'block', color: '#ffffff', fontSize: '1.08rem', fontWeight: 900, textDecoration: 'underline', marginTop: '4px' },
   debug: { background: 'rgba(255,255,255,0.92)', color: '#1f2937', padding: '0.85rem', borderRadius: '0.75rem', marginBottom: '1rem', fontWeight: 700, fontSize: '0.95rem' },
 };
 
@@ -193,6 +195,10 @@ export default function LoginForm() {
         </div>
 
         <div style={styles.footer}>
+          <div style={styles.newUser}>
+            New to SailAway?
+            <Link to="/welcome" style={styles.newUserLink}>Start Here and Create Your Account</Link>
+          </div>
           <Link to="/forgot-password" style={styles.link}>Forgot Password?</Link>
         </div>
       </div>

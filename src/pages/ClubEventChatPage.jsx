@@ -45,6 +45,7 @@ export default function ClubEventChatPage() {
   const [messages, setMessages] = useState([]);
   const [outings, setOutings] = useState([]);
   const [message, setMessage] = useState('');
+  const [shouldLinkOuting, setShouldLinkOuting] = useState('no');
   const [linkedOutingId, setLinkedOutingId] = useState('');
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
@@ -164,6 +165,10 @@ export default function ClubEventChatPage() {
 
   const sendMessage = async () => {
     if (!event || !message.trim()) return;
+    if (shouldLinkOuting === 'yes' && !linkedOutingId) {
+      setError('Please select the outing you want to link, or answer No.');
+      return;
+    }
     try {
       setSaving(true);
       const { error: sendError } = await supabase.from('club_event_messages').insert({
@@ -174,6 +179,7 @@ export default function ClubEventChatPage() {
       });
       if (sendError) throw sendError;
       setMessage('');
+      setShouldLinkOuting('no');
       setLinkedOutingId('');
       await loadEvent();
     } catch (err) {
@@ -273,12 +279,28 @@ export default function ClubEventChatPage() {
               <textarea style={styles.textarea} value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Post to all SailAway members..." />
               {!!outings.length && (
                 <label style={{display: 'grid', gap: '5px', color: '#334155', fontWeight: 900}}>
-                  Optional: Link an Upcoming Outing
+                  Do you want to link this event message to one of your own outings?
                   <span style={{fontSize: '0.85rem', color: '#64748b', fontWeight: 650}}>
-                    Select an outing if members should open it to view details or request to join.
+                    Linking an outing lets members open its details and request to join.
                   </span>
+                  <select
+                    style={styles.input}
+                    value={shouldLinkOuting}
+                    onChange={(e) => {
+                      setShouldLinkOuting(e.target.value);
+                      if (e.target.value === 'no') setLinkedOutingId('');
+                    }}
+                  >
+                    <option value="no">No</option>
+                    <option value="yes">Yes</option>
+                  </select>
+                </label>
+              )}
+              {shouldLinkOuting === 'yes' && !!outings.length && (
+                <label style={{display: 'grid', gap: '5px', color: '#334155', fontWeight: 900}}>
+                  Which outing do you want to link?
                   <select style={styles.input} value={linkedOutingId} onChange={(e) => setLinkedOutingId(e.target.value)}>
-                    <option value="">Do not link an outing</option>
+                    <option value="">Select your outing</option>
                     {outings.map((outing) => (
                       <option key={outing.id} value={outing.id}>{outing.title} · {formatLocalDate(outing.outing_date)}</option>
                     ))}

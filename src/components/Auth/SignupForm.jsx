@@ -53,6 +53,11 @@ export default function SignupForm() {
     gender: '',
     userType: '',
     sailingExperience: '',
+    boatName: '',
+    boatBrandModelColor: '',
+    boatSize: '',
+    boatCapacity: '',
+    mooringLocation: '',
   });
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
@@ -147,6 +152,13 @@ export default function SignupForm() {
     photo_url: photoUrl,
     waiver_version: CURRENT_WAIVER_VERSION,
     waiver_accepted_at: waiverAcceptedAt,
+    ...(formData.userType === 'owner' ? {
+      boat_name: formData.boatName.trim(),
+      boat_brand_model_color: formData.boatBrandModelColor.trim(),
+      boat_size_ft: Number.parseInt(formData.boatSize, 10),
+      boat_capacity: Number.parseInt(formData.boatCapacity, 10),
+      boat_mooring_location: formData.mooringLocation.trim(),
+    } : {}),
   });
 
   const uploadProfilePhoto = async () => {
@@ -271,6 +283,28 @@ export default function SignupForm() {
     if (!formData.sailingExperience) {
       fail('Please select your experience level');
       return;
+    }
+    if (formData.userType === 'owner') {
+      if (!formData.boatName.trim()) {
+        fail('Please enter your boat name');
+        return;
+      }
+      if (!formData.boatBrandModelColor.trim()) {
+        fail('Please enter your boat brand, model, and color');
+        return;
+      }
+      if (!Number.isInteger(Number.parseInt(formData.boatSize, 10)) || Number.parseInt(formData.boatSize, 10) < 1) {
+        fail('Please enter your boat length');
+        return;
+      }
+      if (!Number.isInteger(Number.parseInt(formData.boatCapacity, 10)) || Number.parseInt(formData.boatCapacity, 10) < 1) {
+        fail('Please enter your boat capacity');
+        return;
+      }
+      if (!formData.mooringLocation.trim()) {
+        fail('Please enter your boat mooring or marina');
+        return;
+      }
     }
     if (!waiverAccepted) {
       fail('Please read and accept the Waiver, Release & Disclaimer of Liability');
@@ -637,6 +671,36 @@ export default function SignupForm() {
                 <option value="advanced">Advanced</option>
               </select>
             </div>
+
+            {formData.userType === 'owner' && (
+              <section style={styles.orientationCard}>
+                <h3 style={styles.orientationTitle}>Your Boat</h3>
+                <p style={styles.orientationText}>These details are saved to your skipper profile and automatically added to new outings.</p>
+
+                <div style={styles.form}>
+                  <div style={styles.fieldGroup}>
+                    <label htmlFor="signup-boat-name" style={styles.label}>Boat Name *</label>
+                    <input id="signup-boat-name" type="text" name="boatName" value={formData.boatName} onChange={handleChange} required style={styles.input} />
+                  </div>
+                  <div style={styles.fieldGroup}>
+                    <label htmlFor="signup-boat-details" style={styles.label}>Brand / Model / Color *</label>
+                    <input id="signup-boat-details" type="text" name="boatBrandModelColor" value={formData.boatBrandModelColor} onChange={handleChange} required placeholder="e.g., Tartan / 33 / blue" style={styles.input} />
+                  </div>
+                  <div style={styles.fieldGroup}>
+                    <label htmlFor="signup-boat-size" style={styles.label}>Length (ft) *</label>
+                    <input id="signup-boat-size" type="number" name="boatSize" value={formData.boatSize} onChange={handleChange} min="1" required style={styles.input} />
+                  </div>
+                  <div style={styles.fieldGroup}>
+                    <label htmlFor="signup-boat-capacity" style={styles.label}>Total Capacity *</label>
+                    <input id="signup-boat-capacity" type="number" name="boatCapacity" value={formData.boatCapacity} onChange={handleChange} min="1" required style={styles.input} />
+                  </div>
+                  <div style={styles.fieldGroup}>
+                    <label htmlFor="signup-boat-location" style={styles.label}>Mooring / Marina *</label>
+                    <input id="signup-boat-location" type="text" name="mooringLocation" value={formData.mooringLocation} onChange={handleChange} required style={styles.input} />
+                  </div>
+                </div>
+              </section>
+            )}
 
             <div style={styles.fieldGroup}>
               <label style={styles.label}>Waiver, Release & Disclaimer of Liability *</label>

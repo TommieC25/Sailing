@@ -66,6 +66,7 @@ export default function CreateOutingPage() {
   const [initialLoading, setInitialLoading] = useState(true);
   const [canEdit, setCanEdit] = useState(!isEditing);
   const [boatId, setBoatId] = useState(null);
+  const [missingSavedBoat, setMissingSavedBoat] = useState(false);
   const [approvedCrewCount, setApprovedCrewCount] = useState(0);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({
@@ -140,7 +141,12 @@ export default function CreateOutingPage() {
           boat = boats?.[0];
         }
 
-        if (boat) setBoatId(boat.id);
+        if (boat) {
+          setBoatId(boat.id);
+          setMissingSavedBoat(false);
+        } else if (!isEditing) {
+          setMissingSavedBoat(true);
+        }
         const brandModelColor = [boat?.brand, boat?.model, boat?.color]
           .filter(Boolean)
           .join(' / ') || '';
@@ -304,6 +310,17 @@ export default function CreateOutingPage() {
 
   if (!canEdit) {
     return <div style={styles.restrictedBox}>Only the skipper who posted this outing can edit it.</div>;
+  }
+
+  if (missingSavedBoat) {
+    return (
+      <div style={styles.restrictedBox}>
+        <p style={{ marginTop: 0 }}>Complete and save your boat details in My Profile before posting an outing. SailAway will then automatically add your boat to each new outing.</p>
+        <button type="button" onClick={() => navigate('/profile')} style={{ ...styles.submitButton, background: '#0369a1' }}>
+          Complete Boat Profile
+        </button>
+      </div>
+    );
   }
 
   return (

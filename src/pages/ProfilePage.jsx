@@ -197,15 +197,21 @@ export default function ProfilePage() {
     if (!boatData.name.trim()) {
       throw new Error('Please enter your boat name');
     }
+    if (!boatData.brand_model_color.trim()) {
+      throw new Error('Please enter your boat brand, model, and color');
+    }
 
     const capacity = parseInt(boatData.capacity, 10);
     if (!Number.isInteger(capacity) || capacity < 1) {
       throw new Error('Please enter your boat capacity');
     }
 
-    const sizeFt = boatData.size_ft ? parseInt(boatData.size_ft, 10) : null;
-    if (boatData.size_ft && (!Number.isInteger(sizeFt) || sizeFt < 1)) {
-      throw new Error('Please enter a valid boat size');
+    const sizeFt = parseInt(boatData.size_ft, 10);
+    if (!Number.isInteger(sizeFt) || sizeFt < 1) {
+      throw new Error('Please enter your boat length');
+    }
+    if (!boatData.mooring_location.trim()) {
+      throw new Error('Please enter your boat mooring or marina');
     }
 
     const parts = boatData.brand_model_color.split('/').map(s => s.trim());
@@ -580,12 +586,12 @@ export default function ProfilePage() {
                 </div>
 
                 <div style={styles.field}>
-                  <div style={styles.label}>Brand / Model / Color</div>
+                  <div style={styles.label}>Brand / Model / Color *</div>
                   <input type="text" name="brand_model_color" value={boatData.brand_model_color} onChange={handleBoatChange} style={styles.input} placeholder="e.g., Tartan / 33 / blue" />
                 </div>
 
                   <div style={styles.field}>
-                    <div style={styles.label}>Size (ft)</div>
+                    <div style={styles.label}>Size (ft) *</div>
                     <input type="number" name="size_ft" value={boatData.size_ft} onChange={handleBoatChange} style={styles.input} />
                   </div>
 
@@ -595,7 +601,7 @@ export default function ProfilePage() {
                   </div>
 
                 <div style={styles.field}>
-                  <div style={styles.label}>Location (Club Mooring / Marina & Slip)</div>
+                  <div style={styles.label}>Location (Club Mooring / Marina & Slip) *</div>
                   <input type="text" name="mooring_location" value={boatData.mooring_location} onChange={handleBoatChange} style={styles.input} />
                 </div>
                 </div>

@@ -60,8 +60,10 @@ export default function CreateOutingPage() {
   const { id: outingId } = useParams();
   const isEditing = Boolean(outingId);
   const { user, profile, loading: authLoading } = useAuth();
+  const userId = user?.id;
+  const userType = profile?.user_type;
   const [loading, setLoading] = useState(false);
-  const [initialLoading, setInitialLoading] = useState(isEditing);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [canEdit, setCanEdit] = useState(!isEditing);
   const [boatId, setBoatId] = useState(null);
   const [approvedCrewCount, setApprovedCrewCount] = useState(0);
@@ -87,13 +89,15 @@ export default function CreateOutingPage() {
 
   useEffect(() => {
     const loadFormData = async () => {
-      if (!user || profile?.user_type !== 'owner') {
+      if (authLoading) return;
+
+      if (!userId || userType !== 'owner') {
         setInitialLoading(false);
         return;
       }
 
       try {
-        if (isEditing) setInitialLoading(true);
+        setInitialLoading(true);
         let boat;
         let outing;
 
@@ -104,7 +108,7 @@ export default function CreateOutingPage() {
             .eq('id', outingId)
             .maybeSingle();
           if (outingError) throw outingError;
-          if (!outingData || outingData.skipper_id !== user.id) {
+          if (!outingData || outingData.skipper_id !== userId) {
             setCanEdit(false);
             return;
           }
@@ -130,7 +134,7 @@ export default function CreateOutingPage() {
           const { data: boats, error: boatsError } = await supabase
             .from('boats')
             .select('*')
-            .eq('owner_id', user.id)
+            .eq('owner_id', userId)
             .limit(1);
           if (boatsError) throw boatsError;
           boat = boats?.[0];
@@ -169,7 +173,13 @@ export default function CreateOutingPage() {
     };
 
     loadFormData();
-  }, [user, profile, isEditing, outingId]);
+  }, [userId, userType, authLoading, isEditing, outingId]);
+
+  const handleFormKeyDown = (e) => {
+    if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+      e.preventDefault();
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -314,7 +324,7 @@ export default function CreateOutingPage() {
 
       {error && <div style={styles.errorBox}>{error}</div>}
 
-      <form onSubmit={handleSubmit} style={styles.form} noValidate>
+      <form onSubmit={handleSubmit} onKeyDown={handleFormKeyDown} style={styles.form} noValidate>
 
         {/* Outing Details */}
         <div style={styles.section}>

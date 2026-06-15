@@ -1,4 +1,4 @@
-import { Link, useLocation, Navigate } from 'react-router-dom';
+import { useLocation, Navigate } from 'react-router-dom';
 
 const styles = {
   container: { minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(to bottom right, #0c3880, #0369a1, #06b6d4)', paddingLeft: '1rem', paddingRight: '1rem', paddingTop: '2rem', paddingBottom: '2rem' },
@@ -11,7 +11,6 @@ const styles = {
   bigText: { fontSize: '1.25rem', color: '#1e3a8a', fontWeight: 600, lineHeight: 1.5, marginBottom: '1.5rem' },
   midText: { fontSize: '1.125rem', color: '#374151', fontWeight: 600, lineHeight: 1.5, marginBottom: '2rem' },
   smallText: { fontSize: '1rem', color: '#6b7280', fontWeight: 500, lineHeight: 1.5, marginBottom: '2rem' },
-  signInLink: { display: 'block', width: '100%', padding: '1.25rem', borderRadius: '12px', fontWeight: 900, color: '#1e3a8a', fontSize: '1.5rem', border: '3px solid #1e3a8a', textAlign: 'center', textDecoration: 'none' },
   bottomText: { color: '#ffffff', textAlign: 'center', fontSize: '1.125rem', fontWeight: 600, marginTop: '2rem', textShadow: '0 1px 3px rgba(0,0,0,0.4)' },
 };
 
@@ -39,12 +38,11 @@ export default function SignupSuccessPage() {
             We sent a confirmation link to <strong>{email}</strong>.
           </p>
           <p style={styles.midText}>
-            Click the link in the email to verify your account, then come back and sign in.
+            Click the link in the email to verify your account. SailAway will then show the Sign In button.
           </p>
           <p style={styles.smallText}>
             Don't see it? Check your spam folder. The email comes from <strong>noreply@mail.app.supabase.io</strong>.
           </p>
-          <Link to="/login" style={styles.signInLink}>Go to Sign In →</Link>
         </div>
         <p style={styles.bottomText}>Coconut Grove Sailing Club • Miami, FL</p>
       </div>

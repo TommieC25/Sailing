@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../utils/supabaseClient';
 import { formatPhoneNumber, phoneDigits } from '../../utils/phoneFormat';
@@ -31,9 +31,6 @@ const styles = {
   input: { width: '100%', paddingX: '1.25rem', paddingY: '1rem', border: '3px solid #93c5fd', borderRadius: '12px', color: '#1e3a8a', fontSize: '1.5rem', fontWeight: 600, padding: '1rem 1.25rem', fontFamily: 'inherit' },
   select: { width: '100%', paddingX: '1.25rem', paddingY: '1rem', border: '3px solid #93c5fd', borderRadius: '12px', color: '#1e3a8a', fontSize: '1.5rem', fontWeight: 600, background: '#ffffff', padding: '1rem 1.25rem', fontFamily: 'inherit' },
   button: { width: '100%', paddingY: '1.25rem', borderRadius: '12px', fontWeight: 900, color: '#ffffff', fontSize: '1.5rem', border: 'none', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 10px 15px rgba(0,0,0,0.2)' },
-  footer: { marginTop: '2rem', paddingTop: '1.5rem', borderTop: '3px solid #e5e7eb' },
-  footerText: { color: '#374151', fontSize: '1.25rem', fontWeight: 700, textAlign: 'center', marginBottom: '1rem', margin: '0 0 1rem 0' },
-  signInLink: { display: 'block', width: '100%', paddingY: '1.25rem', borderRadius: '12px', fontWeight: 900, color: '#1e3a8a', fontSize: '1.5rem', border: '3px solid #1e3a8a', textAlign: 'center', textDecoration: 'none', transition: 'all 0.2s' },
   passwordHint: { color: '#475569', fontSize: '0.95rem', fontWeight: 700, lineHeight: 1.35, margin: '0' },
   passwordActions: { display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' },
   smallButton: { background: '#e0f2fe', color: '#0c2340', border: '2px solid #0369a1', borderRadius: '10px', padding: '10px 14px', fontSize: '1rem', fontWeight: 900, cursor: 'pointer' },
@@ -353,10 +350,9 @@ export default function SignupForm() {
               We sent a confirmation link to <strong>{signupCompleteEmail}</strong>.
             </p>
             <p style={{ color: '#475569', fontSize: '1rem', fontWeight: 600, lineHeight: 1.5, margin: '0 0 1.5rem 0' }}>
-              Click the link in that email to verify your account, then return here and sign in.
+              Click the link in that email to verify your account. SailAway will then show the Sign In button.
               Check spam or junk if you do not see it.
             </p>
-            <Link to="/login" style={styles.signInLink}>Go to Sign In →</Link>
           </div>
 
           <p style={styles.bottomText}>Coconut Grove Sailing Club • Miami, FL</p>
@@ -627,17 +623,6 @@ export default function SignupForm() {
             </button>
           </form>
 
-          <div style={styles.footer}>
-            <p style={styles.footerText}>Already have an account?</p>
-            <Link
-              to="/login"
-              style={styles.signInLink}
-              onMouseEnter={(e) => e.target.style.background = '#eff6ff'}
-              onMouseLeave={(e) => e.target.style.background = '#ffffff'}
-            >
-              Sign In →
-            </Link>
-          </div>
         </div>
 
         <p style={styles.bottomText}>Coconut Grove Sailing Club • Miami, FL</p>

@@ -197,7 +197,7 @@ export default function LoginForm() {
         <div style={styles.footer}>
           <div style={styles.newUser}>
             New to SailAway?
-            <Link to="/welcome" style={styles.newUserLink}>Start Here and Create Your Account</Link>
+            <Link to="/signup" style={styles.newUserLink}>Create New Account</Link>
           </div>
           <Link to="/forgot-password" style={styles.link}>Forgot Password?</Link>
         </div>

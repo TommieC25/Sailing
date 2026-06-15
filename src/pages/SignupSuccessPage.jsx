@@ -38,7 +38,7 @@ export default function SignupSuccessPage() {
             We sent a confirmation link to <strong>{email}</strong>.
           </p>
           <p style={styles.midText}>
-            Click the link in the email to verify your account. SailAway will then show the Sign In button.
+            Click the link in the email to verify your account.
           </p>
           <p style={styles.smallText}>
             Don't see it? Check your spam folder. The email comes from <strong>noreply@mail.app.supabase.io</strong>.

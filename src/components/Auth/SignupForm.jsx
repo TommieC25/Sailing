@@ -350,7 +350,7 @@ export default function SignupForm() {
               We sent a confirmation link to <strong>{signupCompleteEmail}</strong>.
             </p>
             <p style={{ color: '#475569', fontSize: '1rem', fontWeight: 600, lineHeight: 1.5, margin: '0 0 1.5rem 0' }}>
-              Click the link in that email to verify your account. SailAway will then show the Sign In button.
+              Click the link in that email to verify your account.
               Check spam or junk if you do not see it.
             </p>
           </div>

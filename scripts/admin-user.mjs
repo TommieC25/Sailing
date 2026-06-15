@@ -25,16 +25,17 @@ function readAdminEnv() {
 }
 
 function validateArguments() {
-  if (!['status', 'delete'].includes(action) || !email) {
+  if (!['status', 'confirm', 'delete'].includes(action) || !email) {
     throw new Error(
       'Usage:\n'
       + '  npm run admin:user-status -- user@example.com\n'
+      + '  npm run admin:user-confirm -- user@example.com --confirm user@example.com\n'
       + '  npm run admin:user-delete -- user@example.com --confirm user@example.com',
     );
   }
 
-  if (action === 'delete' && confirmation !== email) {
-    throw new Error('Deletion requires --confirm followed by the exact same email address.');
+  if (['confirm', 'delete'].includes(action) && confirmation !== email) {
+    throw new Error(`${action} requires --confirm followed by the exact same email address.`);
   }
 }
 
@@ -96,6 +97,33 @@ async function deleteAccount(client, account) {
   }
 }
 
+async function confirmAccount(client, account) {
+  if (account.authUsers.length !== 1) {
+    throw new Error(`Expected exactly one Auth user for ${email}; found ${account.authUsers.length}. No confirmation performed.`);
+  }
+
+  const user = account.authUsers[0];
+  if (user.deleted_at) {
+    throw new Error(`The Auth user for ${email} is deleted. No confirmation performed.`);
+  }
+  if (user.email_confirmed_at) {
+    return { userId: user.id, alreadyConfirmed: true };
+  }
+
+  const confirmed = await client.query(
+    `update auth.users
+     set email_confirmed_at = now(), updated_at = now()
+     where id = $1 and lower(email) = $2 and email_confirmed_at is null and deleted_at is null`,
+    [user.id, email],
+  );
+
+  if (confirmed.rowCount !== 1) {
+    throw new Error(`Expected to confirm exactly one Auth user for ${email}; updated ${confirmed.rowCount}.`);
+  }
+
+  return { userId: user.id, alreadyConfirmed: false };
+}
+
 validateArguments();
 const env = readAdminEnv();
 if (!env.SUPABASE_DATABASE_URL) {
@@ -119,6 +147,11 @@ try {
     const deleted = await deleteAccount(client, before);
     const after = await findAccount(client);
     console.log(JSON.stringify({ email, deleted, after }, null, 2));
+  }
+  if (action === 'confirm') {
+    const confirmed = await confirmAccount(client, before);
+    const after = await findAccount(client);
+    console.log(JSON.stringify({ email, confirmed, after }, null, 2));
   }
 } finally {
   await client.end();

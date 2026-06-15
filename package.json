@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "admin:user-status": "node scripts/admin-user.mjs status",
+    "admin:user-confirm": "node scripts/admin-user.mjs confirm",
     "admin:user-delete": "node scripts/admin-user.mjs delete"
   },
   "dependencies": {

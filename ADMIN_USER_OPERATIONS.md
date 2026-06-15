@@ -21,6 +21,29 @@ Inspect an exact email without changing anything:
 npm run admin:user-status -- user@example.com
 ```
 
+## Recover An Unconfirmed Account
+
+If a member completed signup but did not receive the confirmation email:
+
+1. Verify the exact email address and the member's identity directly.
+2. Inspect the account and confirm `email_confirmed_at` is null:
+
+```sh
+npm run admin:user-status -- user@example.com
+```
+
+3. Request one resend from the app's Check Your Email screen.
+4. If delivery still fails, confirm the existing account without deleting it:
+
+```sh
+npm run admin:user-confirm -- user@example.com --confirm user@example.com
+```
+
+This operation requires the exact email twice and refuses to act unless exactly
+one matching Auth user exists. Do not diagnose a system-wide email outage from
+one failed recipient. First compare recent confirmation history and state what
+the available evidence can and cannot prove.
+
 Delete an exact test account only after reviewing the status output:
 
 ```sh

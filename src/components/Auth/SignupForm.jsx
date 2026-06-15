@@ -43,7 +43,7 @@ const styles = {
 
 export default function SignupForm() {
   const [searchParams] = useSearchParams();
-  const { signUp } = useAuth();
+  const { signUp, resendConfirmation } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -70,6 +70,9 @@ export default function SignupForm() {
     }
   });
   const [loading, setLoading] = useState(false);
+  const [resendingConfirmation, setResendingConfirmation] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [resendStatus, setResendStatus] = useState('');
   const [signupCompleteEmail, setSignupCompleteEmail] = useState(() => {
     try {
       const email = sessionStorage.getItem(SIGNUP_SUCCESS_EMAIL_KEY);
@@ -85,6 +88,28 @@ export default function SignupForm() {
     return '';
   });
   const showSignupDebug = searchParams.get('signupDebug') === '1';
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return undefined;
+    const timer = window.setTimeout(() => setResendCooldown((seconds) => seconds - 1), 1000);
+    return () => window.clearTimeout(timer);
+  }, [resendCooldown]);
+
+  const handleResendConfirmation = async () => {
+    if (!signupCompleteEmail || resendingConfirmation || resendCooldown > 0) return;
+
+    try {
+      setResendingConfirmation(true);
+      setResendStatus('');
+      await resendConfirmation(signupCompleteEmail);
+      setResendStatus('A new confirmation email was requested. Check your inbox and spam or junk folder.');
+      setResendCooldown(60);
+    } catch (err) {
+      setResendStatus(err.message || 'Could not request another confirmation email. Please contact the SailAway administrator.');
+    } finally {
+      setResendingConfirmation(false);
+    }
+  };
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -352,6 +377,26 @@ export default function SignupForm() {
             <p style={{ color: '#475569', fontSize: '1rem', fontWeight: 600, lineHeight: 1.5, margin: '0 0 1.5rem 0' }}>
               Click the link in that email to verify your account.
               Check spam or junk if you do not see it.
+            </p>
+            <button
+              type="button"
+              onClick={handleResendConfirmation}
+              disabled={resendingConfirmation || resendCooldown > 0}
+              style={{ ...styles.smallButton, width: '100%', opacity: resendingConfirmation || resendCooldown > 0 ? 0.6 : 1 }}
+            >
+              {resendingConfirmation
+                ? 'Requesting Another Email...'
+                : resendCooldown > 0
+                  ? `Resend Available in ${resendCooldown}s`
+                  : 'Resend Confirmation Email'}
+            </button>
+            {resendStatus && (
+              <p style={{ color: '#475569', fontSize: '0.95rem', fontWeight: 700, lineHeight: 1.45, margin: '12px 0 0' }}>
+                {resendStatus}
+              </p>
+            )}
+            <p style={{ color: '#475569', fontSize: '0.9rem', fontWeight: 650, lineHeight: 1.45, margin: '12px 0 0' }}>
+              If it still does not arrive, contact the SailAway administrator. Your account can be verified after your identity is confirmed.
             </p>
           </div>
 

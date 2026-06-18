@@ -138,7 +138,7 @@ const AdminDashboard = () => {
       const [usersData, boatsData, outingsData, crewRequestsData, bugsData, featuresData, msgsData, announcementsData] = await Promise.all([
         supabase.from('users').select('*').limit(100),
         supabase.from('boats').select('*, users(full_name, email)').order('created_at', { ascending: false }).limit(100),
-        supabase.from('outings').select('*, boats(name), users(full_name, email)').order('outing_date', { ascending: true }).limit(100),
+        supabase.from('outings').select('*, boats(name), users:users!outings_skipper_id_fkey(full_name, email)').order('outing_date', { ascending: true }).limit(100),
         supabase.from('crew_requests').select('*, outings(id, title, outing_date), users(full_name, email, user_type)').order('requested_at', { ascending: false }).limit(100),
         supabase.from('bug_reports').select('*').order('created_at', { ascending: false }).limit(50),
         supabase.from('feature_requests').select('*').order('created_at', { ascending: false }).limit(50),
@@ -175,7 +175,7 @@ const AdminDashboard = () => {
   async function loadRecentActivity() {
     try {
       const [outingsData, crewData, chatData] = await Promise.all([
-        supabase.from('outings').select('id, title, skipper_id, created_at, users(full_name)').order('created_at', { ascending: false }).limit(5),
+        supabase.from('outings').select('id, title, skipper_id, created_at, users:users!outings_skipper_id_fkey(full_name)').order('created_at', { ascending: false }).limit(5),
         supabase.from('crew_requests').select('id, status, created_at, outing_id, outings(title), users(full_name)').order('created_at', { ascending: false }).limit(5),
         supabase.from('general_chat').select('message, created_at, users(full_name)').order('created_at', { ascending: false }).limit(10),
       ]);

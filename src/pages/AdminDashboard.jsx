@@ -335,20 +335,6 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleUpdateMessage = async (id, newStatus) => {
-    try {
-      const { error } = await supabase
-        .from('contact_messages')
-        .update({ status: newStatus })
-        .eq('id', id);
-
-      if (error) throw error;
-      await loadDashboardData();
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
   const handleRemoveAdmin = async (userId) => {
     const admin = users.find((item) => item.id === userId);
     if (!window.confirm(`Remove admin access from ${admin?.full_name || admin?.email || 'this member'}?`)) return;
@@ -461,13 +447,19 @@ const AdminDashboard = () => {
       icon: '💬',
       items: contactMessages,
       accent: '#10b981',
-      statusHandler: handleUpdateMessage,
       tableLabel: 'contact message',
     },
   };
 
   const feedbackTitle = (type, item) => (type === 'messages' ? item.subject : item.title);
   const feedbackBody = (type, item) => (type === 'messages' ? item.message : item.description);
+  const openContactMessageThread = (item) => {
+    if (!item.user_id) {
+      openFeedback('messages', item);
+      return;
+    }
+    navigate(`/messages/${item.user_id}?contactMessage=${item.id}&returnTo=${encodeURIComponent('/admin/dashboard?tab=inbox')}`);
+  };
   const featureDashboardStatusValue = (status) => {
     if (status === 'open') return 'pending';
     if (status === 'in_progress' || status === 'planned') return 'in_development';
@@ -536,7 +528,7 @@ const AdminDashboard = () => {
                       ? navigate(`/bug-report/${item.id}?returnTo=${encodeURIComponent('/admin/dashboard')}`)
                       : type === 'features'
                         ? navigate(`/feature-request/${item.id}?returnTo=${encodeURIComponent('/admin/dashboard')}`)
-                        : openFeedback(type, item)}
+                        : openContactMessageThread(item)}
                     style={{ minWidth: 0, flex: '1 1 240px', textAlign: 'left', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
                   >
                     <h4 style={{ margin: 0, fontWeight: 900, color: '#0369a1', fontSize: '1rem' }}>{feedbackTitle(type, item)}</h4>
@@ -547,35 +539,39 @@ const AdminDashboard = () => {
                     <p style={{ margin: '3px 0', fontSize: '0.8rem', color: '#64748b' }}>Submitted {new Date(item.created_at).toLocaleString()}</p>
                   </button>
                   <div style={{ display: 'grid', gap: '6px', minWidth: '140px' }}>
-                    <select
-                      value={type === 'features' ? featureDashboardStatusValue(item.status) : item.status}
-                      onChange={(e) => config.statusHandler(item.id, e.target.value, item)}
-                      style={{ padding: '7px 10px', borderRadius: '6px', border: '1px solid #d1d5db', fontWeight: 700, background: '#ffffff' }}
-                    >
-                      {type === 'features' ? (
-                        <>
-                          <option value="pending">Pending</option>
-                          <option value="in_development">In Development</option>
-                          <option value="implemented">Implemented</option>
-                        </>
-                      ) : (
-                        <>
-                          <option value="open">Open</option>
-                          <option value="in_progress">In Progress</option>
-                          <option value="resolved">Resolved</option>
-                        </>
-                      )}
-                    </select>
+                    {type === 'messages' ? (
+                      null
+                    ) : (
+                      <select
+                        value={type === 'features' ? featureDashboardStatusValue(item.status) : item.status}
+                        onChange={(e) => config.statusHandler(item.id, e.target.value, item)}
+                        style={{ padding: '7px 10px', borderRadius: '6px', border: '1px solid #d1d5db', fontWeight: 700, background: '#ffffff' }}
+                      >
+                        {type === 'features' ? (
+                          <>
+                            <option value="pending">Pending</option>
+                            <option value="in_development">In Development</option>
+                            <option value="implemented">Implemented</option>
+                          </>
+                        ) : (
+                          <>
+                            <option value="open">Open</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="resolved">Resolved</option>
+                          </>
+                        )}
+                      </select>
+                    )}
                     <button
                       type="button"
                       onClick={() => type === 'bugs'
                         ? navigate(`/bug-report/${item.id}?returnTo=${encodeURIComponent('/admin/dashboard')}`)
                         : type === 'features'
                           ? navigate(`/feature-request/${item.id}?returnTo=${encodeURIComponent('/admin/dashboard')}`)
-                          : openFeedback(type, item)}
+                          : openContactMessageThread(item)}
                       style={{ padding: '7px 10px', borderRadius: '6px', border: 'none', background: '#0369a1', color: '#ffffff', fontWeight: 900, cursor: 'pointer' }}
                     >
-                      {type === 'bugs' || type === 'features' ? 'Open Thread' : isSelected ? 'Open' : 'View'}
+                      {type === 'bugs' || type === 'features' ? 'Open Thread' : 'Reply'}
                     </button>
                     {type === 'bugs' && (
                       <button

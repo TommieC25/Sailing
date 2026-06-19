@@ -291,7 +291,7 @@ export default function ClubEventChatPage() {
 
           <section style={styles.card}>
             <div style={styles.composer}>
-              <textarea style={styles.textarea} value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Post to all SailAway members..." />
+              <textarea style={styles.textarea} value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Post your message about this event..." />
               {!!outings.length && (
                 <label style={{display: 'grid', gap: '5px', color: '#334155', fontWeight: 900}}>
                   Do you want to link this event message to one of your own outings?

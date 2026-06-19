@@ -9,7 +9,9 @@ const styles = {
   container: { maxWidth: '900px', margin: '0 auto', display: 'grid', gap: '12px' },
   back: { width: 'fit-content', background: '#e0f2fe', border: '2px solid #0369a1', color: '#0369a1', padding: '9px 12px', borderRadius: '8px', fontWeight: 900, cursor: 'pointer' },
   header: { background: 'linear-gradient(135deg, #0c2340 0%, #0369a1 100%)', color: '#ffffff', borderRadius: '8px', padding: '16px' },
-  title: { margin: '0 0 5px', fontSize: '1.55rem', fontWeight: 900 },
+  headerRow: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', flexWrap: 'wrap' },
+  title: { margin: 0, fontSize: '1.35rem', fontWeight: 900 },
+  details: { marginTop: '12px', paddingTop: '12px', borderTop: '1px solid rgba(255, 255, 255, 0.35)' },
   meta: { margin: '0 0 6px', color: '#dbeafe', fontWeight: 800 },
   text: { margin: 0, whiteSpace: 'pre-wrap', lineHeight: 1.45 },
   card: { background: '#ffffff', border: '1px solid #dbeafe', borderRadius: '8px', padding: '14px' },
@@ -50,6 +52,7 @@ export default function ClubEventChatPage() {
   const [linkedOutingId, setLinkedOutingId] = useState('');
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [showEventDetails, setShowEventDetails] = useState(false);
   const [isEditingEvent, setIsEditingEvent] = useState(false);
   const [eventForm, setEventForm] = useState({ title: '', event_date: '', location: '', description: '' });
 
@@ -245,19 +248,40 @@ export default function ClubEventChatPage() {
       {event ? (
         <>
           <section style={styles.header}>
-            <h1 style={styles.title}>📣 {event.title}</h1>
-            <p style={styles.meta}>
-              {formatLocalDate(event.event_date)}{event.location ? ` · ${event.location}` : ''}
-            </p>
-            {event.description && <p style={styles.text}>{event.description}</p>}
-            {isAdmin && !isEditingEvent && (
+            <div style={styles.headerRow}>
+              <h1 style={styles.title}>📣 {event.title}</h1>
               <button
                 type="button"
-                onClick={() => setIsEditingEvent(true)}
-                style={{ ...styles.button, ...styles.secondary, marginTop: '12px', padding: '7px 10px' }}
+                onClick={() => {
+                  if (showEventDetails) {
+                    if (isEditingEvent) cancelEventEdit();
+                    setShowEventDetails(false);
+                  } else {
+                    setShowEventDetails(true);
+                  }
+                }}
+                aria-expanded={showEventDetails}
+                style={{ ...styles.button, ...styles.secondary, padding: '7px 10px' }}
               >
-                Edit Event
+                {showEventDetails ? 'Hide Details' : 'Event Details'}
               </button>
+            </div>
+            {showEventDetails && (
+              <div style={styles.details}>
+                <p style={styles.meta}>
+                  {formatLocalDate(event.event_date)}{event.location ? ` · ${event.location}` : ''}
+                </p>
+                {event.description && <p style={styles.text}>{event.description}</p>}
+                {isAdmin && !isEditingEvent && (
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingEvent(true)}
+                    style={{ ...styles.button, ...styles.secondary, marginTop: '12px', padding: '7px 10px' }}
+                  >
+                    Edit Event
+                  </button>
+                )}
+              </div>
             )}
           </section>
 

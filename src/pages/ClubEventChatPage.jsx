@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import AuthorMessageActions from '../components/AuthorMessageActions';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
@@ -44,6 +44,7 @@ const openSpots = (message) => Math.max(
 
 export default function ClubEventChatPage() {
   const navigate = useNavigate();
+  const { eventId } = useParams();
   const { user, profile } = useAuth();
   const isAdmin = profile?.role === 'admin';
   const [event, setEvent] = useState(null);
@@ -62,7 +63,7 @@ export default function ClubEventChatPage() {
   const loadEvent = useCallback(async () => {
     try {
       setError('');
-      const { data, error: loadError } = await supabase.rpc('active_club_event_chat');
+      const { data, error: loadError } = await supabase.rpc('club_event_chat', { p_event_id: eventId });
       if (loadError) throw loadError;
       const rows = data || [];
       if (!rows.length) {
@@ -91,19 +92,19 @@ export default function ClubEventChatPage() {
     } catch (err) {
       setError(err.message || 'Could not load Upcoming Rendezvous');
     }
-  }, []);
+  }, [eventId]);
 
   useEffect(() => {
     const initialLoad = window.setTimeout(loadEvent, 0);
     const channel = supabase.channel('club-event-chat-page')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'club_event_messages' }, loadEvent)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'club_events' }, loadEvent)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'club_event_messages', filter: `event_id=eq.${eventId}` }, loadEvent)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'club_events', filter: `id=eq.${eventId}` }, loadEvent)
       .subscribe();
     return () => {
       window.clearTimeout(initialLoad);
       supabase.removeChannel(channel);
     };
-  }, [loadEvent]);
+  }, [eventId, loadEvent]);
 
   useEffect(() => {
     if (!user) return;
@@ -137,25 +138,14 @@ export default function ClubEventChatPage() {
     try {
       setSaving(true);
       setError('');
-      if (event) {
-        const { error: updateError } = await supabase.from('club_events').update({
-          title: eventForm.title.trim(),
-          event_date: eventForm.event_date,
-          location: eventForm.location.trim() || null,
-          description: eventForm.description.trim() || null,
-          updated_at: new Date().toISOString(),
-        }).eq('id', event.id);
-        if (updateError) throw updateError;
-      } else {
-        const { error: insertError } = await supabase.from('club_events').insert({
-          ...eventForm,
-          title: eventForm.title.trim(),
-          location: eventForm.location.trim() || null,
-          description: eventForm.description.trim() || null,
-          created_by: user.id,
-        });
-        if (insertError) throw insertError;
-      }
+      const { error: updateError } = await supabase.from('club_events').update({
+        title: eventForm.title.trim(),
+        event_date: eventForm.event_date,
+        location: eventForm.location.trim() || null,
+        description: eventForm.description.trim() || null,
+        updated_at: new Date().toISOString(),
+      }).eq('id', event.id);
+      if (updateError) throw updateError;
       await loadEvent();
       setIsEditingEvent(false);
     } catch (err) {
@@ -173,7 +163,10 @@ export default function ClubEventChatPage() {
       updated_at: new Date().toISOString(),
     }).eq('id', event.id);
     if (archiveError) setError(archiveError.message);
-    else await loadEvent();
+    else {
+      window.dispatchEvent(new Event('sailing:club-event-chat-updated'));
+      navigate('/event-chat');
+    }
   };
 
   const cancelEventEdit = () => {
@@ -245,7 +238,7 @@ export default function ClubEventChatPage() {
 
   return (
     <div style={styles.container}>
-      <button type="button" onClick={() => navigate(-1)} style={styles.back}>← Back</button>
+      <button type="button" onClick={() => navigate('/event-chat')} style={styles.back}>← All Rendezvous</button>
       {error && <div style={styles.error}>{error}</div>}
 
       {event ? (
@@ -322,13 +315,13 @@ export default function ClubEventChatPage() {
               {messages.map((item) => (
                 <div key={item.message_id} style={{...styles.bubble, ...(item.sender_id === user.id ? styles.own : styles.other)}}>
                   {item.sender_id !== user.id && (
-                    <button type="button" style={styles.author} onClick={() => navigate(`/profile/${item.sender_id}?returnTo=${encodeURIComponent('/event-chat')}`)}>
+                    <button type="button" style={styles.author} onClick={() => navigate(`/profile/${item.sender_id}?returnTo=${encodeURIComponent(`/event-chat/${eventId}`)}`)}>
                       {item.sender_name || 'Member'}
                     </button>
                   )}
                   <div>{item.message_text}</div>
                   {item.linked_outing_id && (
-                    <button type="button" style={styles.preview} onClick={() => navigate(`/outing/${item.linked_outing_id}?returnTo=${encodeURIComponent('/event-chat')}`)}>
+                    <button type="button" style={styles.preview} onClick={() => navigate(`/outing/${item.linked_outing_id}?returnTo=${encodeURIComponent(`/event-chat/${eventId}`)}`)}>
                       <span style={styles.previewTitle}>⛵ {item.linked_outing_title}</span>
                       <span>{formatLocalDate(item.linked_outing_date)} · {item.linked_boat_name || 'Boat TBD'} · {openSpots(item)} spots available</span>
                     </button>
@@ -394,19 +387,8 @@ export default function ClubEventChatPage() {
             </div>
           </section>
         </>
-      ) : isAdmin ? (
-        <section style={styles.card}>
-          <h1 style={{marginTop: 0}}>Create the Upcoming Rendezvous</h1>
-          <div style={styles.adminGrid}>
-            <input style={styles.input} value={eventForm.title} onChange={(e) => setEventForm((v) => ({ ...v, title: e.target.value }))} placeholder="Event title" />
-            <input style={styles.input} type="date" value={eventForm.event_date} onChange={(e) => setEventForm((v) => ({ ...v, event_date: e.target.value }))} />
-            <input style={styles.input} value={eventForm.location} onChange={(e) => setEventForm((v) => ({ ...v, location: e.target.value }))} placeholder="Location" />
-            <textarea style={styles.textarea} value={eventForm.description} onChange={(e) => setEventForm((v) => ({ ...v, description: e.target.value }))} placeholder="Event details" />
-            <button type="button" onClick={saveEvent} style={{...styles.button, ...styles.primary}}>Create Rendezvous Chat</button>
-          </div>
-        </section>
       ) : (
-        <section style={styles.card}><h1 style={{marginTop: 0}}>No Upcoming Rendezvous</h1><p>Admin will open the next club-wide Rendezvous conversation here.</p></section>
+        <section style={styles.card}><h1 style={{marginTop: 0}}>Rendezvous unavailable</h1><p>This event has been closed or could not be found.</p></section>
       )}
     </div>
   );

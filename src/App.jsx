@@ -23,6 +23,7 @@ import EmailConfirmedPage from './pages/EmailConfirmedPage';
 import UserGuidePage from './pages/UserGuidePage';
 import WaiverAcceptancePage from './pages/WaiverAcceptancePage';
 import ClubEventChatPage from './pages/ClubEventChatPage';
+import ClubEventsPage from './pages/ClubEventsPage';
 import WelcomePage from './pages/WelcomePage';
 import SignupForm from './components/Auth/SignupForm';
 import LoginForm from './components/Auth/LoginForm';
@@ -159,7 +160,8 @@ function App() {
           <Route path="/contact-admin" element={<ProtectedRoute><ContactAdminPage /></ProtectedRoute>} />
           <Route path="/guide" element={<ProtectedRoute><UserGuidePage /></ProtectedRoute>} />
           <Route path="/waiver" element={<ProtectedRoute><WaiverAcceptancePage /></ProtectedRoute>} />
-          <Route path="/event-chat" element={<ProtectedRoute><ClubEventChatPage /></ProtectedRoute>} />
+          <Route path="/event-chat" element={<ProtectedRoute><ClubEventsPage /></ProtectedRoute>} />
+          <Route path="/event-chat/:eventId" element={<ProtectedRoute><ClubEventChatPage /></ProtectedRoute>} />
           <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
           <Route path="/admin/inbox" element={<AdminRoute><AdminInboxPage /></AdminRoute>} />
           <Route path="/announcements" element={<ProtectedRoute><AnnouncementsFeed /></ProtectedRoute>} />

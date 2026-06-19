@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
-import { formatLocalDate, isPastLocalDate } from '../utils/dateUtils';
+import { formatLocalDate, isPastLocalDate, todayLocalDateString } from '../utils/dateUtils';
 import { formatPhoneNumber } from '../utils/phoneFormat';
 
 const HEADER_BG = 'linear-gradient(135deg, #0c2340 0%, #0369a1 100%)';
@@ -10,7 +10,7 @@ const HEADER_BG = 'linear-gradient(135deg, #0c2340 0%, #0369a1 100%)';
 export default function HomePage() {
   const { user, profile, loading: authLoading } = useAuth();
   const [outings, setOutings] = useState([]);
-  const [activeClubEvent, setActiveClubEvent] = useState(null);
+  const [clubEvents, setClubEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -140,28 +140,29 @@ export default function HomePage() {
   useEffect(() => {
     if (!user) return;
 
-    const fetchActiveClubEvent = async () => {
+    const fetchClubEvents = async () => {
       const { data, error: clubEventError } = await supabase
         .from('club_events')
         .select('id, title, event_date, location')
         .eq('status', 'active')
-        .maybeSingle();
+        .gte('event_date', todayLocalDateString())
+        .order('event_date', { ascending: true });
 
       if (clubEventError) {
         console.error('Could not load Upcoming Rendezvous:', clubEventError);
         return;
       }
-      setActiveClubEvent(data || null);
+      setClubEvents(data || []);
     };
 
-    const initialFetch = window.setTimeout(fetchActiveClubEvent, 0);
-    window.addEventListener('sailing:club-event-chat-updated', fetchActiveClubEvent);
-    window.addEventListener('focus', fetchActiveClubEvent);
+    const initialFetch = window.setTimeout(fetchClubEvents, 0);
+    window.addEventListener('sailing:club-event-chat-updated', fetchClubEvents);
+    window.addEventListener('focus', fetchClubEvents);
 
     return () => {
       window.clearTimeout(initialFetch);
-      window.removeEventListener('sailing:club-event-chat-updated', fetchActiveClubEvent);
-      window.removeEventListener('focus', fetchActiveClubEvent);
+      window.removeEventListener('sailing:club-event-chat-updated', fetchClubEvents);
+      window.removeEventListener('focus', fetchClubEvents);
     };
   }, [user]);
 
@@ -222,18 +223,27 @@ export default function HomePage() {
       {/* Main content with padding */}
       <div style={{padding: '0 12px 24px 12px'}}>
 
-        {activeClubEvent && (
-          <Link
-            to="/event-chat"
-            style={{display: 'block', background: '#e0f2fe', border: '3px solid #0284c7', borderRadius: '10px', padding: '13px 14px', marginBottom: '16px', textDecoration: 'none'}}
-          >
-            <div style={{fontSize: '1.15rem', fontWeight: 900, color: '#0c2340', marginBottom: '3px'}}>
-              📣 Upcoming Rendezvous: {activeClubEvent.title}
+        {clubEvents.length > 0 && (
+          <section style={{marginBottom: '16px'}}>
+            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', marginBottom: '8px'}}>
+              <h2 style={{margin: 0, color: '#0c2340', fontSize: '1.2rem'}}>📣 Upcoming Club Rendezvous</h2>
+              <Link to="/event-chat" style={{color: '#0369a1', fontWeight: 900}}>View all</Link>
             </div>
-            <div style={{fontSize: '0.92rem', color: '#0369a1', fontWeight: 800}}>
-              {formatLocalDate(activeClubEvent.event_date)}{activeClubEvent.location ? ` · ${activeClubEvent.location}` : ''} · Open conversation →
+            <div style={{display: 'grid', gap: '8px'}}>
+              {clubEvents.map((clubEvent) => (
+                <Link
+                  key={clubEvent.id}
+                  to={`/event-chat/${clubEvent.id}`}
+                  style={{display: 'block', background: '#e0f2fe', border: '2px solid #0284c7', borderRadius: '8px', padding: '11px 12px', textDecoration: 'none'}}
+                >
+                  <div style={{fontSize: '1.05rem', fontWeight: 900, color: '#0c2340', marginBottom: '3px'}}>{clubEvent.title}</div>
+                  <div style={{fontSize: '0.9rem', color: '#0369a1', fontWeight: 800}}>
+                    {formatLocalDate(clubEvent.event_date)}{clubEvent.location ? ` · ${clubEvent.location}` : ''}
+                  </div>
+                </Link>
+              ))}
             </div>
-          </Link>
+          </section>
         )}
 
         {/* Bio prompt - shown to users who haven't filled in their bio yet */}

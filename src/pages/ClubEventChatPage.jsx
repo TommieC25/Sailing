@@ -50,6 +50,7 @@ export default function ClubEventChatPage() {
   const [linkedOutingId, setLinkedOutingId] = useState('');
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [isEditingEvent, setIsEditingEvent] = useState(false);
   const [eventForm, setEventForm] = useState({ title: '', event_date: '', location: '', description: '' });
 
   const loadEvent = useCallback(async () => {
@@ -150,6 +151,7 @@ export default function ClubEventChatPage() {
         if (insertError) throw insertError;
       }
       await loadEvent();
+      setIsEditingEvent(false);
     } catch (err) {
       setError(err.message || 'Could not save Upcoming Rendezvous');
     } finally {
@@ -166,6 +168,17 @@ export default function ClubEventChatPage() {
     }).eq('id', event.id);
     if (archiveError) setError(archiveError.message);
     else await loadEvent();
+  };
+
+  const cancelEventEdit = () => {
+    setEventForm({
+      title: event.title || '',
+      event_date: event.event_date || '',
+      location: event.location || '',
+      description: event.description || '',
+    });
+    setIsEditingEvent(false);
+    setError('');
   };
 
   const sendMessage = async () => {
@@ -237,9 +250,18 @@ export default function ClubEventChatPage() {
               {formatLocalDate(event.event_date)}{event.location ? ` · ${event.location}` : ''}
             </p>
             {event.description && <p style={styles.text}>{event.description}</p>}
+            {isAdmin && !isEditingEvent && (
+              <button
+                type="button"
+                onClick={() => setIsEditingEvent(true)}
+                style={{ ...styles.button, ...styles.secondary, marginTop: '12px', padding: '7px 10px' }}
+              >
+                Edit Event
+              </button>
+            )}
           </section>
 
-          {isAdmin && (
+          {isAdmin && isEditingEvent && (
             <section style={styles.card}>
               <div style={styles.adminGrid}>
                 <input style={styles.input} value={eventForm.title} onChange={(e) => setEventForm((v) => ({ ...v, title: e.target.value }))} placeholder="Event title" />
@@ -247,7 +269,8 @@ export default function ClubEventChatPage() {
                 <input style={styles.input} value={eventForm.location} onChange={(e) => setEventForm((v) => ({ ...v, location: e.target.value }))} placeholder="Location" />
                 <textarea style={styles.textarea} value={eventForm.description} onChange={(e) => setEventForm((v) => ({ ...v, description: e.target.value }))} placeholder="Event details" />
                 <div style={styles.actions}>
-                  <button type="button" onClick={saveEvent} style={{...styles.button, ...styles.primary}}>Save Event Details</button>
+                  <button type="button" onClick={saveEvent} disabled={saving} style={{...styles.button, ...styles.primary}}>Save Event Details</button>
+                  <button type="button" onClick={cancelEventEdit} disabled={saving} style={{...styles.button, ...styles.secondary}}>Cancel</button>
                   <button type="button" onClick={archiveEvent} style={{...styles.button, ...styles.danger}}>Close Rendezvous</button>
                 </div>
               </div>

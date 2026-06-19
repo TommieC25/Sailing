@@ -10,6 +10,7 @@ const styles = {
   back: { width: 'fit-content', background: '#e0f2fe', border: '2px solid #0369a1', color: '#0369a1', padding: '9px 12px', borderRadius: '8px', fontWeight: 900, cursor: 'pointer' },
   header: { background: 'linear-gradient(135deg, #0c2340 0%, #0369a1 100%)', color: '#ffffff', borderRadius: '8px', padding: '16px' },
   headerRow: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', flexWrap: 'wrap' },
+  headerActions: { display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' },
   title: { margin: 0, fontSize: '1.35rem', fontWeight: 900 },
   details: { marginTop: '12px', paddingTop: '12px', borderTop: '1px solid rgba(255, 255, 255, 0.35)' },
   meta: { margin: '0 0 6px', color: '#dbeafe', fontWeight: 800 },
@@ -29,6 +30,7 @@ const styles = {
   button: { border: 0, borderRadius: '7px', padding: '10px 13px', fontWeight: 900, cursor: 'pointer' },
   primary: { background: '#0369a1', color: '#ffffff' },
   secondary: { background: '#e0f2fe', color: '#0369a1', border: '2px solid #0369a1' },
+  moderate: { background: '#fef3c7', color: '#92400e', border: '2px solid #f59e0b' },
   danger: { background: '#dc2626', color: '#ffffff' },
   input: { width: '100%', border: '2px solid #94a3b8', borderRadius: '7px', padding: '9px', font: 'inherit' },
   adminGrid: { display: 'grid', gap: '9px' },
@@ -54,6 +56,7 @@ export default function ClubEventChatPage() {
   const [saving, setSaving] = useState(false);
   const [showEventDetails, setShowEventDetails] = useState(false);
   const [isEditingEvent, setIsEditingEvent] = useState(false);
+  const [isModerating, setIsModerating] = useState(false);
   const [eventForm, setEventForm] = useState({ title: '', event_date: '', location: '', description: '' });
 
   const loadEvent = useCallback(async () => {
@@ -250,21 +253,33 @@ export default function ClubEventChatPage() {
           <section style={styles.header}>
             <div style={styles.headerRow}>
               <h1 style={styles.title}>📣 {event.title}</h1>
-              <button
-                type="button"
-                onClick={() => {
-                  if (showEventDetails) {
-                    if (isEditingEvent) cancelEventEdit();
-                    setShowEventDetails(false);
-                  } else {
-                    setShowEventDetails(true);
-                  }
-                }}
-                aria-expanded={showEventDetails}
-                style={{ ...styles.button, ...styles.secondary, padding: '7px 10px' }}
-              >
-                {showEventDetails ? 'Hide Details' : 'Event Details'}
-              </button>
+              <div style={styles.headerActions}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (showEventDetails) {
+                      if (isEditingEvent) cancelEventEdit();
+                      setShowEventDetails(false);
+                    } else {
+                      setShowEventDetails(true);
+                    }
+                  }}
+                  aria-expanded={showEventDetails}
+                  style={{ ...styles.button, ...styles.secondary, padding: '7px 10px' }}
+                >
+                  {showEventDetails ? 'Hide Details' : 'Event Details'}
+                </button>
+                {isAdmin && (
+                  <button
+                    type="button"
+                    onClick={() => setIsModerating((current) => !current)}
+                    aria-pressed={isModerating}
+                    style={{ ...styles.button, ...styles.moderate, padding: '7px 10px' }}
+                  >
+                    {isModerating ? 'Done Moderating' : 'Moderate Chat'}
+                  </button>
+                )}
+              </div>
             </div>
             {showEventDetails && (
               <div style={styles.details}>
@@ -325,7 +340,7 @@ export default function ClubEventChatPage() {
                       onSave={(text) => editMessage(item.message_id, text)}
                       onDelete={() => deleteMessage(item.message_id)}
                     />
-                  ) : isAdmin && (
+                  ) : isAdmin && isModerating && (
                     <div style={styles.actions}>
                       <button
                         type="button"

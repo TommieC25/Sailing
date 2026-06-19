@@ -4,7 +4,7 @@ const styles = {
   actions: { display: 'flex', gap: '8px', marginTop: '6px', justifyContent: 'flex-end' },
   button: { border: 0, padding: 0, background: 'none', color: 'inherit', font: 'inherit', fontSize: '0.75rem', fontWeight: 900, textDecoration: 'underline', cursor: 'pointer', opacity: 0.85 },
   editor: { display: 'grid', gap: '7px', marginTop: '5px' },
-  textarea: { width: '100%', minHeight: '68px', resize: 'vertical', border: '1px solid #94a3b8', borderRadius: '7px', padding: '8px', font: 'inherit', color: '#0f172a', background: '#ffffff' },
+  textarea: { width: '100%', minHeight: '140px', resize: 'vertical', border: '1px solid #94a3b8', borderRadius: '7px', padding: '10px', font: 'inherit', color: '#0f172a', background: '#ffffff' },
 };
 
 export default function AuthorMessageActions({ value, onSave, onDelete }) {

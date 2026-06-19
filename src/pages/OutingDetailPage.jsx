@@ -25,7 +25,6 @@ const styles = {
   skipperSkill: { fontSize: '0.875rem', color: '#6b7280', marginBottom: '8px', textTransform: 'capitalize' },
   skipperBio: { fontSize: '0.875rem', color: '#374151', marginTop: '8px' },
   crewRequestsSection: { borderTop: '1px solid #e5e7eb', paddingTop: '14px', marginTop: '14px' },
-  crewRequestsTitle: { fontSize: '1.25rem', fontWeight: 'bold', color: '#1f2937', marginBottom: '12px', margin: '0 0 12px 0' },
   requestsList: { display: 'grid', gap: '10px' },
   requestCard: { borderRadius: '8px', padding: '12px', display: 'flex', gap: '12px', alignItems: 'flex-start' },
   requestCardPending: { borderLeft: '4px solid #fbbf24', background: '#fffbeb' },
@@ -61,6 +60,7 @@ const styles = {
   errorBox: { background: '#fef2f2', border: '1px solid #fecaca', color: '#991b1b', padding: '16px', borderRadius: '8px' },
   noRequestsText: { color: '#6b7280' },
   approvedCrewSection: { borderTop: '1px solid #e5e7eb', paddingTop: '14px', marginTop: '14px' },
+  disclosureButton: { width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', border: 0, background: 'none', color: '#1f2937', padding: '6px 0', font: 'inherit', fontSize: '1.2rem', fontWeight: 900, cursor: 'pointer', textAlign: 'left' },
   crewMemberLine: { display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 0', borderBottom: '1px solid #f3f4f6' },
   crewPhoto: { width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 },
   crewPhotoPlaceholder: { width: '40px', height: '40px', borderRadius: '50%', background: '#e5e7eb', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem' },
@@ -71,15 +71,15 @@ const styles = {
   messageBtn: { background: '#0c2340', color: '#ffffff', border: 'none', borderRadius: '8px', padding: '8px 10px', fontWeight: 900, cursor: 'pointer', fontSize: '0.85rem', flexShrink: 0 },
   chatSection: { borderTop: '1px solid #e5e7eb', paddingTop: '14px', marginTop: '14px' },
   chatMessages: { background: '#f9fafb', borderRadius: '8px', padding: '10px', maxHeight: '220px', overflowY: 'auto', marginBottom: '10px', display: 'flex', flexDirection: 'column', gap: '8px' },
-  chatMessage: { padding: '9px 12px', borderRadius: '8px', maxWidth: '80%' },
+  chatMessage: { padding: '9px 12px', borderRadius: '8px', maxWidth: '92%' },
   chatMessageOwn: { background: '#06b6d4', color: '#ffffff', alignSelf: 'flex-end' },
   chatMessageOther: { background: '#e5e7eb', color: '#1f2937' },
   chatMessageAuthor: { fontSize: '0.75rem', fontWeight: 600, marginBottom: '4px', opacity: 0.8 },
   chatAuthorButton: { background: 'none', border: 'none', padding: 0, color: 'inherit', font: 'inherit', fontWeight: 900, cursor: 'pointer', textAlign: 'left', textDecoration: 'underline' },
   chatMessageText: { fontSize: '0.95rem', lineHeight: '1.4', whiteSpace: 'pre-wrap' },
-  chatInput: { display: 'flex', gap: '8px' },
-  chatTextarea: { flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '0.95rem', fontFamily: 'inherit', resize: 'vertical', minHeight: '48px' },
-  chatSendBtn: { padding: '10px 14px', background: '#06b6d4', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', fontSize: '0.9rem', alignSelf: 'flex-end' },
+  chatInput: { display: 'grid', gap: '8px' },
+  chatTextarea: { width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #94a3b8', fontSize: '1rem', fontFamily: 'inherit', lineHeight: 1.4, resize: 'vertical', minHeight: '130px' },
+  chatSendBtn: { padding: '10px 16px', background: '#06b6d4', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontSize: '0.95rem', justifySelf: 'end' },
   calendarLink: { display: 'inline-block', fontSize: '0.9rem', fontWeight: 600, color: '#06b6d4', textDecoration: 'none', padding: '8px 12px', background: '#e0f2fe', borderRadius: '6px', marginTop: '12px' },
 };
 
@@ -98,6 +98,8 @@ export default function OutingDetailPage() {
   const [messages, setMessages] = useState([]);
   const [messageText, setMessageText] = useState('');
   const [sendingMessage, setSendingMessage] = useState(false);
+  const [showCrewConfirmed, setShowCrewConfirmed] = useState(false);
+  const [showCrewRequests, setShowCrewRequests] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -742,8 +744,16 @@ export default function OutingDetailPage() {
             {/* Approved Crew List */}
             {approvedCrew.length > 0 && (
               <div style={styles.approvedCrewSection}>
-                <h2 style={styles.sectionTitle}>⛵ Crew Confirmed ({approvedCrew.length})</h2>
-                <div>
+                <button
+                  type="button"
+                  onClick={() => setShowCrewConfirmed((current) => !current)}
+                  aria-expanded={showCrewConfirmed}
+                  style={styles.disclosureButton}
+                >
+                  <span>⛵ Crew Confirmed ({approvedCrew.length})</span>
+                  <span aria-hidden="true">{showCrewConfirmed ? '▾' : '▸'}</span>
+                </button>
+                {showCrewConfirmed && <div>
                   {approvedCrew.map((req) => (
                     <div key={req.id} style={styles.crewMemberLine}>
                       {req.crew?.photo_url ? (
@@ -778,7 +788,7 @@ export default function OutingDetailPage() {
                       )}
                     </div>
                   ))}
-                </div>
+                </div>}
               </div>
             )}
 
@@ -863,9 +873,17 @@ export default function OutingDetailPage() {
 
         {isSkipper && (
           <div style={styles.crewRequestsSection}>
-            <h2 style={styles.crewRequestsTitle}>Crew Requests ({crewRequests.length})</h2>
+            <button
+              type="button"
+              onClick={() => setShowCrewRequests((current) => !current)}
+              aria-expanded={showCrewRequests}
+              style={styles.disclosureButton}
+            >
+              <span>Crew Requests ({crewRequests.length})</span>
+              <span aria-hidden="true">{showCrewRequests ? '▾' : '▸'}</span>
+            </button>
 
-            {crewRequests.length === 0 ? (
+            {showCrewRequests && (crewRequests.length === 0 ? (
               <p style={styles.noRequestsText}>No crew requests yet</p>
             ) : (
               <div style={styles.requestsList}>
@@ -894,7 +912,7 @@ export default function OutingDetailPage() {
                   </div>
                 )}
               </div>
-            )}
+            ))}
           </div>
         )}
 

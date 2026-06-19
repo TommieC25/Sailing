@@ -214,6 +214,11 @@ export default function ClubEventChatPage() {
     await loadEvent();
   };
 
+  const moderateDeleteMessage = async (messageId) => {
+    if (!window.confirm('Delete this message as moderator? This cannot be undone.')) return;
+    await deleteMessage(messageId);
+  };
+
   return (
     <div style={styles.container}>
       <button type="button" onClick={() => navigate(-1)} style={styles.back}>← Back</button>
@@ -262,12 +267,22 @@ export default function ClubEventChatPage() {
                     </button>
                   )}
                   <div style={{fontSize: '0.72rem', opacity: 0.7, marginTop: '5px'}}>{new Date(item.message_created_at).toLocaleString()}</div>
-                  {item.sender_id === user.id && (
+                  {item.sender_id === user.id ? (
                     <AuthorMessageActions
                       value={item.message_text}
                       onSave={(text) => editMessage(item.message_id, text)}
                       onDelete={() => deleteMessage(item.message_id)}
                     />
+                  ) : isAdmin && (
+                    <div style={styles.actions}>
+                      <button
+                        type="button"
+                        onClick={() => moderateDeleteMessage(item.message_id)}
+                        style={{ ...styles.button, ...styles.danger, padding: '6px 9px', fontSize: '0.78rem' }}
+                      >
+                        Delete
+                      </button>
+                    </div>
                   )}
                 </div>
               ))}

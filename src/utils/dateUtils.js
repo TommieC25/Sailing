@@ -11,6 +11,16 @@ export const formatLocalDate = (dateString, options) => {
   return date.toLocaleDateString('en-US', options);
 };
 
+export const formatLocalTime = (timeString) => {
+  if (!timeString) return '';
+  const [hour, minute] = timeString.split(':').map(Number);
+  if (!Number.isInteger(hour) || !Number.isInteger(minute)) return timeString;
+  return new Date(2000, 0, 1, hour, minute).toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+};
+
 export const compactLocalDate = (dateString) => {
   const date = parseLocalDate(dateString);
   if (!date) return '';

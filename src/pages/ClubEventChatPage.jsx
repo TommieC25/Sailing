@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import AuthorMessageActions from '../components/AuthorMessageActions';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
-import { formatLocalDate, todayLocalDateString } from '../utils/dateUtils';
+import { formatLocalDate, formatLocalTime, todayLocalDateString } from '../utils/dateUtils';
 
 const styles = {
   container: { maxWidth: '900px', margin: '0 auto', display: 'grid', gap: '12px' },
@@ -33,6 +33,7 @@ const styles = {
   moderate: { background: '#fef3c7', color: '#92400e', border: '2px solid #f59e0b' },
   danger: { background: '#dc2626', color: '#ffffff' },
   input: { width: '100%', border: '2px solid #94a3b8', borderRadius: '7px', padding: '9px', font: 'inherit' },
+  label: { display: 'grid', gap: '5px', color: '#334155', fontWeight: 900 },
   adminGrid: { display: 'grid', gap: '9px' },
   error: { background: '#fee2e2', border: '2px solid #dc2626', color: '#991b1b', borderRadius: '7px', padding: '10px', fontWeight: 800 },
 };
@@ -58,7 +59,7 @@ export default function ClubEventChatPage() {
   const [showEventDetails, setShowEventDetails] = useState(false);
   const [isEditingEvent, setIsEditingEvent] = useState(false);
   const [isModerating, setIsModerating] = useState(false);
-  const [eventForm, setEventForm] = useState({ title: '', event_date: '', location: '', description: '' });
+  const [eventForm, setEventForm] = useState({ title: '', event_date: '', event_time: '', location: '', description: '' });
 
   const loadEvent = useCallback(async () => {
     try {
@@ -76,6 +77,7 @@ export default function ClubEventChatPage() {
         id: first.event_id,
         title: first.event_title,
         event_date: first.event_date,
+        event_time: first.event_time,
         location: first.event_location,
         description: first.event_description,
         status: first.event_status,
@@ -83,6 +85,7 @@ export default function ClubEventChatPage() {
       setEventForm({
         title: first.event_title || '',
         event_date: first.event_date || '',
+        event_time: first.event_time?.slice(0, 5) || '',
         location: first.event_location || '',
         description: first.event_description || '',
       });
@@ -131,8 +134,8 @@ export default function ClubEventChatPage() {
   const canLinkOuting = outings.length > 0 && !hasLinkedOuting;
 
   const saveEvent = async () => {
-    if (!eventForm.title.trim() || !eventForm.event_date) {
-      setError('Event title and date are required.');
+    if (!eventForm.title.trim() || !eventForm.event_date || !eventForm.event_time) {
+      setError('Event title, date, and time are required.');
       return;
     }
     try {
@@ -141,6 +144,7 @@ export default function ClubEventChatPage() {
       const { error: updateError } = await supabase.from('club_events').update({
         title: eventForm.title.trim(),
         event_date: eventForm.event_date,
+        event_time: eventForm.event_time,
         location: eventForm.location.trim() || null,
         description: eventForm.description.trim() || null,
         updated_at: new Date().toISOString(),
@@ -173,6 +177,7 @@ export default function ClubEventChatPage() {
     setEventForm({
       title: event.title || '',
       event_date: event.event_date || '',
+      event_time: event.event_time?.slice(0, 5) || '',
       location: event.location || '',
       description: event.description || '',
     });
@@ -277,7 +282,7 @@ export default function ClubEventChatPage() {
             {showEventDetails && (
               <div style={styles.details}>
                 <p style={styles.meta}>
-                  {formatLocalDate(event.event_date)}{event.location ? ` · ${event.location}` : ''}
+                  {formatLocalDate(event.event_date)} · {event.event_time ? formatLocalTime(event.event_time) : 'Time TBD'}{event.location ? ` · ${event.location}` : ''}
                 </p>
                 {event.description && <p style={styles.text}>{event.description}</p>}
                 {isAdmin && !isEditingEvent && (
@@ -296,10 +301,11 @@ export default function ClubEventChatPage() {
           {isAdmin && isEditingEvent && (
             <section style={styles.card}>
               <div style={styles.adminGrid}>
-                <input style={styles.input} value={eventForm.title} onChange={(e) => setEventForm((v) => ({ ...v, title: e.target.value }))} placeholder="Event title" />
-                <input style={styles.input} type="date" value={eventForm.event_date} onChange={(e) => setEventForm((v) => ({ ...v, event_date: e.target.value }))} />
-                <input style={styles.input} value={eventForm.location} onChange={(e) => setEventForm((v) => ({ ...v, location: e.target.value }))} placeholder="Location" />
-                <textarea style={styles.textarea} value={eventForm.description} onChange={(e) => setEventForm((v) => ({ ...v, description: e.target.value }))} placeholder="Event details" />
+                <label style={styles.label}>Event title<input style={styles.input} value={eventForm.title} onChange={(e) => setEventForm((v) => ({ ...v, title: e.target.value }))} /></label>
+                <label style={styles.label}>Event date<input style={styles.input} type="date" value={eventForm.event_date} onChange={(e) => setEventForm((v) => ({ ...v, event_date: e.target.value }))} /></label>
+                <label style={styles.label}>Event time<input style={styles.input} type="time" value={eventForm.event_time} onChange={(e) => setEventForm((v) => ({ ...v, event_time: e.target.value }))} /></label>
+                <label style={styles.label}>Location<input style={styles.input} value={eventForm.location} onChange={(e) => setEventForm((v) => ({ ...v, location: e.target.value }))} /></label>
+                <label style={styles.label}>Event details<textarea style={styles.textarea} value={eventForm.description} onChange={(e) => setEventForm((v) => ({ ...v, description: e.target.value }))} /></label>
                 <div style={styles.actions}>
                   <button type="button" onClick={saveEvent} disabled={saving} style={{...styles.button, ...styles.primary}}>Save Event Details</button>
                   <button type="button" onClick={cancelEventEdit} disabled={saving} style={{...styles.button, ...styles.secondary}}>Cancel</button>

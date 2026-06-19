@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
-import { formatLocalDate, isPastLocalDate, todayLocalDateString } from '../utils/dateUtils';
+import { formatLocalDate, formatLocalTime, isPastLocalDate, todayLocalDateString } from '../utils/dateUtils';
 import { formatPhoneNumber } from '../utils/phoneFormat';
 
 const HEADER_BG = 'linear-gradient(135deg, #0c2340 0%, #0369a1 100%)';
@@ -143,10 +143,11 @@ export default function HomePage() {
     const fetchClubEvents = async () => {
       const { data, error: clubEventError } = await supabase
         .from('club_events')
-        .select('id, title, event_date, location')
+        .select('id, title, event_date, event_time, location')
         .eq('status', 'active')
         .gte('event_date', todayLocalDateString())
-        .order('event_date', { ascending: true });
+        .order('event_date', { ascending: true })
+        .order('event_time', { ascending: true, nullsFirst: false });
 
       if (clubEventError) {
         console.error('Could not load Upcoming Rendezvous:', clubEventError);
@@ -238,7 +239,7 @@ export default function HomePage() {
                 >
                   <div style={{fontSize: '1.05rem', fontWeight: 900, color: '#0c2340', marginBottom: '3px'}}>{clubEvent.title}</div>
                   <div style={{fontSize: '0.9rem', color: '#0369a1', fontWeight: 800}}>
-                    {formatLocalDate(clubEvent.event_date)}{clubEvent.location ? ` · ${clubEvent.location}` : ''}
+                    {formatLocalDate(clubEvent.event_date)} · {clubEvent.event_time ? formatLocalTime(clubEvent.event_time) : 'Time TBD'}{clubEvent.location ? ` · ${clubEvent.location}` : ''}
                   </div>
                 </Link>
               ))}

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
-import { formatLocalDate, todayLocalDateString } from '../utils/dateUtils';
+import { formatLocalDate, formatLocalTime, todayLocalDateString } from '../utils/dateUtils';
 
 const styles = {
   container: { maxWidth: '900px', margin: '0 auto', display: 'grid', gap: '14px' },
@@ -25,7 +25,7 @@ const styles = {
   empty: { background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '18px', color: '#64748b', textAlign: 'center' },
 };
 
-const emptyForm = () => ({ title: '', event_date: '', location: '', description: '' });
+const emptyForm = () => ({ title: '', event_date: '', event_time: '', location: '', description: '' });
 
 export default function ClubEventsPage() {
   const navigate = useNavigate();
@@ -44,10 +44,11 @@ export default function ClubEventsPage() {
       const [eventsResult, unreadResult] = await Promise.all([
         supabase
           .from('club_events')
-          .select('id, title, event_date, location')
+          .select('id, title, event_date, event_time, location')
           .eq('status', 'active')
           .gte('event_date', todayLocalDateString())
           .order('event_date', { ascending: true })
+          .order('event_time', { ascending: true, nullsFirst: false })
           .order('created_at', { ascending: true }),
         supabase.rpc('my_unread_club_event_counts'),
       ]);
@@ -77,8 +78,8 @@ export default function ClubEventsPage() {
 
   const createEvent = async () => {
     const title = form.title.trim();
-    if (!title || !form.event_date) {
-      setError('Event title and date are required.');
+    if (!title || !form.event_date || !form.event_time) {
+      setError('Event title, date, and time are required.');
       return;
     }
     if (form.event_date < todayLocalDateString()) {
@@ -93,6 +94,7 @@ export default function ClubEventsPage() {
         .insert({
           title,
           event_date: form.event_date,
+          event_time: form.event_time,
           location: form.location.trim() || null,
           description: form.description.trim() || null,
           created_by: user.id,
@@ -134,6 +136,10 @@ export default function ClubEventsPage() {
             <input style={styles.input} type="date" min={todayLocalDateString()} value={form.event_date} onChange={(e) => setForm((current) => ({ ...current, event_date: e.target.value }))} />
           </label>
           <label style={styles.label}>
+            Event time
+            <input style={styles.input} type="time" value={form.event_time} onChange={(e) => setForm((current) => ({ ...current, event_time: e.target.value }))} />
+          </label>
+          <label style={styles.label}>
             Location
             <input style={styles.input} value={form.location} onChange={(e) => setForm((current) => ({ ...current, location: e.target.value }))} />
           </label>
@@ -157,7 +163,9 @@ export default function ClubEventsPage() {
             <div style={styles.eventTop}>
               <div>
                 <h2 style={styles.eventTitle}>{event.title}</h2>
-                <p style={styles.meta}>{formatLocalDate(event.event_date)}{event.location ? ` · ${event.location}` : ''}</p>
+                <p style={styles.meta}>
+                  {formatLocalDate(event.event_date)} · {event.event_time ? formatLocalTime(event.event_time) : 'Time TBD'}{event.location ? ` · ${event.location}` : ''}
+                </p>
               </div>
               {unreadCount > 0 && <span style={styles.badge}>{unreadCount} new</span>}
             </div>

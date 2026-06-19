@@ -21,6 +21,7 @@ const styles = {
   preview: { marginTop: '9px', background: '#ffffff', color: '#0f172a', border: '2px solid #38bdf8', borderRadius: '7px', padding: '9px', cursor: 'pointer', width: '100%', textAlign: 'left' },
   previewTitle: { display: 'block', color: '#0369a1', fontWeight: 900, marginBottom: '3px' },
   composer: { display: 'grid', gap: '9px' },
+  composerActions: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', flexWrap: 'wrap' },
   textarea: { width: '100%', minHeight: '80px', resize: 'vertical', border: '2px solid #94a3b8', borderRadius: '7px', padding: '10px', font: 'inherit' },
   actions: { display: 'flex', gap: '8px', flexWrap: 'wrap' },
   button: { border: 0, borderRadius: '7px', padding: '10px 13px', fontWeight: 900, cursor: 'pointer' },
@@ -45,7 +46,7 @@ export default function ClubEventChatPage() {
   const [messages, setMessages] = useState([]);
   const [outings, setOutings] = useState([]);
   const [message, setMessage] = useState('');
-  const [shouldLinkOuting, setShouldLinkOuting] = useState('no');
+  const [showOutingLinker, setShowOutingLinker] = useState(false);
   const [linkedOutingId, setLinkedOutingId] = useState('');
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
@@ -103,19 +104,23 @@ export default function ClubEventChatPage() {
       const query = supabase
         .from('outings')
         .select('id, title, outing_date, outing_time, capacity_available, boats(name)')
+        .eq('skipper_id', user.id)
         .gte('outing_date', todayLocalDateString())
         .order('outing_date', { ascending: true });
-      if (!isAdmin) query.eq('skipper_id', user.id);
       const { data } = await query;
       setOutings(data || []);
     };
     loadOutings();
-  }, [user, isAdmin]);
+  }, [user]);
 
   const selectedOuting = useMemo(
     () => outings.find((outing) => outing.id === linkedOutingId),
     [outings, linkedOutingId]
   );
+  const hasLinkedOuting = messages.some((item) => (
+    item.sender_id === user?.id && item.linked_outing_id
+  ));
+  const canLinkOuting = outings.length > 0 && !hasLinkedOuting;
 
   const saveEvent = async () => {
     if (!eventForm.title.trim() || !eventForm.event_date) {
@@ -165,8 +170,8 @@ export default function ClubEventChatPage() {
 
   const sendMessage = async () => {
     if (!event || !message.trim()) return;
-    if (shouldLinkOuting === 'yes' && !linkedOutingId) {
-      setError('Please select the outing you want to link, or answer No.');
+    if (showOutingLinker && !linkedOutingId) {
+      setError('Select your outing, or close the outing link option.');
       return;
     }
     try {
@@ -179,7 +184,7 @@ export default function ClubEventChatPage() {
       });
       if (sendError) throw sendError;
       setMessage('');
-      setShouldLinkOuting('no');
+      setShowOutingLinker(false);
       setLinkedOutingId('');
       await loadEvent();
     } catch (err) {
@@ -292,28 +297,9 @@ export default function ClubEventChatPage() {
           <section style={styles.card}>
             <div style={styles.composer}>
               <textarea style={styles.textarea} value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Post your message about this event..." />
-              {!!outings.length && (
+              {showOutingLinker && canLinkOuting && (
                 <label style={{display: 'grid', gap: '5px', color: '#334155', fontWeight: 900}}>
-                  Do you want to link this event message to one of your own outings?
-                  <span style={{fontSize: '0.85rem', color: '#64748b', fontWeight: 650}}>
-                    Linking an outing lets members open its details and request to join.
-                  </span>
-                  <select
-                    style={styles.input}
-                    value={shouldLinkOuting}
-                    onChange={(e) => {
-                      setShouldLinkOuting(e.target.value);
-                      if (e.target.value === 'no') setLinkedOutingId('');
-                    }}
-                  >
-                    <option value="no">No</option>
-                    <option value="yes">Yes</option>
-                  </select>
-                </label>
-              )}
-              {shouldLinkOuting === 'yes' && !!outings.length && (
-                <label style={{display: 'grid', gap: '5px', color: '#334155', fontWeight: 900}}>
-                  Which outing do you want to link?
+                  Link one of your outings
                   <select style={styles.input} value={linkedOutingId} onChange={(e) => setLinkedOutingId(e.target.value)}>
                     <option value="">Select your outing</option>
                     {outings.map((outing) => (
@@ -327,7 +313,22 @@ export default function ClubEventChatPage() {
                   This post will include a clickable link to: {selectedOuting.title}
                 </div>
               )}
-              <button type="button" onClick={sendMessage} disabled={saving || !message.trim()} style={{...styles.button, ...styles.primary, opacity: saving || !message.trim() ? 0.55 : 1}}>Post Message</button>
+              <div style={styles.composerActions}>
+                {canLinkOuting && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowOutingLinker((current) => !current);
+                      setLinkedOutingId('');
+                      setError('');
+                    }}
+                    style={{...styles.button, ...styles.secondary, padding: '8px 10px'}}
+                  >
+                    {showOutingLinker ? 'Cancel' : '🔗 Link my outing'}
+                  </button>
+                )}
+                <button type="button" onClick={sendMessage} disabled={saving || !message.trim()} style={{...styles.button, ...styles.primary, marginLeft: 'auto', opacity: saving || !message.trim() ? 0.55 : 1}}>Post Message</button>
+              </div>
             </div>
           </section>
         </>

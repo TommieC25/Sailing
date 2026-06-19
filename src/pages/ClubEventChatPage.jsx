@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import AuthorMessageActions from '../components/AuthorMessageActions';
+import CalendarActions from '../components/CalendarActions';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
 import { formatLocalDate, formatLocalTime, todayLocalDateString } from '../utils/dateUtils';
@@ -285,6 +286,14 @@ export default function ClubEventChatPage() {
                   {formatLocalDate(event.event_date)} · {event.event_time ? formatLocalTime(event.event_time) : 'Time TBD'}{event.location ? ` · ${event.location}` : ''}
                 </p>
                 {event.description && <p style={styles.text}>{event.description}</p>}
+                <CalendarActions event={{
+                  title: event.title,
+                  date: event.event_date,
+                  time: event.event_time,
+                  location: event.location,
+                  description: event.description,
+                  url: `${window.location.origin}/Sailing/event-chat/${event.id}`,
+                }} />
                 {isAdmin && !isEditingEvent && (
                   <button
                     type="button"

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import AuthorMessageActions from '../components/AuthorMessageActions';
+import CalendarActions from '../components/CalendarActions';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
 import { formatLocalDate, isPastLocalDate } from '../utils/dateUtils';
@@ -689,6 +690,15 @@ export default function OutingDetailPage() {
             </p>
           </div>
         </div>
+
+        <CalendarActions event={{
+          title: outing.title,
+          date: outing.outing_date,
+          time: outing.outing_time,
+          location: outing.location,
+          description: outing.description,
+          url: `${window.location.origin}/Sailing/outing/${outing.id}`,
+        }} />
 
         {/* Boat Information */}
         <div style={{background: '#f0f9ff', border: '1px solid #bfdbfe', borderRadius: '8px', padding: '9px 12px', marginBottom: '12px'}}>

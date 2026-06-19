@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import CalendarActions from '../components/CalendarActions';
 import { supabase } from '../utils/supabaseClient';
-import { compactLocalDate, formatLocalDate, isPastLocalDate } from '../utils/dateUtils';
+import { formatLocalDate, isPastLocalDate } from '../utils/dateUtils';
 
 const styles = {
   container: { maxWidth: '800px', margin: '0 auto' },
@@ -214,23 +215,6 @@ export default function SkipperDashboard() {
     }
   };
 
-  const generateCalendarLink = (outing) => {
-    const dateStr = compactLocalDate(outing.outing_date);
-
-    const timeParts = outing.outing_time.match(/(\d+):(\d+)/);
-    const hour = timeParts ? String(timeParts[1]).padStart(2, '0') : '09';
-    const minute = timeParts ? String(timeParts[2]).padStart(2, '0') : '00';
-
-    const startTime = `${dateStr}T${hour}${minute}00`;
-    const endHour = String((parseInt(hour) + 2) % 24).padStart(2, '0');
-    const endTime = `${dateStr}T${endHour}${minute}00`;
-
-    const title = encodeURIComponent(outing.title);
-    const details = encodeURIComponent(`${outing.description || ''}\n\nBoat: ${outing.boats?.name || 'TBD'}`);
-
-    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startTime}/${endTime}&details=${details}`;
-  };
-
   if (loading) {
     return (
       <div style={{textAlign: 'center', padding: '64px 16px'}}>
@@ -371,11 +355,14 @@ export default function SkipperDashboard() {
                 {isExpanded && (
                   <div style={styles.expandedSection}>
                     <div>
-                      <div style={{display: 'flex', gap: '12px', flexWrap: 'wrap'}}>
-                        <a href={generateCalendarLink(outing)} target="_blank" rel="noopener noreferrer" style={{fontSize: '1rem', fontWeight: 900, color: '#0369a1', textDecoration: 'none', padding: '8px 12px', background: '#e0f2fe', borderRadius: '8px', display: 'inline-block'}}>
-                        📅 Add to Calendar
-                        </a>
-                      </div>
+                      <CalendarActions event={{
+                        title: outing.title,
+                        date: outing.outing_date,
+                        time: outing.outing_time,
+                        location: outing.location,
+                        description: `${outing.description || ''}${outing.boats?.name ? `\n\nBoat: ${outing.boats.name}` : ''}`,
+                        url: `${window.location.origin}/Sailing/outing/${outing.id}`,
+                      }} />
                     </div>
 
                     {!isArchived && pending.length > 0 && (

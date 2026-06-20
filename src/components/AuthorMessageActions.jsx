@@ -7,7 +7,7 @@ const styles = {
   textarea: { width: '100%', minHeight: '140px', resize: 'vertical', border: '1px solid #94a3b8', borderRadius: '7px', padding: '10px', font: 'inherit', color: '#0f172a', background: '#ffffff' },
 };
 
-export default function AuthorMessageActions({ value, onSave, onDelete }) {
+export default function AuthorMessageActions({ value, onSave, onDelete, allowEdit = true }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
   const [saving, setSaving] = useState(false);
@@ -56,7 +56,7 @@ export default function AuthorMessageActions({ value, onSave, onDelete }) {
 
   return (
     <div style={styles.actions}>
-      <button type="button" onClick={() => setEditing(true)} disabled={saving} style={styles.button}>Edit</button>
+      {allowEdit && <button type="button" onClick={() => setEditing(true)} disabled={saving} style={styles.button}>Edit</button>}
       <button type="button" onClick={remove} disabled={saving} style={styles.button}>Delete</button>
     </div>
   );

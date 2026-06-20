@@ -6,6 +6,7 @@ import { isPastLocalDate, todayLocalDateString } from '../utils/dateUtils';
 import { shouldSendCourtesyStatus, statusCourtesyMessage } from '../utils/statusMessages';
 import { attachBugScreenshotUrls } from '../utils/bugScreenshots';
 import { ANNOUNCEMENT_AUDIENCES, announcementAudienceLabel } from '../utils/announcements';
+import { formatPhoneNumber } from '../utils/phoneFormat';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -136,7 +137,7 @@ const AdminDashboard = () => {
 
       // Load detailed data
       const [usersData, boatsData, outingsData, crewRequestsData, bugsData, featuresData, msgsData, announcementsData] = await Promise.all([
-        supabase.from('users').select('*').limit(100),
+        supabase.from('users').select('*').order('full_name', { ascending: true, nullsFirst: false }).limit(100),
         supabase.from('boats').select('*, users(full_name, email)').order('created_at', { ascending: false }).limit(100),
         supabase.from('outings').select('*, boats(name), users:users!outings_skipper_id_fkey(full_name, email)').order('outing_date', { ascending: true }).limit(100),
         supabase.from('crew_requests').select('*, outings(id, title, outing_date), users(full_name, email, user_type)').order('requested_at', { ascending: false }).limit(100),
@@ -772,7 +773,7 @@ const AdminDashboard = () => {
                         <td style={{ padding: '8px 10px', fontSize: '0.86rem' }}>
                           {memberPhoneDigits(u) ? (
                             <a href={`tel:${memberPhoneDigits(u)}`} style={{ color: '#0369a1', fontWeight: 800, textDecoration: 'none' }}>
-                              {u.phone || u.phone_number}
+                              {formatPhoneNumber(u.phone_number || u.phone)}
                             </a>
                           ) : (
                             <span style={{ color: '#94a3b8', fontWeight: 700 }}>—</span>

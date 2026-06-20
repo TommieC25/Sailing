@@ -39,6 +39,7 @@ const styles = {
   requestSkill: { fontSize: '0.875rem', color: '#6b7280', marginBottom: '8px', textTransform: 'capitalize' },
   requestBio: { fontSize: '0.875rem', color: '#374151', marginBottom: '8px' },
   requestDate: { fontSize: '0.75rem', color: '#9ca3af' },
+  contactLink: { display: 'inline-block', color: '#166534', fontWeight: 900, textDecoration: 'none', marginTop: '5px' },
   requestActions: { display: 'flex', gap: '8px', flexDirection: 'column', flexShrink: 0 },
   approveBtn: { padding: '8px 16px', background: '#16a34a', color: '#ffffff', border: 'none', fontWeight: 'bold', fontSize: '0.875rem', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s' },
   declineBtn: { padding: '8px 16px', background: '#dc2626', color: '#ffffff', border: 'none', fontWeight: 'bold', fontSize: '0.875rem', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s' },
@@ -96,6 +97,7 @@ export default function OutingDetailPage() {
   const [crewRequests, setCrewRequests] = useState([]);
   const [approvedCrew, setApprovedCrew] = useState([]);
   const [approvedCrewCount, setApprovedCrewCount] = useState(0);
+  const [participantPhones, setParticipantPhones] = useState({});
   const [messages, setMessages] = useState([]);
   const [messageText, setMessageText] = useState('');
   const [sendingMessage, setSendingMessage] = useState(false);
@@ -138,6 +140,17 @@ export default function OutingDetailPage() {
           .maybeSingle();
 
         if (skipperError) throw skipperError;
+        const { data: participantContacts, error: participantContactsError } = await supabase
+          .rpc('outing_participant_contacts', { p_outing_id: outingData.id });
+        const participantPhoneById = Object.fromEntries((participantContacts || []).map((contact) => [
+          contact.user_id,
+          contact.phone_number || '',
+        ]));
+        setParticipantPhones(participantPhoneById);
+        if (participantContactsError) {
+          console.warn('Could not load outing participant contact numbers:', participantContactsError.message);
+        }
+
         const { data: skipperContacts, error: skipperContactsError } = await supabase
           .rpc('outing_skipper_contacts', { p_outing_ids: [outingData.id] });
 
@@ -150,7 +163,7 @@ export default function OutingDetailPage() {
           id: outingData.skipper_id,
           full_name: 'Skipper profile unavailable',
           }),
-          phone_number: skipperContacts?.[0]?.phone_number || '',
+          phone_number: participantPhoneById[outingData.skipper_id] || skipperContacts?.[0]?.phone_number || '',
         });
 
         const { data: boatData, error: boatError } = await supabase
@@ -204,7 +217,10 @@ export default function OutingDetailPage() {
             const crewById = Object.fromEntries((crewProfiles || []).map((crew) => [crew.id, crew]));
             setCrewRequests((allRequests || []).map((request) => ({
               ...request,
-              crew: crewById[request.crew_id] || null,
+              crew: {
+                ...(crewById[request.crew_id] || {}),
+                phone_number: participantPhoneById[request.crew_id] || '',
+              },
             })));
           }
         }
@@ -240,7 +256,10 @@ export default function OutingDetailPage() {
         const approvedById = Object.fromEntries((approvedProfiles || []).map((crew) => [crew.id, crew]));
         setApprovedCrew((approved || []).map((request) => ({
           ...request,
-          crew: approvedById[request.crew_id] || null,
+          crew: {
+            ...(approvedById[request.crew_id] || {}),
+            phone_number: participantPhoneById[request.crew_id] || '',
+          },
         })));
 
         const currentUserRequest = user
@@ -300,6 +319,10 @@ export default function OutingDetailPage() {
   }, [id, user]);
 
   const handleRequestToJoin = async () => {
+    if (phoneDigits(profile?.phone_number || profile?.phone || '').length !== 10) {
+      setError('Add a valid 10-digit mobile phone number to your profile before requesting this outing.');
+      return;
+    }
     try {
       setSubmitting(true);
       const { data, error } = await supabase
@@ -592,6 +615,11 @@ export default function OutingDetailPage() {
         </button>
         <p style={styles.requestSkill}>{req.crew?.sailing_experience || 'Experience not listed'} sailor</p>
         {req.crew?.bio && <p style={styles.requestBio}>{req.crew.bio}</p>}
+        {req.crew?.phone_number && (
+          <a href={`tel:${phoneDigits(req.crew.phone_number)}`} style={styles.contactLink}>
+            📞 {formatPhoneNumber(req.crew.phone_number)}
+          </a>
+        )}
         {req.skipper_response_note && <p style={styles.requestBio}>Note: {req.skipper_response_note}</p>}
         <p style={styles.requestDate}>Requested: {new Date(req.requested_at).toLocaleDateString()}</p>
       </div>
@@ -786,6 +814,11 @@ export default function OutingDetailPage() {
                           {req.crew?.sailing_experience ? `${req.crew.sailing_experience} sailor` : 'Sailing experience not listed'}
                           {req.crew?.gender ? ` • ${req.crew.gender}` : ''}
                         </span>
+                        {participantPhones[req.crew_id] && (
+                          <a href={`tel:${phoneDigits(participantPhones[req.crew_id])}`} style={styles.contactLink}>
+                            📞 {formatPhoneNumber(participantPhones[req.crew_id])}
+                          </a>
+                        )}
                       </div>
                       {user?.id !== req.crew_id && (
                         <button

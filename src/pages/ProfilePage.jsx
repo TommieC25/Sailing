@@ -34,6 +34,7 @@ export default function ProfilePage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user, profile, updateProfile } = useAuth();
+  const isAdmin = profile?.role === 'admin';
   const [viewedProfile, setViewedProfile] = useState(null);
   const [viewedBoats, setViewedBoats] = useState([]);
   const [loading, setLoading] = useState(profileId ? true : false);
@@ -105,9 +106,10 @@ export default function ProfilePage() {
     if (isViewingOther) {
       const fetchViewedProfile = async () => {
         try {
-          const { data, error } = await supabase
-            .from('public_profiles')
-            .select('id, full_name, photo_url, gender, bio, sailing_experience, user_type')
+          const profileQuery = isAdmin
+            ? supabase.from('users').select('id, full_name, photo_url, gender, bio, sailing_experience, user_type, email, phone, phone_number')
+            : supabase.from('public_profiles').select('id, full_name, photo_url, gender, bio, sailing_experience, user_type');
+          const { data, error } = await profileQuery
             .eq('id', profileId)
             .maybeSingle();
 
@@ -121,7 +123,7 @@ export default function ProfilePage() {
       };
       fetchViewedProfile();
     }
-  }, [profileId, isViewingOther]);
+  }, [profileId, isViewingOther, isAdmin]);
 
   useEffect(() => {
     const fetchViewedBoats = async () => {
@@ -486,6 +488,22 @@ export default function ProfilePage() {
           </>
         ) : isViewingOther ? (
           <>
+            {isAdmin && (
+              <div style={styles.topContact}>
+                <div style={styles.contactCol}>
+                  <div style={styles.label}>Email</div>
+                  <div style={styles.value}>{displayProfile?.email || 'Not set'}</div>
+                </div>
+                <div style={styles.contactCol}>
+                  <div style={styles.label}>Mobile Phone</div>
+                  {(displayProfile?.phone_number || displayProfile?.phone) ? (
+                    <a href={`tel:${phoneDigits(displayProfile.phone_number || displayProfile.phone)}`} style={{...styles.value, color: '#0369a1', textDecoration: 'none'}}>
+                      {formatPhoneNumber(displayProfile.phone_number || displayProfile.phone)}
+                    </a>
+                  ) : <div style={styles.value}>Not set</div>}
+                </div>
+              </div>
+            )}
             <div style={styles.factsGrid}>
               <div style={styles.factBox}>
                 <div style={styles.label}>Full Name</div>
@@ -556,7 +574,7 @@ export default function ProfilePage() {
               </div>
 
               <div style={styles.field}>
-                <div style={styles.label}>Phone</div>
+                <div style={styles.label}>Mobile Phone *</div>
                 <input type="tel" name="phone" value={formData.phone} onChange={handleChange} placeholder="305.555.1212" style={styles.input} />
               </div>
 

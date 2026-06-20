@@ -503,7 +503,7 @@ export default function SignupForm() {
             </div>
 
             <div style={styles.fieldGroup}>
-              <label htmlFor="signup-phone" style={styles.label}>Phone Number *</label>
+              <label htmlFor="signup-phone" style={styles.label}>Mobile Phone Number *</label>
               <input
                 id="signup-phone"
                 type="tel"

@@ -123,6 +123,9 @@ export default function UserGuidePage() {
         <p style={styles.text}>
           Members who have a practical sailing reason to see it, such as skippers reviewing requests and approved crew connected through an outing. Admins can view profiles to support the app.
         </p>
+        <p style={styles.text}>
+          Mobile numbers are limited to outing coordination: skippers can contact members who request their outing, approved crew can contact the skipper and one another, and admins can access member contact information when necessary.
+        </p>
 
         <h3 style={styles.question}>Why can’t every member message every other member?</h3>
         <p style={styles.text}>

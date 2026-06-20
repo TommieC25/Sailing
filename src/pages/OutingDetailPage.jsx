@@ -8,7 +8,7 @@ import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
 import { formatLocalDate, isPastLocalDate } from '../utils/dateUtils';
 import { formatPhoneNumber, phoneDigits } from '../utils/phoneFormat';
-import { attachChatImageUrls, releaseChatImage, removeChatImage, uploadChatImage } from '../utils/chatImages';
+import { attachChatImageUrls, releaseChatImages, removeChatImages, uploadChatImage } from '../utils/chatImages';
 
 const styles = {
   container: { display: 'grid', gap: '12px' },
@@ -103,7 +103,7 @@ export default function OutingDetailPage() {
   const [participantPhones, setParticipantPhones] = useState({});
   const [messages, setMessages] = useState([]);
   const [messageText, setMessageText] = useState('');
-  const [selectedChatImage, setSelectedChatImage] = useState(null);
+  const [selectedChatImages, setSelectedChatImages] = useState([]);
   const [sendingMessage, setSendingMessage] = useState(false);
   const [showCrewConfirmed, setShowCrewConfirmed] = useState(false);
   const [showCrewRequests, setShowCrewRequests] = useState(false);
@@ -323,8 +323,6 @@ export default function OutingDetailPage() {
     fetchOutingDetails();
   }, [id, user]);
 
-  useEffect(() => () => releaseChatImage(selectedChatImage), [selectedChatImage]);
-
   const handleRequestToJoin = async () => {
     if (phoneDigits(profile?.phone_number || profile?.phone || '').length !== 10) {
       setError('Add a valid 10-digit mobile phone number to your profile before requesting this outing.');
@@ -479,27 +477,30 @@ export default function OutingDetailPage() {
   const handleSendMessage = async (e) => {
     e.preventDefault();
     const text = messageText.trim();
-    if ((!text && !selectedChatImage) || !user) return;
+    if ((!text && !selectedChatImages.length) || !user) return;
 
-    let uploadedPath = null;
+    const uploadedPaths = [];
     try {
       setSendingMessage(true);
-      if (selectedChatImage) {
-        uploadedPath = await uploadChatImage(supabase, {
+      for (const image of selectedChatImages) {
+        uploadedPaths.push(await uploadChatImage(supabase, {
           scope: 'outing',
           contextId: id,
           userId: user.id,
-          image: selectedChatImage,
-        });
+          image,
+        }));
       }
+      const imageNames = selectedChatImages.map((image) => image.fileName);
       const { data: newMsg, error } = await supabase
         .from('event_chat')
         .insert([{
           outing_id: id,
           user_id: user.id,
           message: text || null,
-          image_path: uploadedPath,
-          image_name: selectedChatImage?.fileName || null,
+          image_path: uploadedPaths[0] || null,
+          image_name: imageNames[0] || null,
+          image_paths: uploadedPaths,
+          image_names: imageNames,
         }])
         .select('*')
         .single();
@@ -508,12 +509,13 @@ export default function OutingDetailPage() {
       const [messageWithImage] = await attachChatImageUrls(supabase, [{ ...newMsg, user: profile }]);
       setMessages((current) => [...current, messageWithImage]);
       setMessageText('');
-      setSelectedChatImage(null);
+      releaseChatImages(selectedChatImages);
+      setSelectedChatImages([]);
       window.dispatchEvent(new Event('sailing:event-chat-updated'));
     } catch (err) {
-      if (uploadedPath) {
+      if (uploadedPaths.length) {
         try {
-          await removeChatImage(supabase, uploadedPath);
+          await removeChatImages(supabase, uploadedPaths);
         } catch (cleanupError) {
           console.error('Could not clean up unsent chat image:', cleanupError);
         }
@@ -538,8 +540,8 @@ export default function OutingDetailPage() {
     window.dispatchEvent(new Event('sailing:event-chat-updated'));
   };
 
-  const deleteChatMessage = async (messageId, imagePath = null) => {
-    if (imagePath) await removeChatImage(supabase, imagePath);
+  const deleteChatMessage = async (messageId, imagePaths = []) => {
+    await removeChatImages(supabase, imagePaths);
     const { error: deleteError } = await supabase.rpc('delete_authored_message', {
       p_kind: 'outing_chat',
       p_id: messageId,
@@ -900,7 +902,7 @@ export default function OutingDetailPage() {
                           </div>
                         )}
                         {msg.message && <div style={styles.chatMessageText}>{msg.message}</div>}
-                        <ChatImageAttachment url={msg.image_url} name={msg.image_name || 'Outing chat photo'} />
+                        <ChatImageAttachment attachments={msg.image_attachments} />
                         <div style={{fontSize: '0.7rem', opacity: 0.6, marginTop: '4px'}}>
                           {new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                         </div>
@@ -908,7 +910,7 @@ export default function OutingDetailPage() {
                           <AuthorMessageActions
                             value={msg.message || ''}
                             onSave={(text) => editChatMessage(msg.id, text)}
-                            onDelete={() => deleteChatMessage(msg.id, msg.image_path)}
+                            onDelete={() => deleteChatMessage(msg.id, msg.image_paths?.length ? msg.image_paths : [msg.image_path].filter(Boolean))}
                             allowEdit={Boolean(msg.message)}
                           />
                         )}
@@ -923,11 +925,11 @@ export default function OutingDetailPage() {
                     placeholder="Message the crew..."
                     style={styles.chatTextarea}
                   />
-                  <ChatImagePicker value={selectedChatImage} onChange={setSelectedChatImage} disabled={sendingMessage} />
+                  <ChatImagePicker value={selectedChatImages} onChange={setSelectedChatImages} disabled={sendingMessage} />
                   <button
                     type="submit"
-                    disabled={sendingMessage || (!messageText.trim() && !selectedChatImage)}
-                    style={{...styles.chatSendBtn, opacity: sendingMessage || (!messageText.trim() && !selectedChatImage) ? 0.5 : 1}}
+                    disabled={sendingMessage || (!messageText.trim() && !selectedChatImages.length)}
+                    style={{...styles.chatSendBtn, opacity: sendingMessage || (!messageText.trim() && !selectedChatImages.length) ? 0.5 : 1}}
                   >
                     Send
                   </button>

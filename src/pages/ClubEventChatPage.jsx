@@ -7,7 +7,7 @@ import ChatImagePicker from '../components/ChatImagePicker';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
 import { formatLocalDate, formatLocalTime, todayLocalDateString } from '../utils/dateUtils';
-import { attachChatImageUrls, releaseChatImage, removeChatImage, uploadChatImage } from '../utils/chatImages';
+import { attachChatImageUrls, releaseChatImages, removeChatImages, uploadChatImage } from '../utils/chatImages';
 
 const styles = {
   container: { maxWidth: '900px', margin: '0 auto', display: 'grid', gap: '12px' },
@@ -56,7 +56,7 @@ export default function ClubEventChatPage() {
   const [messages, setMessages] = useState([]);
   const [outings, setOutings] = useState([]);
   const [message, setMessage] = useState('');
-  const [selectedChatImage, setSelectedChatImage] = useState(null);
+  const [selectedChatImages, setSelectedChatImages] = useState([]);
   const [showOutingLinker, setShowOutingLinker] = useState(false);
   const [linkedOutingId, setLinkedOutingId] = useState('');
   const [error, setError] = useState('');
@@ -98,6 +98,8 @@ export default function ClubEventChatPage() {
         ...row,
         image_path: row.message_image_path,
         image_name: row.message_image_name,
+        image_paths: row.message_image_paths,
+        image_names: row.message_image_names,
       }));
       setMessages(await attachChatImageUrls(supabase, chatMessages));
       await supabase.rpc('mark_club_event_seen', { p_event_id: first.event_id });
@@ -118,8 +120,6 @@ export default function ClubEventChatPage() {
       supabase.removeChannel(channel);
     };
   }, [eventId, loadEvent]);
-
-  useEffect(() => () => releaseChatImage(selectedChatImage), [selectedChatImage]);
 
   useEffect(() => {
     if (!user) return;
@@ -199,40 +199,44 @@ export default function ClubEventChatPage() {
 
   const sendMessage = async () => {
     const text = message.trim();
-    if (!event || (!text && !selectedChatImage)) return;
+    if (!event || (!text && !selectedChatImages.length)) return;
     if (showOutingLinker && !linkedOutingId) {
       setError('Select your outing, or close the outing link option.');
       return;
     }
-    let uploadedPath = null;
+    const uploadedPaths = [];
     try {
       setSaving(true);
-      if (selectedChatImage) {
-        uploadedPath = await uploadChatImage(supabase, {
+      for (const image of selectedChatImages) {
+        uploadedPaths.push(await uploadChatImage(supabase, {
           scope: 'rendezvous',
           contextId: event.id,
           userId: user.id,
-          image: selectedChatImage,
-        });
+          image,
+        }));
       }
+      const imageNames = selectedChatImages.map((image) => image.fileName);
       const { error: sendError } = await supabase.from('club_event_messages').insert({
         event_id: event.id,
         user_id: user.id,
         message: text || null,
-        image_path: uploadedPath,
-        image_name: selectedChatImage?.fileName || null,
+        image_path: uploadedPaths[0] || null,
+        image_name: imageNames[0] || null,
+        image_paths: uploadedPaths,
+        image_names: imageNames,
         linked_outing_id: linkedOutingId || null,
       });
       if (sendError) throw sendError;
       setMessage('');
-      setSelectedChatImage(null);
+      releaseChatImages(selectedChatImages);
+      setSelectedChatImages([]);
       setShowOutingLinker(false);
       setLinkedOutingId('');
       await loadEvent();
     } catch (err) {
-      if (uploadedPath) {
+      if (uploadedPaths.length) {
         try {
-          await removeChatImage(supabase, uploadedPath);
+          await removeChatImages(supabase, uploadedPaths);
         } catch (cleanupError) {
           console.error('Could not clean up unsent chat image:', cleanupError);
         }
@@ -256,8 +260,8 @@ export default function ClubEventChatPage() {
     await loadEvent();
   };
 
-  const deleteMessage = async (messageId, imagePath = null) => {
-    if (imagePath) await removeChatImage(supabase, imagePath);
+  const deleteMessage = async (messageId, imagePaths = []) => {
+    await removeChatImages(supabase, imagePaths);
     const { error: deleteError } = await supabase.rpc('delete_authored_message', {
       p_kind: 'club_event_chat',
       p_id: messageId,
@@ -269,10 +273,10 @@ export default function ClubEventChatPage() {
     await loadEvent();
   };
 
-  const moderateDeleteMessage = async (messageId, imagePath = null) => {
+  const moderateDeleteMessage = async (messageId, imagePaths = []) => {
     if (!window.confirm('Delete this message as moderator? This cannot be undone.')) return;
     try {
-      await deleteMessage(messageId, imagePath);
+      await deleteMessage(messageId, imagePaths);
     } catch (err) {
       setError(err.message || 'Could not delete this message');
     }
@@ -371,7 +375,7 @@ export default function ClubEventChatPage() {
                     </button>
                   )}
                   {item.message_text && <div>{item.message_text}</div>}
-                  <ChatImageAttachment url={item.image_url} name={item.image_name || 'Rendezvous chat photo'} />
+                  <ChatImageAttachment attachments={item.image_attachments} />
                   {item.linked_outing_id && (
                     <button type="button" style={styles.preview} onClick={() => navigate(`/outing/${item.linked_outing_id}?returnTo=${encodeURIComponent(`/event-chat/${eventId}`)}`)}>
                       <span style={styles.previewTitle}>⛵ {item.linked_outing_title}</span>
@@ -383,14 +387,14 @@ export default function ClubEventChatPage() {
                     <AuthorMessageActions
                       value={item.message_text || ''}
                       onSave={(text) => editMessage(item.message_id, text)}
-                      onDelete={() => deleteMessage(item.message_id, item.image_path)}
+                      onDelete={() => deleteMessage(item.message_id, item.image_paths?.length ? item.image_paths : [item.image_path].filter(Boolean))}
                       allowEdit={Boolean(item.message_text)}
                     />
                   ) : isAdmin && isModerating && (
                     <div style={styles.actions}>
                       <button
                         type="button"
-                        onClick={() => moderateDeleteMessage(item.message_id, item.image_path)}
+                        onClick={() => moderateDeleteMessage(item.message_id, item.image_paths?.length ? item.image_paths : [item.image_path].filter(Boolean))}
                         style={{ ...styles.button, ...styles.danger, padding: '6px 9px', fontSize: '0.78rem' }}
                       >
                         Delete
@@ -405,7 +409,7 @@ export default function ClubEventChatPage() {
           <section style={styles.card}>
             <div style={styles.composer}>
               <textarea style={styles.textarea} value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Post your message about this event..." />
-              <ChatImagePicker value={selectedChatImage} onChange={setSelectedChatImage} disabled={saving} />
+              <ChatImagePicker value={selectedChatImages} onChange={setSelectedChatImages} disabled={saving} />
               {showOutingLinker && canLinkOuting && (
                 <label style={{display: 'grid', gap: '5px', color: '#334155', fontWeight: 900}}>
                   Link one of your outings
@@ -436,7 +440,7 @@ export default function ClubEventChatPage() {
                     {showOutingLinker ? 'Cancel' : '🔗 Link my outing'}
                   </button>
                 )}
-                <button type="button" onClick={sendMessage} disabled={saving || (!message.trim() && !selectedChatImage)} style={{...styles.button, ...styles.primary, marginLeft: 'auto', opacity: saving || (!message.trim() && !selectedChatImage) ? 0.55 : 1}}>Post Message</button>
+                <button type="button" onClick={sendMessage} disabled={saving || (!message.trim() && !selectedChatImages.length)} style={{...styles.button, ...styles.primary, marginLeft: 'auto', opacity: saving || (!message.trim() && !selectedChatImages.length) ? 0.55 : 1}}>Post Message</button>
               </div>
             </div>
           </section>

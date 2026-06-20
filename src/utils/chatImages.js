@@ -62,6 +62,10 @@ export function releaseChatImage(image) {
   if (image?.previewUrl) URL.revokeObjectURL(image.previewUrl);
 }
 
+export function releaseChatImages(images) {
+  (images || []).forEach(releaseChatImage);
+}
+
 export async function uploadChatImage(supabase, { scope, contextId, userId, image }) {
   const objectId = typeof globalThis.crypto?.randomUUID === 'function'
     ? globalThis.crypto.randomUUID()
@@ -80,8 +84,20 @@ export async function removeChatImage(supabase, path) {
   if (error) throw error;
 }
 
-export async function attachChatImageUrls(supabase, messages, pathKey = 'image_path') {
-  const paths = [...new Set((messages || []).map((message) => message[pathKey]).filter(Boolean))];
+export async function removeChatImages(supabase, paths) {
+  const uniquePaths = [...new Set((paths || []).filter(Boolean))];
+  if (!uniquePaths.length) return;
+  const { error } = await supabase.storage.from(CHAT_IMAGE_BUCKET).remove(uniquePaths);
+  if (error) throw error;
+}
+
+export async function attachChatImageUrls(supabase, messages) {
+  const attachmentsFor = (message) => {
+    const paths = message.image_paths?.length ? message.image_paths : [message.image_path].filter(Boolean);
+    const names = message.image_names?.length ? message.image_names : [message.image_name].filter(Boolean);
+    return paths.map((path, index) => ({ path, name: names[index] || 'Chat photo' }));
+  };
+  const paths = [...new Set((messages || []).flatMap((message) => attachmentsFor(message).map((item) => item.path)))];
   if (!paths.length) return messages || [];
   const { data, error } = await supabase.storage.from(CHAT_IMAGE_BUCKET).createSignedUrls(paths, 60 * 60);
   if (error) {
@@ -91,6 +107,9 @@ export async function attachChatImageUrls(supabase, messages, pathKey = 'image_p
   const urlByPath = Object.fromEntries((data || []).map((item) => [item.path, item.signedUrl || null]));
   return (messages || []).map((message) => ({
     ...message,
-    image_url: message[pathKey] ? urlByPath[message[pathKey]] || null : null,
+    image_attachments: attachmentsFor(message).map((item) => ({
+      ...item,
+      url: urlByPath[item.path] || null,
+    })),
   }));
 }

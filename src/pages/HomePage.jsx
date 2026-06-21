@@ -296,8 +296,8 @@ export default function HomePage() {
             </div>
             <div style={{background: '#ffffff', border: '2px solid #dbeafe', borderRadius: '10px', padding: '20px', textAlign: 'center'}}>
               <p style={{fontSize: '2rem', margin: '0 0 10px 0'}}>🚢</p>
-              <p style={{fontSize: '1.25rem', fontWeight: 900, color: '#1e293b', margin: '0 0 6px 0'}}>You have not posted any outings yet</p>
-              <p style={{fontSize: '1rem', color: '#64748b', margin: '0 0 16px 0'}}>Post your first outing to find crew and get sailing!</p>
+              <p style={{fontSize: '1.25rem', fontWeight: 900, color: '#1e293b', margin: '0 0 6px 0'}}>You have no upcoming outings</p>
+              <p style={{fontSize: '1rem', color: '#64748b', margin: '0 0 16px 0'}}>Let other sailors know when you’re going out next.</p>
             <Link
               to="/create-outing"
               style={{display: 'inline-block', background: '#06b6d4', color: '#ffffff', padding: '11px 18px', borderRadius: '8px', fontWeight: 900, fontSize: '1rem', textDecoration: 'none'}}

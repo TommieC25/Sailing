@@ -539,7 +539,7 @@ export default function Layout({ children }) {
                         }}
                         style={{width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', padding: '12px 14px', background: 'none', border: 'none', borderBottom: '1px solid #e2e8f0', cursor: 'pointer', color: '#1e293b', textAlign: 'left', fontSize: '1rem', fontWeight: 700}}
                       >
-                        <span>Upcoming Rendezvous</span>
+                        <span>Rendezvous</span>
                         <span style={{background: '#ef4444', color: '#ffffff', borderRadius: '999px', minWidth: '24px', padding: '2px 8px', textAlign: 'center', fontWeight: 900}}>
                           {unreadClubEventChatCount}
                         </span>
@@ -617,7 +617,7 @@ export default function Layout({ children }) {
                 <>
                   {hasActiveClubEvent && (
                     <Link to="/event-chat" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#fde047', fontSize: '1.25rem', fontWeight: 900, textDecoration: 'none', borderRadius: '12px'}}>
-                      📣 Upcoming Rendezvous{unreadClubEventChatCount > 0 ? ` (${unreadClubEventChatCount})` : ''}
+                      📣 Rendezvous{unreadClubEventChatCount > 0 ? ` (${unreadClubEventChatCount})` : ''}
                     </Link>
                   )}
                   <Link to="/" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#ffffff', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>
@@ -636,7 +636,7 @@ export default function Layout({ children }) {
                   </Link>
                   {!hasActiveClubEvent && (
                     <Link to="/event-chat" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#ffffff', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>
-                      📣 Upcoming Rendezvous
+                      📣 Rendezvous
                     </Link>
                   )}
                   <Link to="/profile" onClick={() => setMobileMenuOpen(false)} style={{display: 'block', padding: '12px', color: '#ffffff', fontSize: '1.25rem', fontWeight: 700, textDecoration: 'none', borderRadius: '12px'}}>👤 Profile</Link>

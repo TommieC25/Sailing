@@ -46,7 +46,6 @@ export default function ClubEventsPage() {
           .from('club_events')
           .select('id, title, event_date, event_time, location')
           .eq('status', 'active')
-          .gte('event_date', todayLocalDateString())
           .order('event_date', { ascending: true })
           .order('event_time', { ascending: true, nullsFirst: false })
           .order('created_at', { ascending: true }),
@@ -54,7 +53,16 @@ export default function ClubEventsPage() {
       ]);
       if (eventsResult.error) throw eventsResult.error;
       if (unreadResult.error) throw unreadResult.error;
-      setEvents(eventsResult.data || []);
+      const today = todayLocalDateString();
+      const orderedEvents = [...(eventsResult.data || [])].sort((a, b) => {
+        const aIsPast = a.event_date < today;
+        const bIsPast = b.event_date < today;
+        if (aIsPast !== bIsPast) return aIsPast ? 1 : -1;
+        return aIsPast
+          ? b.event_date.localeCompare(a.event_date)
+          : a.event_date.localeCompare(b.event_date);
+      });
+      setEvents(orderedEvents);
       setUnreadByEvent(Object.fromEntries((unreadResult.data || []).map((row) => [
         row.event_id,
         Number(row.unread_count || 0),
@@ -114,7 +122,7 @@ export default function ClubEventsPage() {
   return (
     <div style={styles.container}>
       <div style={styles.header}>
-        <h1 style={styles.title}>📣 Club Rendezvous</h1>
+        <h1 style={styles.title}>📣 Rendezvous List</h1>
         {isAdmin && !showCreate && (
           <button type="button" onClick={() => setShowCreate(true)} style={{ ...styles.button, ...styles.primary }}>
             Create Rendezvous
@@ -155,7 +163,7 @@ export default function ClubEventsPage() {
       )}
 
       {!events.length ? (
-        <div style={styles.empty}>No upcoming Club Rendezvous events have been posted.</div>
+        <div style={styles.empty}>No active Club Rendezvous events have been posted.</div>
       ) : events.map((event) => {
         const unreadCount = unreadByEvent[event.id] || 0;
         return (

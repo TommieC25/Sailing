@@ -145,15 +145,23 @@ export default function HomePage() {
         .from('club_events')
         .select('id, title, event_date, event_time, location')
         .eq('status', 'active')
-        .gte('event_date', todayLocalDateString())
         .order('event_date', { ascending: true })
         .order('event_time', { ascending: true, nullsFirst: false });
 
       if (clubEventError) {
-        console.error('Could not load Upcoming Rendezvous:', clubEventError);
+        console.error('Could not load Rendezvous list:', clubEventError);
         return;
       }
-      setClubEvents(data || []);
+      const today = todayLocalDateString();
+      const orderedEvents = [...(data || [])].sort((a, b) => {
+        const aIsPast = a.event_date < today;
+        const bIsPast = b.event_date < today;
+        if (aIsPast !== bIsPast) return aIsPast ? 1 : -1;
+        return aIsPast
+          ? b.event_date.localeCompare(a.event_date)
+          : a.event_date.localeCompare(b.event_date);
+      });
+      setClubEvents(orderedEvents);
     };
 
     const initialFetch = window.setTimeout(fetchClubEvents, 0);
@@ -227,7 +235,7 @@ export default function HomePage() {
         {clubEvents.length > 0 && (
           <section style={{marginBottom: '16px'}}>
             <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', marginBottom: '8px'}}>
-              <h2 style={{margin: 0, color: '#0c2340', fontSize: '1.2rem'}}>📣 Upcoming Club Rendezvous</h2>
+              <h2 style={{margin: 0, color: '#0c2340', fontSize: '1.2rem'}}>📣 Rendezvous List</h2>
               <Link to="/event-chat" style={{color: '#0369a1', fontWeight: 900}}>View all</Link>
             </div>
             <div style={{display: 'grid', gap: '8px'}}>

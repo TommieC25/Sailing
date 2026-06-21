@@ -12,10 +12,14 @@ const styles = {
   primary: { background: '#0369a1', color: '#ffffff' },
   secondary: { background: '#e0f2fe', color: '#0369a1', border: '2px solid #0369a1' },
   card: { display: 'block', background: '#ffffff', border: '2px solid #bae6fd', borderRadius: '8px', padding: '14px', textDecoration: 'none', color: '#0f172a' },
+  pastCard: { background: '#f1f5f9', borderColor: '#94a3b8' },
+  group: { display: 'grid', gap: '9px' },
+  groupTitle: { margin: 0, fontSize: '1.2rem', fontWeight: 900 },
   eventTop: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px' },
   eventTitle: { margin: '0 0 4px', color: '#0c2340', fontSize: '1.15rem' },
   meta: { margin: 0, color: '#0369a1', fontWeight: 800 },
   badge: { background: '#dc2626', color: '#ffffff', borderRadius: '999px', padding: '3px 8px', fontSize: '0.78rem', fontWeight: 900, whiteSpace: 'nowrap' },
+  dateBadge: { borderRadius: '999px', padding: '4px 9px', fontSize: '0.78rem', fontWeight: 900, whiteSpace: 'nowrap' },
   form: { display: 'grid', gap: '9px', background: '#ffffff', border: '2px solid #bae6fd', borderRadius: '8px', padding: '14px' },
   label: { display: 'grid', gap: '5px', color: '#334155', fontWeight: 900 },
   input: { width: '100%', border: '2px solid #94a3b8', borderRadius: '7px', padding: '9px', font: 'inherit' },
@@ -119,6 +123,30 @@ export default function ClubEventsPage() {
     }
   };
 
+  const today = todayLocalDateString();
+  const upcomingEvents = events.filter((event) => event.event_date >= today);
+  const pastEvents = events.filter((event) => event.event_date < today);
+
+  const renderEvent = (event, isPast) => {
+    const unreadCount = unreadByEvent[event.id] || 0;
+    return (
+      <button key={event.id} type="button" onClick={() => navigate(`/event-chat/${event.id}`)} style={{ ...styles.card, ...(isPast ? styles.pastCard : {}), width: '100%', cursor: 'pointer', textAlign: 'left', font: 'inherit' }}>
+        <div style={styles.eventTop}>
+          <div>
+            <h2 style={{...styles.eventTitle, ...(isPast ? {color: '#475569'} : {})}}>{event.title}</h2>
+            <p style={{...styles.meta, ...(isPast ? {color: '#64748b'} : {})}}>
+              {formatLocalDate(event.event_date)} · {event.event_time ? formatLocalTime(event.event_time) : 'Time TBD'}{event.location ? ` · ${event.location}` : ''}
+            </p>
+          </div>
+          <div style={{display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', justifyContent: 'flex-end'}}>
+            <span style={{...styles.dateBadge, background: isPast ? '#cbd5e1' : '#dbeafe', color: isPast ? '#334155' : '#075985'}}>{isPast ? 'Past' : 'Upcoming'}</span>
+            {unreadCount > 0 && <span style={styles.badge}>{unreadCount} new</span>}
+          </div>
+        </div>
+      </button>
+    );
+  };
+
   return (
     <div style={styles.container}>
       <div style={styles.header}>
@@ -164,22 +192,22 @@ export default function ClubEventsPage() {
 
       {!events.length ? (
         <div style={styles.empty}>No active Club Rendezvous events have been posted.</div>
-      ) : events.map((event) => {
-        const unreadCount = unreadByEvent[event.id] || 0;
-        return (
-          <button key={event.id} type="button" onClick={() => navigate(`/event-chat/${event.id}`)} style={{ ...styles.card, width: '100%', cursor: 'pointer', textAlign: 'left', font: 'inherit' }}>
-            <div style={styles.eventTop}>
-              <div>
-                <h2 style={styles.eventTitle}>{event.title}</h2>
-                <p style={styles.meta}>
-                  {formatLocalDate(event.event_date)} · {event.event_time ? formatLocalTime(event.event_time) : 'Time TBD'}{event.location ? ` · ${event.location}` : ''}
-                </p>
-              </div>
-              {unreadCount > 0 && <span style={styles.badge}>{unreadCount} new</span>}
-            </div>
-          </button>
-        );
-      })}
+      ) : (
+        <>
+          {upcomingEvents.length > 0 && (
+            <section style={styles.group}>
+              <h2 style={{...styles.groupTitle, color: '#075985'}}>Upcoming Rendezvous</h2>
+              {upcomingEvents.map((event) => renderEvent(event, false))}
+            </section>
+          )}
+          {pastEvents.length > 0 && (
+            <section style={styles.group}>
+              <h2 style={{...styles.groupTitle, color: '#475569'}}>Past Rendezvous</h2>
+              {pastEvents.map((event) => renderEvent(event, true))}
+            </section>
+          )}
+        </>
+      )}
     </div>
   );
 }

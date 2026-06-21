@@ -55,6 +55,7 @@ export default function ClubEventChatPage() {
   const [event, setEvent] = useState(null);
   const [messages, setMessages] = useState([]);
   const [outings, setOutings] = useState([]);
+  const [rendezvousEvents, setRendezvousEvents] = useState([]);
   const [message, setMessage] = useState('');
   const [selectedChatImages, setSelectedChatImages] = useState([]);
   const [showOutingLinker, setShowOutingLinker] = useState(false);
@@ -64,6 +65,8 @@ export default function ClubEventChatPage() {
   const [showEventDetails, setShowEventDetails] = useState(false);
   const [isEditingEvent, setIsEditingEvent] = useState(false);
   const [isModerating, setIsModerating] = useState(false);
+  const [movingMessageId, setMovingMessageId] = useState(null);
+  const [moveTargetEventId, setMoveTargetEventId] = useState('');
   const [eventForm, setEventForm] = useState({ title: '', event_date: '', event_time: '', location: '', description: '' });
 
   const loadEvent = useCallback(async () => {
@@ -135,6 +138,24 @@ export default function ClubEventChatPage() {
     };
     loadOutings();
   }, [user]);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    const loadRendezvousEvents = async () => {
+      const { data, error: eventError } = await supabase
+        .from('club_events')
+        .select('id, title, event_date')
+        .eq('status', 'active')
+        .neq('id', eventId)
+        .order('event_date', { ascending: true });
+      if (eventError) {
+        setError(eventError.message || 'Could not load Rendezvous destinations');
+        return;
+      }
+      setRendezvousEvents(data || []);
+    };
+    loadRendezvousEvents();
+  }, [eventId, isAdmin]);
 
   const selectedOuting = useMemo(
     () => outings.find((outing) => outing.id === linkedOutingId),
@@ -282,6 +303,63 @@ export default function ClubEventChatPage() {
     }
   };
 
+  const cancelMove = () => {
+    setMovingMessageId(null);
+    setMoveTargetEventId('');
+  };
+
+  const moveMessage = async (item) => {
+    if (!moveTargetEventId || !isAdmin) return;
+    const destination = rendezvousEvents.find((candidate) => candidate.id === moveTargetEventId);
+    if (!destination || !window.confirm(`Move this message from ${event.title} to ${destination.title}?`)) return;
+
+    const oldPaths = item.image_paths?.length ? item.image_paths : [item.image_path].filter(Boolean);
+    const attachments = item.image_attachments || [];
+    const newPaths = [];
+    try {
+      setSaving(true);
+      setError('');
+      if (oldPaths.length !== attachments.filter((attachment) => attachment.url).length) {
+        throw new Error('One or more attached photos could not be loaded. Refresh and try again.');
+      }
+      for (const attachment of attachments) {
+        const response = await fetch(attachment.url);
+        if (!response.ok) throw new Error('An attached photo could not be copied. Refresh and try again.');
+        newPaths.push(await uploadChatImage(supabase, {
+          scope: 'rendezvous',
+          contextId: moveTargetEventId,
+          userId: user.id,
+          image: { blob: await response.blob() },
+        }));
+      }
+      const { error: moveError } = await supabase.rpc('move_club_event_message', {
+        p_message_id: item.message_id,
+        p_target_event_id: moveTargetEventId,
+        p_image_paths: newPaths,
+      });
+      if (moveError) throw moveError;
+      try {
+        await removeChatImages(supabase, oldPaths);
+      } catch (cleanupError) {
+        console.warn('Moved message but could not remove old photo copies:', cleanupError);
+      }
+      cancelMove();
+      await loadEvent();
+      window.dispatchEvent(new Event('sailing:club-event-chat-updated'));
+    } catch (err) {
+      if (newPaths.length) {
+        try {
+          await removeChatImages(supabase, newPaths);
+        } catch (cleanupError) {
+          console.error('Could not clean up copied chat photos:', cleanupError);
+        }
+      }
+      setError(err.message || 'Could not move this message');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div style={styles.container}>
       <button type="button" onClick={() => navigate('/event-chat')} style={styles.back}>← All Rendezvous</button>
@@ -383,22 +461,54 @@ export default function ClubEventChatPage() {
                     </button>
                   )}
                   <div style={{fontSize: '0.72rem', opacity: 0.7, marginTop: '5px'}}>{new Date(item.message_created_at).toLocaleString()}</div>
-                  {item.sender_id === user.id ? (
+                  {item.sender_id === user.id && (
                     <AuthorMessageActions
                       value={item.message_text || ''}
                       onSave={(text) => editMessage(item.message_id, text)}
                       onDelete={() => deleteMessage(item.message_id, item.image_paths?.length ? item.image_paths : [item.image_path].filter(Boolean))}
                       allowEdit={Boolean(item.message_text)}
                     />
-                  ) : isAdmin && isModerating && (
+                  )}
+                  {isAdmin && isModerating && (
                     <div style={styles.actions}>
-                      <button
-                        type="button"
-                        onClick={() => moderateDeleteMessage(item.message_id, item.image_paths?.length ? item.image_paths : [item.image_path].filter(Boolean))}
-                        style={{ ...styles.button, ...styles.danger, padding: '6px 9px', fontSize: '0.78rem' }}
-                      >
-                        Delete
-                      </button>
+                      {item.sender_id !== user.id && (
+                        <button
+                          type="button"
+                          onClick={() => moderateDeleteMessage(item.message_id, item.image_paths?.length ? item.image_paths : [item.image_path].filter(Boolean))}
+                          style={{ ...styles.button, ...styles.danger, padding: '6px 9px', fontSize: '0.78rem' }}
+                        >
+                          Delete
+                        </button>
+                      )}
+                      {movingMessageId !== item.message_id && rendezvousEvents.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setMovingMessageId(item.message_id);
+                            setMoveTargetEventId('');
+                          }}
+                          style={{ ...styles.button, ...styles.secondary, padding: '6px 9px', fontSize: '0.78rem' }}
+                        >
+                          Move
+                        </button>
+                      )}
+                      {movingMessageId === item.message_id && (
+                        <div style={{display: 'grid', gap: '7px', width: '100%', background: '#ffffff', color: '#0f172a', borderRadius: '7px', padding: '9px'}}>
+                          <div style={{fontSize: '0.82rem', fontWeight: 900}}>Currently in: {event.title}</div>
+                          <select value={moveTargetEventId} onChange={(e) => setMoveTargetEventId(e.target.value)} style={styles.input}>
+                            <option value="">Move to...</option>
+                            {rendezvousEvents.map((candidate) => (
+                              <option key={candidate.id} value={candidate.id}>
+                                {candidate.title} · {formatLocalDate(candidate.event_date)}
+                              </option>
+                            ))}
+                          </select>
+                          <div style={styles.actions}>
+                            <button type="button" onClick={() => moveMessage(item)} disabled={saving || !moveTargetEventId} style={{ ...styles.button, ...styles.primary, padding: '7px 9px', opacity: saving || !moveTargetEventId ? 0.55 : 1 }}>Confirm Move</button>
+                            <button type="button" onClick={cancelMove} disabled={saving} style={{ ...styles.button, ...styles.secondary, padding: '7px 9px' }}>Cancel</button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

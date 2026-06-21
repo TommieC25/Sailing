@@ -206,6 +206,25 @@ export default function HomePage() {
   }));
   const yourOutings = upcomingOutings.filter((o) => o.skipper_id === user?.id);
   const otherOutings = upcomingOutings.filter((o) => o.skipper_id !== user?.id);
+  const today = todayLocalDateString();
+  const upcomingClubEvents = clubEvents.filter((clubEvent) => clubEvent.event_date >= today);
+  const pastClubEvents = clubEvents.filter((clubEvent) => clubEvent.event_date < today);
+
+  const renderClubEvent = (clubEvent, isPast) => (
+    <Link
+      key={clubEvent.id}
+      to={`/event-chat/${clubEvent.id}`}
+      style={{display: 'block', background: isPast ? '#f1f5f9' : '#e0f2fe', border: `2px solid ${isPast ? '#94a3b8' : '#0284c7'}`, borderRadius: '8px', padding: '11px 12px', textDecoration: 'none'}}
+    >
+      <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px'}}>
+        <div style={{fontSize: '1.05rem', fontWeight: 900, color: isPast ? '#475569' : '#0c2340'}}>{clubEvent.title}</div>
+        <span style={{background: isPast ? '#cbd5e1' : '#dbeafe', color: isPast ? '#334155' : '#075985', borderRadius: '999px', padding: '3px 8px', fontSize: '0.75rem', fontWeight: 900}}>{isPast ? 'Past' : 'Upcoming'}</span>
+      </div>
+      <div style={{fontSize: '0.9rem', color: isPast ? '#64748b' : '#0369a1', fontWeight: 800, marginTop: '3px'}}>
+        {formatLocalDate(clubEvent.event_date)} · {clubEvent.event_time ? formatLocalTime(clubEvent.event_time) : 'Time TBD'}{clubEvent.location ? ` · ${clubEvent.location}` : ''}
+      </div>
+    </Link>
+  );
 
   return (
     <div style={{marginLeft: '-10px', marginRight: '-10px', marginTop: '-16px'}}>
@@ -238,19 +257,19 @@ export default function HomePage() {
               <h2 style={{margin: 0, color: '#0c2340', fontSize: '1.2rem'}}>📣 Rendezvous List</h2>
               <Link to="/event-chat" style={{color: '#0369a1', fontWeight: 900}}>View all</Link>
             </div>
-            <div style={{display: 'grid', gap: '8px'}}>
-              {clubEvents.map((clubEvent) => (
-                <Link
-                  key={clubEvent.id}
-                  to={`/event-chat/${clubEvent.id}`}
-                  style={{display: 'block', background: '#e0f2fe', border: '2px solid #0284c7', borderRadius: '8px', padding: '11px 12px', textDecoration: 'none'}}
-                >
-                  <div style={{fontSize: '1.05rem', fontWeight: 900, color: '#0c2340', marginBottom: '3px'}}>{clubEvent.title}</div>
-                  <div style={{fontSize: '0.9rem', color: '#0369a1', fontWeight: 800}}>
-                    {formatLocalDate(clubEvent.event_date)} · {clubEvent.event_time ? formatLocalTime(clubEvent.event_time) : 'Time TBD'}{clubEvent.location ? ` · ${clubEvent.location}` : ''}
-                  </div>
-                </Link>
-              ))}
+            <div style={{display: 'grid', gap: '12px'}}>
+              {upcomingClubEvents.length > 0 && (
+                <div style={{display: 'grid', gap: '7px'}}>
+                  <h3 style={{margin: 0, color: '#075985', fontSize: '1rem'}}>Upcoming Rendezvous</h3>
+                  {upcomingClubEvents.map((clubEvent) => renderClubEvent(clubEvent, false))}
+                </div>
+              )}
+              {pastClubEvents.length > 0 && (
+                <div style={{display: 'grid', gap: '7px'}}>
+                  <h3 style={{margin: 0, color: '#475569', fontSize: '1rem'}}>Past Rendezvous</h3>
+                  {pastClubEvents.map((clubEvent) => renderClubEvent(clubEvent, true))}
+                </div>
+              )}
             </div>
           </section>
         )}

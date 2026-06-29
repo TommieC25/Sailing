@@ -53,7 +53,7 @@ function ProtectedRoute({ children }) {
   }
 
   if (!user) {
-    return <Navigate to="/welcome" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   if (profile && !hasAcceptedCurrentWaiver(profile)) {

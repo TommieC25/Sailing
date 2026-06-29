@@ -138,7 +138,7 @@ export default function LoginForm() {
               <div>{error}</div>
               <div style={styles.loginErrorActions}>
                 <Link to="/forgot-password" style={styles.loginErrorLink}>Reset password</Link>
-                <Link to="/signup" style={styles.loginErrorLink}>Create account</Link>
+                <Link to="/welcome" style={styles.loginErrorLink}>Start at Welcome</Link>
               </div>
             </div>
           )}
@@ -197,7 +197,7 @@ export default function LoginForm() {
         <div style={styles.footer}>
           <div style={styles.newUser}>
             New to SailAway?
-            <Link to="/signup" style={styles.newUserLink}>Create New Account</Link>
+            <Link to="/welcome" style={styles.newUserLink}>Start at the Welcome Page</Link>
           </div>
           <Link to="/forgot-password" style={styles.link}>Forgot Password?</Link>
         </div>

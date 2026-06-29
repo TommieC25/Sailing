@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
 import { formatLocalDate, formatLocalTime, isPastLocalDate, todayLocalDateString } from '../utils/dateUtils';
-import { formatPhoneNumber } from '../utils/phoneFormat';
 
 const HEADER_BG = 'linear-gradient(135deg, #0c2340 0%, #0369a1 100%)';
 
@@ -42,20 +41,7 @@ export default function HomePage() {
         const outingIds = (data || []).map((outing) => outing.id);
         let approvedCountsByOutingId = {};
         let unreadChatByOutingId = {};
-        let skipperPhoneByOutingId = {};
         if (outingIds.length > 0) {
-          const { data: skipperContacts, error: skipperContactsError } = await supabase
-            .rpc('outing_skipper_contacts', { p_outing_ids: outingIds });
-
-          if (skipperContactsError) {
-            console.warn('Could not load skipper contact numbers:', skipperContactsError.message);
-          } else {
-            skipperPhoneByOutingId = (skipperContacts || []).reduce((contacts, row) => {
-              contacts[row.outing_id] = row.phone_number || '';
-              return contacts;
-            }, {});
-          }
-
           const { data: approvedCounts, error: approvedCountsError } = await supabase
             .rpc('outing_approved_counts', { p_outing_ids: outingIds });
 
@@ -106,7 +92,6 @@ export default function HomePage() {
         setOutings((data || []).map((outing) => ({
           ...outing,
           skipper: skipperById[outing.skipper_id] || null,
-          skipperPhone: skipperPhoneByOutingId[outing.id] || '',
           pendingCrewRequestCount: pendingByOutingId[outing.id] || 0,
           approvedCrewCount: approvedCountsByOutingId[outing.id] || 0,
           unreadChatCount: unreadChatByOutingId[outing.id] || 0,
@@ -455,7 +440,6 @@ function OutingCard({ outing, isYours, isPast = false }) {
         <div style={{fontSize: '0.9rem', color: '#64748b', marginBottom: '8px', fontWeight: 600, lineHeight: '1.35'}}>
           <div>📅 {formatLocalDate(outing.outing_date, { weekday: 'short', month: 'short', day: 'numeric' })} at {outing.outing_time}</div>
           <div>🚢 {outing.boats?.name} ({outing.boats?.size_ft}ft) • 👤 {outing.skipper?.full_name || 'TBD'} • {availabilityText}</div>
-          {outing.skipperPhone && <div>📞 Skipper: {formatPhoneNumber(outing.skipperPhone)}</div>}
         </div>
 
         {/* Description - condensed */}

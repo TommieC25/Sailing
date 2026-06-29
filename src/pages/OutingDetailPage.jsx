@@ -155,19 +155,12 @@ export default function OutingDetailPage() {
           console.warn('Could not load outing participant contact numbers:', participantContactsError.message);
         }
 
-        const { data: skipperContacts, error: skipperContactsError } = await supabase
-          .rpc('outing_skipper_contacts', { p_outing_ids: [outingData.id] });
-
-        if (skipperContactsError) {
-          console.warn('Could not load skipper contact number:', skipperContactsError.message);
-        }
-
         setSkipper({
           ...(skipperData || {
           id: outingData.skipper_id,
           full_name: 'Skipper profile unavailable',
           }),
-          phone_number: participantPhoneById[outingData.skipper_id] || skipperContacts?.[0]?.phone_number || '',
+          phone_number: participantPhoneById[outingData.skipper_id] || '',
         });
 
         const { data: boatData, error: boatError } = await supabase

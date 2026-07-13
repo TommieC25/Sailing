@@ -18,6 +18,7 @@ const styles = {
   input: { width: '100%', padding: '12px 16px', border: '2px solid #dbeafe', borderRadius: '8px', fontSize: '1rem', fontWeight: 500, color: '#1e293b', fontFamily: 'inherit', background: '#ffffff' },
   textarea: { width: '100%', padding: '12px 16px', border: '2px solid #dbeafe', borderRadius: '8px', fontSize: '1rem', fontWeight: 500, color: '#1e293b', fontFamily: 'inherit', minHeight: '100px', resize: 'vertical', background: '#ffffff' },
   grid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' },
+  helpText: { margin: 0, color: '#64748b', fontSize: '0.95rem', fontWeight: 600, lineHeight: 1.4 },
   infoBox: { background: '#f0f9ff', border: '2px solid #bfdbfe', borderRadius: '8px', padding: '16px' },
   infoTitle: { fontSize: '1.125rem', fontWeight: 900, color: '#0c2340', margin: '0 0 8px 0' },
   infoText: { fontSize: '1rem', color: '#1e293b', fontWeight: 600, margin: 0 },
@@ -25,6 +26,13 @@ const styles = {
   submitButton: { padding: '16px', borderRadius: '8px', fontWeight: 900, fontSize: '1.125rem', color: '#ffffff', border: 'none', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', transition: 'all 0.2s' },
   cancelButton: { padding: '16px', borderRadius: '8px', fontWeight: 900, fontSize: '1.125rem', background: '#e5e7eb', color: '#1e293b', border: 'none', cursor: 'pointer', transition: 'all 0.2s' },
   restrictedBox: { background: '#fef3c7', border: '2px solid #fcd34d', color: '#92400e', fontSize: '1rem', padding: '16px', borderRadius: '8px', fontWeight: 600 },
+};
+
+const formatEventOptionDate = (dateValue) => {
+  if (!dateValue) return '';
+  const [year, month, day] = dateValue.split('-').map(Number);
+  const date = new Date(year, month - 1, day);
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 };
 
 const requiredFieldLabels = {
@@ -68,6 +76,8 @@ export default function CreateOutingPage() {
   const [boatId, setBoatId] = useState(null);
   const [missingSavedBoat, setMissingSavedBoat] = useState(false);
   const [approvedCrewCount, setApprovedCrewCount] = useState(0);
+  const [rendezvousEvents, setRendezvousEvents] = useState([]);
+  const [linkedMessageId, setLinkedMessageId] = useState(null);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     title: '',
@@ -81,6 +91,7 @@ export default function CreateOutingPage() {
     boatSize: '',
     boatCapacity: '',
     mooringLocation: '',
+    rendezvousEventId: '',
   });
 
   const handleInputChange = (e) => {
@@ -101,6 +112,16 @@ export default function CreateOutingPage() {
         setInitialLoading(true);
         let boat;
         let outing;
+        let existingLinkedMessage;
+
+        const { data: eventsData, error: eventsError } = await supabase
+          .from('club_events')
+          .select('id, title, event_date, event_time, location, status')
+          .eq('status', 'active')
+          .order('event_date', { ascending: true })
+          .order('event_time', { ascending: true });
+        if (eventsError) throw eventsError;
+        setRendezvousEvents(eventsData || []);
 
         if (isEditing) {
           const { data: outingData, error: outingError } = await supabase
@@ -131,6 +152,18 @@ export default function CreateOutingPage() {
             .maybeSingle();
           if (boatError) throw boatError;
           boat = boatData;
+
+          const { data: messageData, error: messageError } = await supabase
+            .from('club_event_messages')
+            .select('id, event_id')
+            .eq('linked_outing_id', outingData.id)
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          if (messageError) throw messageError;
+          existingLinkedMessage = messageData;
+          setLinkedMessageId(messageData?.id || null);
         } else {
           const { data: boats, error: boatsError } = await supabase
             .from('boats')
@@ -170,6 +203,7 @@ export default function CreateOutingPage() {
             boatCapacity: '',
             mooringLocation: '',
           }),
+          rendezvousEventId: existingLinkedMessage?.event_id || '',
         });
       } catch (err) {
         setError(err.message || 'Could not load outing details');
@@ -180,6 +214,42 @@ export default function CreateOutingPage() {
 
     loadFormData();
   }, [userId, userType, authLoading, isEditing, outingId]);
+
+  const syncRendezvousLink = async (savedOuting, savedBoatId) => {
+    if (isEditing && linkedMessageId) {
+      const deleteExistingLinkedMessage = async () => {
+        const { error: deleteError } = await supabase.rpc('delete_authored_message', {
+          p_kind: 'club_event_chat',
+          p_id: linkedMessageId,
+        });
+        if (deleteError) throw deleteError;
+      };
+
+      if (!formData.rendezvousEventId) {
+        await deleteExistingLinkedMessage();
+        return;
+      }
+
+      await deleteExistingLinkedMessage();
+    }
+
+    if (!formData.rendezvousEventId) return;
+
+    const selectedEvent = rendezvousEvents.find((event) => event.id === formData.rendezvousEventId);
+    const boatLabel = formData.boatName?.trim() || savedBoatId || 'my boat';
+    const message = selectedEvent
+      ? `${boatLabel} is available for ${selectedEvent.title}. Crew can open this linked outing to view details and request to join.`
+      : `${boatLabel} is available for this Rendezvous. Crew can open this linked outing to view details and request to join.`;
+
+    const { error: linkError } = await supabase.from('club_event_messages').insert({
+      event_id: formData.rendezvousEventId,
+      user_id: user.id,
+      message,
+      linked_outing_id: savedOuting.id,
+    });
+
+    if (linkError) throw linkError;
+  };
 
   const handleFormKeyDown = (e) => {
     if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
@@ -287,6 +357,7 @@ export default function CreateOutingPage() {
       const { data: savedOuting, error: outingError } = await outingQuery.select().single();
 
       if (outingError) throw outingError;
+      await syncRendezvousLink(savedOuting, savedBoatId);
       navigate(`/outing/${savedOuting.id}`);
     } catch (err) {
       setError(err.message || `Failed to ${isEditing ? 'update' : 'create'} outing`);
@@ -422,6 +493,27 @@ export default function CreateOutingPage() {
               style={styles.input}
               placeholder="How many crew members do you need?"
             />
+          </div>
+
+          <div style={styles.fieldGroup}>
+            <label style={styles.label}>Include this outing with a Rendezvous?</label>
+            <p style={styles.helpText}>
+              Choose a Club Rendezvous if this boat outing should appear there so crew can find it and request to join.
+            </p>
+            <select
+              name="rendezvousEventId"
+              value={formData.rendezvousEventId}
+              onChange={handleInputChange}
+              style={styles.input}
+            >
+              <option value="">No, keep it separate</option>
+              {rendezvousEvents.map((event) => (
+                <option key={event.id} value={event.id}>
+                  {event.title} {event.event_date ? `- ${formatEventOptionDate(event.event_date)}` : ''}
+                  {event.location ? ` - ${event.location}` : ''}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 

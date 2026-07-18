@@ -35,6 +35,20 @@ const formatEventOptionDate = (dateValue) => {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 };
 
+const formatEventMessageDateTime = (event) => {
+  if (!event?.event_date) return '';
+  const [year, month, day] = event.event_date.split('-').map(Number);
+  const [hours = 0, minutes = 0] = (event.event_time || '00:00').split(':').map(Number);
+  const date = new Date(year, month - 1, day, hours, minutes);
+  return date.toLocaleString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+};
+
 const requiredFieldLabels = {
   title: 'Title',
   description: 'Description',
@@ -238,8 +252,8 @@ export default function CreateOutingPage() {
     const selectedEvent = rendezvousEvents.find((event) => event.id === formData.rendezvousEventId);
     const boatLabel = formData.boatName?.trim() || savedBoatId || 'my boat';
     const message = selectedEvent
-      ? `${boatLabel} is available for ${selectedEvent.title}. Crew can open this linked outing to view details and request to join.`
-      : `${boatLabel} is available for this Rendezvous. Crew can open this linked outing to view details and request to join.`;
+      ? `${boatLabel} is planning to join ${selectedEvent.title} ${formatEventMessageDateTime(selectedEvent)}. Click the outing link below for details.`
+      : `${boatLabel} is planning to join this Rendezvous. Click the outing link below for details.`;
 
     const { error: linkError } = await supabase.from('club_event_messages').insert({
       event_id: formData.rendezvousEventId,

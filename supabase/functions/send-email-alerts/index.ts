@@ -36,6 +36,24 @@ const jsonHeaders = {
 
 const env = (key: string, fallback = '') => Deno.env.get(key) || fallback;
 
+const requireInvokeSecret = (request: Request) => {
+  const expected = env('EMAIL_ALERT_INVOKE_SECRET');
+  const actual = request.headers.get('x-email-alert-secret') || '';
+
+  if (!expected) {
+    throw new Error('Missing EMAIL_ALERT_INVOKE_SECRET.');
+  }
+
+  if (actual !== expected) {
+    return new Response(JSON.stringify({ error: 'Unauthorized.' }, null, 2), {
+      status: 401,
+      headers: jsonHeaders,
+    });
+  }
+
+  return null;
+};
+
 const getIntEnv = (key: string, fallback: number) => {
   const value = Number.parseInt(env(key), 10);
   return Number.isFinite(value) && value > 0 ? value : fallback;
@@ -226,6 +244,9 @@ Deno.serve(async (request) => {
   }
 
   try {
+    const unauthorized = requireInvokeSecret(request);
+    if (unauthorized) return unauthorized;
+
     const enabled = env('EMAIL_ALERTS_ENABLED') === 'true';
     const testRecipients = env('EMAIL_ALERT_TEST_RECIPIENTS')
       .split(',')

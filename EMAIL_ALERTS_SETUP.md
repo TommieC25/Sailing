@@ -55,6 +55,7 @@ Required for real sending:
 
 - `SENDER_API_TOKEN`
 - `EMAIL_ALERTS_ENABLED=true`
+- `EMAIL_ALERT_INVOKE_SECRET`
 
 Recommended test controls:
 
@@ -64,6 +65,8 @@ Recommended test controls:
 - `EMAIL_ALERT_FROM_NAME=CGSC Rendezvous`
 
 If `EMAIL_ALERTS_ENABLED` is not `true`, the function returns `dry_run` results and does not mark queue rows sent.
+
+Every non-OPTIONS function request must include header `x-email-alert-secret` matching `EMAIL_ALERT_INVOKE_SECRET`.
 
 If `EMAIL_ALERT_TEST_RECIPIENTS` is set, non-matching recipients are skipped.
 

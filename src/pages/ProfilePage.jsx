@@ -32,6 +32,13 @@ const styles = {
   field: { display: 'grid', gap: '4px', minWidth: 0 },
 };
 
+const chatEmailAlertOptions = {
+  daily_digest: 'Daily Digest',
+  immediate: 'Immediate',
+  important_only: 'Important Only',
+  off: 'Off',
+};
+
 export default function ProfilePage() {
   const { id: profileId } = useParams();
   const navigate = useNavigate();
@@ -51,6 +58,7 @@ export default function ProfilePage() {
     phone: '',
     user_type: '',
     email_alerts_enabled: true,
+    chat_email_alert_frequency: 'daily_digest',
   });
   const [boatData, setBoatData] = useState({
     name: '',
@@ -157,6 +165,7 @@ export default function ProfilePage() {
         phone: formatPhoneNumber(profile.phone_number || profile.phone || ''),
         user_type: profile.user_type || '',
         email_alerts_enabled: profile.email_alerts_enabled !== false,
+        chat_email_alert_frequency: profile.chat_email_alert_frequency || 'daily_digest',
       });
     }
   }, [profile, isViewingOther]);
@@ -344,6 +353,7 @@ export default function ProfilePage() {
         phone_number: normalizedPhone,
         user_type: formData.user_type,
         email_alerts_enabled: formData.email_alerts_enabled,
+        chat_email_alert_frequency: formData.chat_email_alert_frequency,
       };
 
       await updateProfile(updateData);
@@ -479,6 +489,11 @@ export default function ProfilePage() {
               <div style={styles.value}>
                 {profile?.email_alerts_enabled === false ? 'Off' : 'On'}
               </div>
+              {profile?.email_alerts_enabled !== false && (
+                <div style={{fontSize: '0.88rem', color: '#64748b', fontWeight: 700, marginTop: '4px'}}>
+                  Chat: {chatEmailAlertOptions[profile?.chat_email_alert_frequency || 'daily_digest'] || 'Daily Digest'}
+                </div>
+              )}
             </div>
 
             {profile?.user_type === 'owner' && boats.length > 0 && (
@@ -625,6 +640,26 @@ export default function ProfilePage() {
                   </span>
                 </span>
               </label>
+
+              {formData.email_alerts_enabled && (
+                <div style={{...styles.field, marginTop: '10px'}}>
+                  <div style={styles.label}>Chat Email Alerts</div>
+                  <select
+                    name="chat_email_alert_frequency"
+                    value={formData.chat_email_alert_frequency}
+                    onChange={handleChange}
+                    style={styles.select}
+                  >
+                    <option value="daily_digest">Daily Digest</option>
+                    <option value="immediate">Immediate</option>
+                    <option value="important_only">Important Only</option>
+                    <option value="off">Off</option>
+                  </select>
+                  <div style={{fontSize: '0.86rem', color: '#64748b', fontWeight: 700, lineHeight: 1.35}}>
+                    Choose how often SailAway should email you about outing and Rendezvous chat activity.
+                  </div>
+                </div>
+              )}
             </div>
 
             {formData.user_type === 'owner' && (

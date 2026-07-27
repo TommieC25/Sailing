@@ -137,6 +137,15 @@ const alertDetail = (row: QueueRow) => {
     return `You have a new message from ${senderName}.`;
   }
 
+  if (row.alert_type === 'new_chat_message') {
+    const senderName = textForPayload(payload.sender_name) || 'A SailAway member';
+    const chatTitle = textForPayload(payload.chat_title)
+      || (payload.chat_kind === 'rendezvous' ? 'a Rendezvous chat' : 'an outing chat');
+    const excerpt = textForPayload(payload.message_excerpt);
+    const photoNote = payload.has_images ? ' Photo included.' : '';
+    return `${senderName} posted in ${chatTitle}.${excerpt ? ` ${excerpt}` : ''}${photoNote}`;
+  }
+
   return row.preview;
 };
 

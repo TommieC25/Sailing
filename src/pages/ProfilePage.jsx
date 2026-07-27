@@ -25,6 +25,9 @@ const styles = {
   factsGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '8px', marginBottom: '10px' },
   factBox: { background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '8px 10px', minWidth: 0 },
   bioBox: { background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '9px 10px', marginBottom: '10px' },
+  noticeBox: { background: '#f0f9ff', border: '1px solid #bfdbfe', borderRadius: '8px', padding: '9px 10px', marginBottom: '10px' },
+  checkboxRow: { display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '10px', border: '1px solid #bfdbfe', borderRadius: '8px', background: '#f8fafc' },
+  checkbox: { width: '18px', height: '18px', marginTop: '2px', flexShrink: 0 },
   formGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '10px' },
   field: { display: 'grid', gap: '4px', minWidth: 0 },
 };
@@ -47,6 +50,7 @@ export default function ProfilePage() {
     sailing_experience: '',
     phone: '',
     user_type: '',
+    email_alerts_enabled: true,
   });
   const [boatData, setBoatData] = useState({
     name: '',
@@ -152,6 +156,7 @@ export default function ProfilePage() {
         sailing_experience: profile.sailing_experience || '',
         phone: formatPhoneNumber(profile.phone_number || profile.phone || ''),
         user_type: profile.user_type || '',
+        email_alerts_enabled: profile.email_alerts_enabled !== false,
       });
     }
   }, [profile, isViewingOther]);
@@ -168,7 +173,12 @@ export default function ProfilePage() {
   }, [loadMyBoats]);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, type, checked, value } = e.target;
+    if (type === 'checkbox') {
+      setFormData((prev) => ({ ...prev, [name]: checked }));
+      return;
+    }
+
     if (name === 'phone') {
       setFormData((prev) => ({ ...prev, phone: formatPhoneNumber(value) }));
       return;
@@ -333,6 +343,7 @@ export default function ProfilePage() {
         phone: formatPhoneNumber(normalizedPhone),
         phone_number: normalizedPhone,
         user_type: formData.user_type,
+        email_alerts_enabled: formData.email_alerts_enabled,
       };
 
       await updateProfile(updateData);
@@ -463,6 +474,13 @@ export default function ProfilePage() {
               <div style={styles.value}>{profile?.bio || 'No bio added'}</div>
             </div>
 
+            <div style={styles.noticeBox}>
+              <div style={styles.label}>Email Alerts</div>
+              <div style={styles.value}>
+                {profile?.email_alerts_enabled === false ? 'Off' : 'On'}
+              </div>
+            </div>
+
             {profile?.user_type === 'owner' && boats.length > 0 && (
               <div style={styles.section}>
                 <div style={styles.sectionTitle}>Your Boat</div>
@@ -591,6 +609,22 @@ export default function ProfilePage() {
                 <div style={styles.label}>Bio</div>
                 <textarea name="bio" value={formData.bio} onChange={handleChange} style={styles.textarea} placeholder="Tell other sailors about yourself..." />
               </div>
+
+              <label style={{...styles.checkboxRow, marginTop: '10px'}}>
+                <input
+                  type="checkbox"
+                  name="email_alerts_enabled"
+                  checked={formData.email_alerts_enabled}
+                  onChange={handleChange}
+                  style={styles.checkbox}
+                />
+                <span>
+                  <span style={{...styles.value, display: 'block'}}>Email me when important SailAway activity needs my attention</span>
+                  <span style={{fontSize: '0.86rem', color: '#64748b', fontWeight: 700, lineHeight: 1.35}}>
+                    Turn this off to opt out of all SailAway email alerts. In-app alerts remain available.
+                  </span>
+                </span>
+              </label>
             </div>
 
             {formData.user_type === 'owner' && (

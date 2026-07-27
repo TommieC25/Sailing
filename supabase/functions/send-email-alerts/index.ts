@@ -79,6 +79,32 @@ const textForPayload = (value: unknown) => {
   return text || null;
 };
 
+const getSupabaseSecretKey = () => {
+  const legacyServiceRoleKey = env('SUPABASE_SERVICE_ROLE_KEY');
+  if (legacyServiceRoleKey) {
+    return legacyServiceRoleKey;
+  }
+
+  const secretKeysJson = env('SUPABASE_SECRET_KEYS');
+  if (!secretKeysJson) {
+    throw new Error('Missing SUPABASE_SECRET_KEYS.');
+  }
+
+  try {
+    const secretKeys = JSON.parse(secretKeysJson) as Record<string, string>;
+    const defaultSecretKey = secretKeys.default;
+    if (!defaultSecretKey) {
+      throw new Error('Missing default key in SUPABASE_SECRET_KEYS.');
+    }
+    return defaultSecretKey;
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('default key')) {
+      throw error;
+    }
+    throw new Error('Could not parse SUPABASE_SECRET_KEYS.');
+  }
+};
+
 const alertDetail = (row: QueueRow) => {
   const payload = row.payload || {};
 
@@ -151,16 +177,15 @@ const renderEmail = (row: QueueRow) => {
 
 const supabaseFetch = async (path: string, init: RequestInit = {}) => {
   const supabaseUrl = env('SUPABASE_URL');
-  const serviceRoleKey = env('SUPABASE_SERVICE_ROLE_KEY');
-  if (!supabaseUrl || !serviceRoleKey) {
-    throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY.');
+  const secretKey = getSupabaseSecretKey();
+  if (!supabaseUrl || !secretKey) {
+    throw new Error('Missing SUPABASE_URL or Supabase secret key.');
   }
 
   const response = await fetch(`${supabaseUrl}/rest/v1/${path}`, {
     ...init,
     headers: {
-      apikey: serviceRoleKey,
-      Authorization: `Bearer ${serviceRoleKey}`,
+      apikey: secretKey,
       'Content-Type': 'application/json',
       Prefer: 'return=representation',
       ...(init.headers || {}),

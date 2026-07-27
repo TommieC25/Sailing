@@ -49,7 +49,9 @@ The function defaults to dry-run. It only sends email when explicitly enabled.
 Required for any run:
 
 - `SUPABASE_URL`
-- `SUPABASE_SERVICE_ROLE_KEY`
+- `SUPABASE_SECRET_KEYS`
+
+`SUPABASE_URL` and `SUPABASE_SECRET_KEYS` are default Supabase Edge Function secrets. Do not create a custom `SUPABASE_SERVICE_ROLE_KEY` secret for new deployments.
 
 Required for real sending:
 
@@ -83,6 +85,8 @@ For resilience during the initial manual dashboard setup, the function also acce
 - `EMAIL_ALERT_FROM_EMAIL`
 - `EMAIL_ALERT_FROM_NAME`
 - `EMAIL_ALERT_ALLOW_BROADCAST`
+
+The function also accepts the deprecated `SUPABASE_SERVICE_ROLE_KEY` if it exists, but the preferred/current setup is to use the default `SUPABASE_SECRET_KEYS` secret that Supabase provides automatically.
 
 ## Next deployment steps
 

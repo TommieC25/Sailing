@@ -142,6 +142,9 @@ const alertDetail = (row: QueueRow) => {
 
 const renderEmail = (row: QueueRow) => {
   const detail = alertDetail(row);
+  const announcementMessage = row.alert_type === 'admin_announcement'
+    ? textForPayload(row.payload?.message)
+    : null;
   const safeActionUrl = row.action_url.startsWith(APP_BASE_URL) ? row.action_url : APP_BASE_URL;
   const greeting = row.recipient_name ? `Hello, ${row.recipient_name.split(' ')[0]}!` : 'Hello, Sailor!';
 
@@ -150,6 +153,7 @@ const renderEmail = (row: QueueRow) => {
       <h1 style="font-size: 22px; margin: 0 0 16px; color: #0c2340;">${htmlEscape(greeting)}</h1>
       <p style="font-size: 16px; margin: 0 0 12px;">${htmlEscape(row.preview)}</p>
       <p style="font-size: 16px; margin: 0 0 20px; font-weight: 700;">${htmlEscape(detail)}</p>
+      ${announcementMessage ? `<div style="font-size: 16px; margin: 0 0 22px; white-space: pre-wrap;">${htmlEscape(announcementMessage)}</div>` : ''}
       <p style="margin: 0 0 22px;">
         <a href="${htmlEscape(safeActionUrl)}" style="display: inline-block; background: #0369a1; color: #ffffff; padding: 12px 16px; border-radius: 8px; text-decoration: none; font-weight: 700;">Open SailAway</a>
       </p>
@@ -163,6 +167,7 @@ const renderEmail = (row: QueueRow) => {
     '',
     row.preview,
     detail,
+    announcementMessage ? `\n${announcementMessage}` : null,
     '',
     `Open SailAway: ${safeActionUrl}`,
     '',

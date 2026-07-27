@@ -150,7 +150,9 @@ const supabaseFetch = async (path: string, init: RequestInit = {}) => {
   return response.json();
 };
 
-const loadPendingAlerts = async (limit: number): Promise<QueueRow[]> => {
+const postgrestInList = (values: string[]) => `in.(${values.map((value) => `"${value.replace(/"/g, '\\"')}"`).join(',')})`;
+
+const loadPendingAlerts = async (limit: number, recipients: string[] = []): Promise<QueueRow[]> => {
   const query = new URLSearchParams({
     select: 'id,alert_type,recipient_user_id,recipient_email,recipient_name,actor_user_id,source_table,source_id,related_table,related_id,subject,preview,action_url,payload,attempts',
     status: 'eq.pending',
@@ -158,6 +160,9 @@ const loadPendingAlerts = async (limit: number): Promise<QueueRow[]> => {
     order: 'created_at.asc',
     limit: String(limit),
   });
+  if (recipients.length > 0) {
+    query.set('recipient_email', postgrestInList(recipients));
+  }
   return await supabaseFetch(`email_alert_queue?${query.toString()}`) as QueueRow[];
 };
 
@@ -238,7 +243,7 @@ Deno.serve(async (request) => {
       });
     }
 
-    const rows = await loadPendingAlerts(maxBatch);
+    const rows = await loadPendingAlerts(maxBatch, enabled && !allowBroadcast ? testRecipients : []);
     const results: SendResult[] = [];
 
     for (const row of rows) {

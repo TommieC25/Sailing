@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../utils/supabaseClient';
 import { shouldSendCourtesyStatus, statusCourtesyMessage } from '../utils/statusMessages';
-import { attachBugScreenshotUrls } from '../utils/bugScreenshots';
+import { BUG_SCREENSHOT_BUCKET, attachBugScreenshotUrls } from '../utils/bugScreenshots';
 
 const styles = {
   container: { maxWidth: '900px', margin: '0 auto' },
@@ -20,6 +20,9 @@ const styles = {
   tabActive: { color: '#0369a1', borderBottomColor: '#0369a1' },
   tabCount: { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: '22px', padding: '1px 7px', borderRadius: '999px', background: '#e2e8f0', color: '#475569', fontSize: '0.78rem', fontWeight: 900 },
   tabAttentionCount: { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: '18px', height: '18px', padding: '0 5px', borderRadius: '999px', background: '#ef4444', color: '#ffffff', fontSize: '0.7rem', fontWeight: 900 },
+  filterBar: { display: 'flex', gap: '7px', flexWrap: 'wrap', marginBottom: '12px' },
+  filterButton: { padding: '7px 10px', borderRadius: '999px', border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontWeight: 900, cursor: 'pointer' },
+  filterButtonActive: { borderColor: '#0369a1', background: '#0369a1', color: '#ffffff' },
   items: { display: 'grid', gap: '9px' },
   item: { background: '#ffffff', borderRadius: '10px', boxShadow: '0 1px 2px rgba(0,0,0,0.06)', border: '1px solid #e5e7eb', padding: '12px', borderLeft: '4px solid #0369a1' },
   itemNew: { background: '#f0f9ff', borderLeftColor: '#06b6d4' },
@@ -56,7 +59,9 @@ export default function AdminInboxPage() {
   const { user, profile } = useAuth();
   const requestedTab = searchParams.get('tab');
   const requestedItemId = searchParams.get('id');
+  const requestedBugView = searchParams.get('bugView');
   const activeTab = ['messages', 'bugs', 'features'].includes(requestedTab) ? requestedTab : 'messages';
+  const bugView = requestedBugView === 'archived' ? 'archived' : 'active';
   const [messages, setMessages] = useState([]);
   const [bugReports, setBugReports] = useState([]);
   const [featureRequests, setFeatureRequests] = useState([]);
@@ -295,6 +300,41 @@ export default function AdminInboxPage() {
     }
   };
 
+  const deleteBugReport = async (item) => {
+    if (item.status !== 'resolved') {
+      setInboxError('Only resolved bug reports can be deleted from the archive.');
+      return;
+    }
+
+    if (!window.confirm(`Delete resolved bug report "${item.title}" and its reply conversation? This cannot be undone.`)) return;
+
+    try {
+      setUpdating(item.id);
+      setInboxError('');
+      const { error } = await supabase
+        .from('bug_reports')
+        .delete()
+        .eq('id', item.id);
+
+      if (error) throw error;
+
+      if (item.screenshot_url && !/^https?:\/\//i.test(item.screenshot_url)) {
+        const { error: screenshotError } = await supabase.storage
+          .from(BUG_SCREENSHOT_BUCKET)
+          .remove([item.screenshot_url]);
+        if (screenshotError) console.warn('Could not remove deleted bug report screenshot:', screenshotError.message);
+      }
+
+      setBugReports((current) => current.filter((bug) => bug.id !== item.id));
+      window.dispatchEvent(new Event('sailing:admin-inbox-updated'));
+    } catch (err) {
+      console.error('Error deleting bug report:', err);
+      setInboxError(err.message || 'Could not delete bug report');
+    } finally {
+      setUpdating(null);
+    }
+  };
+
   if (loading) {
     return (
       <div style={styles.container}>
@@ -396,7 +436,7 @@ export default function AdminInboxPage() {
         From: {item.user_id ? (
           <button
             type="button"
-            onClick={() => navigate(`/profile/${item.user_id}?returnTo=${encodeURIComponent(`/admin/inbox?tab=${activeTab}`)}`)}
+            onClick={() => navigate(`/profile/${item.user_id}?returnTo=${encodeURIComponent(currentReturnTo)}`)}
             style={styles.submitterButton}
           >
             {submitterName}
@@ -475,6 +515,7 @@ export default function AdminInboxPage() {
   const renderBugReport = (item) => {
     const isLinkedItem = requestedItemId === item.id;
     const needsAttention = bugNeedsAttention(item);
+    const bugReturnTo = `/admin/inbox?tab=bugs&bugView=${bugView}`;
 
     return (
       <div
@@ -489,7 +530,7 @@ export default function AdminInboxPage() {
         <div style={styles.itemHeader}>
           <button
             type="button"
-            onClick={() => navigate(`/bug-report/${item.id}?returnTo=${encodeURIComponent('/admin/inbox?tab=bugs')}`)}
+            onClick={() => navigate(`/bug-report/${item.id}?returnTo=${encodeURIComponent(bugReturnTo)}`)}
             style={{ ...styles.itemTitle, color: '#0369a1', background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left' }}
           >
             🐛 {item.title}
@@ -512,7 +553,7 @@ export default function AdminInboxPage() {
         )}
         <button
           type="button"
-          onClick={() => navigate(`/bug-report/${item.id}?returnTo=${encodeURIComponent('/admin/inbox?tab=bugs')}`)}
+          onClick={() => navigate(`/bug-report/${item.id}?returnTo=${encodeURIComponent(bugReturnTo)}`)}
           style={{ width: '100%', padding: '9px 12px', border: 'none', borderRadius: '8px', background: '#0369a1', color: '#ffffff', fontSize: '0.92rem', fontWeight: 900, cursor: 'pointer', marginBottom: '10px' }}
         >
           Open full conversation
@@ -529,6 +570,16 @@ export default function AdminInboxPage() {
             <option value="in_progress">In Progress</option>
             <option value="resolved">Resolved</option>
           </select>
+          {bugView === 'archived' && item.status === 'resolved' && (
+            <button
+              type="button"
+              onClick={() => deleteBugReport(item)}
+              disabled={updating === item.id}
+              style={{ ...styles.actionButton, ...styles.dangerButton, opacity: updating === item.id ? 0.6 : 1 }}
+            >
+              Delete
+            </button>
+          )}
         </div>
       </div>
     );
@@ -591,22 +642,28 @@ export default function AdminInboxPage() {
   };
 
   const messageAttentionCount = messages.filter(messageNeedsAttention).length;
-  const bugAttentionCount = bugReports.filter(bugNeedsAttention).length;
+  const activeBugReports = bugReports.filter((bug) => bug.status !== 'resolved');
+  const archivedBugReports = bugReports.filter((bug) => bug.status === 'resolved');
+  const visibleBugReports = bugView === 'archived' ? archivedBugReports : activeBugReports;
+  const bugAttentionCount = activeBugReports.filter(bugNeedsAttention).length;
   const featureAttentionCount = featureRequests.filter(featureNeedsAttention).length;
   const tabs = [
     { key: 'messages', label: '📧 Messages', count: messages.length, attentionCount: messageAttentionCount },
-    { key: 'bugs', label: '🐛 Bug Reports', count: bugReports.length, attentionCount: bugAttentionCount },
+    { key: 'bugs', label: '🐛 Bug Reports', count: activeBugReports.length, attentionCount: bugAttentionCount },
     { key: 'features', label: '⭐ Feature Requests', count: featureRequests.length, attentionCount: featureAttentionCount },
   ];
   const attentionCount = messageAttentionCount + bugAttentionCount + featureAttentionCount;
 
   const currentData = {
     messages: workflowFirst(messages, (message) => message.status || 'open'),
-    bugs: workflowFirst(bugReports, (bug) => bug.status || 'open'),
+    bugs: workflowFirst(visibleBugReports, (bug) => bug.status || 'open'),
     features: workflowFirst(featureRequests, (feature) => featureStatusValue(feature.status)),
   };
 
   const currentItems = currentData[activeTab];
+  const currentReturnTo = activeTab === 'bugs'
+    ? `/admin/inbox?tab=bugs&bugView=${bugView}`
+    : `/admin/inbox?tab=${activeTab}`;
 
   return (
     <div style={styles.container}>
@@ -642,7 +699,7 @@ export default function AdminInboxPage() {
           <button
             key={tab.key}
             onClick={() => {
-              setSearchParams({ tab: tab.key });
+              setSearchParams(tab.key === 'bugs' ? { tab: tab.key, bugView } : { tab: tab.key });
             }}
             style={{
               ...styles.tab,
@@ -658,12 +715,31 @@ export default function AdminInboxPage() {
         ))}
       </div>
 
+      {activeTab === 'bugs' && (
+        <div style={styles.filterBar}>
+          <button
+            type="button"
+            onClick={() => setSearchParams({ tab: 'bugs', bugView: 'active' })}
+            style={{ ...styles.filterButton, ...(bugView === 'active' ? styles.filterButtonActive : {}) }}
+          >
+            Active ({activeBugReports.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setSearchParams({ tab: 'bugs', bugView: 'archived' })}
+            style={{ ...styles.filterButton, ...(bugView === 'archived' ? styles.filterButtonActive : {}) }}
+          >
+            Archived / Resolved ({archivedBugReports.length})
+          </button>
+        </div>
+      )}
+
       {currentItems.length === 0 ? (
         <div style={styles.emptyBox}>
           <div style={styles.emptyIcon}>✨</div>
           <p style={styles.emptyText}>
             {activeTab === 'messages' && 'No messages yet'}
-            {activeTab === 'bugs' && 'No bug reports yet'}
+            {activeTab === 'bugs' && (bugView === 'archived' ? 'No archived bug reports' : 'No active bug reports')}
             {activeTab === 'features' && 'No feature requests yet'}
           </p>
         </div>

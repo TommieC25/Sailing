@@ -36,12 +36,20 @@ const jsonHeaders = {
 
 const env = (key: string, fallback = '') => Deno.env.get(key) || fallback;
 
+const envAny = (keys: string[], fallback = '') => {
+  for (const key of keys) {
+    const value = Deno.env.get(key);
+    if (value) return value;
+  }
+  return fallback;
+};
+
 const requireInvokeSecret = (request: Request) => {
-  const expected = env('EMAIL_ALERT_INVOKE_SECRET');
+  const expected = envAny(['EMAIL_ALERTS_INVOKE_SECRET', 'EMAIL_ALERT_INVOKE_SECRET']);
   const actual = request.headers.get('x-email-alert-secret') || '';
 
   if (!expected) {
-    throw new Error('Missing EMAIL_ALERT_INVOKE_SECRET.');
+    throw new Error('Missing EMAIL_ALERTS_INVOKE_SECRET or EMAIL_ALERT_INVOKE_SECRET.');
   }
 
   if (actual !== expected) {
@@ -54,8 +62,8 @@ const requireInvokeSecret = (request: Request) => {
   return null;
 };
 
-const getIntEnv = (key: string, fallback: number) => {
-  const value = Number.parseInt(env(key), 10);
+const getIntEnvAny = (keys: string[], fallback: number) => {
+  const value = Number.parseInt(envAny(keys), 10);
   return Number.isFinite(value) && value > 0 ? value : fallback;
 };
 
@@ -212,8 +220,8 @@ const sendViaSender = async (row: QueueRow) => {
   const token = env('SENDER_API_TOKEN');
   if (!token) throw new Error('Missing SENDER_API_TOKEN.');
 
-  const fromEmail = env('EMAIL_ALERT_FROM_EMAIL', 'cgscclubcontact@cgsc.org');
-  const fromName = env('EMAIL_ALERT_FROM_NAME', 'CGSC Rendezvous');
+  const fromEmail = envAny(['EMAIL_ALERTS_FROM_EMAIL', 'EMAIL_ALERT_FROM_EMAIL'], 'cgscclubcontact@cgsc.org');
+  const fromName = envAny(['EMAIL_ALERTS_FROM_NAME', 'EMAIL_ALERT_FROM_NAME'], 'CGSC Rendezvous');
   const { html, text } = renderEmail(row);
 
   const response = await fetch(SENDER_API_URL, {
@@ -247,17 +255,17 @@ Deno.serve(async (request) => {
     const unauthorized = requireInvokeSecret(request);
     if (unauthorized) return unauthorized;
 
-    const enabled = env('EMAIL_ALERTS_ENABLED') === 'true';
-    const testRecipients = env('EMAIL_ALERT_TEST_RECIPIENTS')
+    const enabled = envAny(['EMAIL_ALERTS_ENABLED', 'EMAIL_ALERT_ENABLED']) === 'true';
+    const testRecipients = envAny(['EMAIL_ALERTS_TEST_RECIPIENTS', 'EMAIL_ALERT_TEST_RECIPIENTS'])
       .split(',')
       .map((email) => email.trim().toLowerCase())
       .filter(Boolean);
-    const allowBroadcast = env('EMAIL_ALERT_ALLOW_BROADCAST') === 'true';
-    const maxBatch = Math.min(getIntEnv('EMAIL_ALERT_MAX_BATCH', 5), 25);
+    const allowBroadcast = envAny(['EMAIL_ALERTS_ALLOW_BROADCAST', 'EMAIL_ALERT_ALLOW_BROADCAST']) === 'true';
+    const maxBatch = Math.min(getIntEnvAny(['EMAIL_ALERTS_MAX_BATCH', 'EMAIL_ALERT_MAX_BATCH'], 5), 25);
 
     if (enabled && testRecipients.length === 0 && !allowBroadcast) {
       return new Response(JSON.stringify({
-        error: 'Refusing to send without EMAIL_ALERT_TEST_RECIPIENTS or EMAIL_ALERT_ALLOW_BROADCAST=true.',
+        error: 'Refusing to send without EMAIL_ALERTS_TEST_RECIPIENTS or EMAIL_ALERTS_ALLOW_BROADCAST=true.',
       }, null, 2), {
         status: 400,
         headers: jsonHeaders,
@@ -278,7 +286,7 @@ Deno.serve(async (request) => {
           status: 'skipped',
           alertType: row.alert_type,
           subject: row.subject,
-          error: 'Recipient is not in EMAIL_ALERT_TEST_RECIPIENTS.',
+          error: 'Recipient is not in EMAIL_ALERTS_TEST_RECIPIENTS.',
         });
         continue;
       }

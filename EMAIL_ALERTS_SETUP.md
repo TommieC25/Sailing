@@ -55,25 +55,34 @@ Required for real sending:
 
 - `SENDER_API_TOKEN`
 - `EMAIL_ALERTS_ENABLED=true`
-- `EMAIL_ALERT_INVOKE_SECRET`
+- `EMAIL_ALERTS_INVOKE_SECRET`
 
 Recommended test controls:
 
-- `EMAIL_ALERT_TEST_RECIPIENTS=tom@example.com,second@example.com`
-- `EMAIL_ALERT_MAX_BATCH=5`
-- `EMAIL_ALERT_FROM_EMAIL=cgscclubcontact@cgsc.org`
-- `EMAIL_ALERT_FROM_NAME=CGSC Rendezvous`
+- `EMAIL_ALERTS_TEST_RECIPIENTS=tom@example.com,second@example.com`
+- `EMAIL_ALERTS_MAX_BATCH=5`
+- `EMAIL_ALERTS_FROM_EMAIL=cgscclubcontact@cgsc.org`
+- `EMAIL_ALERTS_FROM_NAME=CGSC Rendezvous`
 
 If `EMAIL_ALERTS_ENABLED` is not `true`, the function returns `dry_run` results and does not mark queue rows sent.
 
-Every non-OPTIONS function request must include header `x-email-alert-secret` matching `EMAIL_ALERT_INVOKE_SECRET`.
+Every non-OPTIONS function request must include header `x-email-alert-secret` matching `EMAIL_ALERTS_INVOKE_SECRET`.
 
-If `EMAIL_ALERT_TEST_RECIPIENTS` is set, non-matching recipients are skipped.
+If `EMAIL_ALERTS_TEST_RECIPIENTS` is set, non-matching recipients are skipped.
 
 If `EMAIL_ALERTS_ENABLED=true`, the function refuses to send unless either:
 
-- `EMAIL_ALERT_TEST_RECIPIENTS` is set, or
-- `EMAIL_ALERT_ALLOW_BROADCAST=true` is explicitly set.
+- `EMAIL_ALERTS_TEST_RECIPIENTS` is set, or
+- `EMAIL_ALERTS_ALLOW_BROADCAST=true` is explicitly set.
+
+For resilience during the initial manual dashboard setup, the function also accepts older singular aliases:
+
+- `EMAIL_ALERT_INVOKE_SECRET`
+- `EMAIL_ALERT_TEST_RECIPIENTS`
+- `EMAIL_ALERT_MAX_BATCH`
+- `EMAIL_ALERT_FROM_EMAIL`
+- `EMAIL_ALERT_FROM_NAME`
+- `EMAIL_ALERT_ALLOW_BROADCAST`
 
 ## Next deployment steps
 

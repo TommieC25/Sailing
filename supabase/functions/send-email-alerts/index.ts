@@ -258,7 +258,7 @@ const sendViaSender = async (row: QueueRow) => {
     },
     body: JSON.stringify({
       from: { email: fromEmail, name: fromName },
-      to: [{ email: row.recipient_email, name: row.recipient_name || '' }],
+      to: { email: row.recipient_email, name: row.recipient_name || '' },
       subject: row.subject,
       html,
       text,
